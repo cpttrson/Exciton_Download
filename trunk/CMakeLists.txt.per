@@ -1,0 +1,256 @@
+PROJECT(exciton CXX Fortran)
+#set(COLLECT_GCC_OPTIONS "-static-libgcc -static-libgfortran -O3")
+enable_language(C)
+
+#set(CMAKE_C_FLAGS_INIT -static-libgcc -mtune=generic)
+#set(CMAKE_CXX_FLAGS_INIT -static-libgcc -mtune=generic)
+#set(CMAKE_CXX_FLAGS_INIT "-lefence")
+message("C_FLAGS_INIT ${CMAKE_C_FLAGS_INIT}")
+message("CXX_FLAGS_INIT ${CMAKE_CXX_FLAGS_INIT}")
+
+set(CMAKE_BUILD_TYPE "RELEASE")
+#set(CMAKE_BUILD_TYPE "Debug")
+#set(CMAKE_CXX_COMPILER icpc)
+set(CMAKE_CXX_COMPILER mpicxx)
+#set(CMAKE_CXX_COMPILER mpig++)
+#set(CMAKE_CXX_COMPILER mpiicc)
+#set(CMAKE_CXX_FLAGS:STRING=' -g -Wall -traceback')
+#set(CMAKE_CXX_FLAGS:STRING= -g)
+#set(CMAKE_CXX_FLAGS:STRING=" -g -debug -Wall")
+##set(CMAKE_CXX_FLAGS:STRING= -O0 -g -debug - Wall)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -L/home/users/cpttrson/electric-fence-master -lefence")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+MESSAGE("CMAKE_CXX_FLAGS =  ${CMAKE_CXX_FLAGS} \n")
+#set(CMAKE_CXX_FLAGS "-O0 -g -debug -Wall")
+#set(CMAKE_CXX_FLAGS:STRING=-I/home/support/apps/intel/11.0.074/openmpi/64/1.3.3/include)
+#set(CMAKE_CXX_FLAGS "-static-libstdc++ -static-libgcc -static-libgfortran -O3")
+#set(CMAKE_C_FLAGS "-static -O3")
+#set(CMAKE_CXX_FLAGS "-O3 -Wall")
+#-L/home/users/cpttrson/electric-fence-master -lefence)
+#"-L/home/tsphy/cpttrson/exciton10/electric-fence-2.1.13/lib -lefence")
+#set(CMAKE_EXE_LINKER_FLAGS "-O3")
+#set(CMAKE_EXE_LINKER_FLAGS:STRING= -g)
+#set(CMAKE_EXE_LINKER_FLAGS:STRING= -O3)
+MESSAGE("CMAKE_EXE_LINKER_FLAGS = ${CMAKE_EXE_LINKER_FLAGS} \n")
+#set(CMAKE_EXE_LINKER_FLAGS:STRING= -g -lefence)
+#set(CMAKE_EXE_LINKER_FLAGS:STRING=-L$MKL
+#$MKL/libmkl_solver_lp64_sequential.a -Wl,--start-group -lmkl_intel_lp64
+#-lmkl_sequential -lmkl_core -Wl,--end-group -lpthread)
+#set(CMAKE_EXE_LINKER_FLAGS:STRING=BLLAAH)
+#message("CMAKE_EXE ${CMAKE_EXE_LINKER_FLAGS}")
+
+####set(CMAKE_EXE_LINKER_FLAGS:STRING=${MKLROOT}/lib/intel64/libmkl_scalapack_lp64.a -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_blacs_openmpi_lp64.a -Wl,--end-group -lpthread -lm -ldl)
+#set(CMAKE_EXE_LINKER_FLAGS:STRING=-L$MKLROOT/lib/intel64 $MKLROOT/lib/intel64/libmkl_solver_lp64_sequential.a -Wl,--start-group -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -Wl) 
+
+#set(CMAKE_EXE_LINKER_FLAGS:STRING= -O3)
+
+set(VERSION_MAJOR "1")
+set(VERSION_MINOR "0")
+set(VERSION_PATCH "0")
+
+
+find_program(SVN "svn")
+if(SVN)
+  execute_process(COMMAND ${SVN} info ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE SVN_OUT)
+  string(REGEX REPLACE "\n" " " svn_int "${SVN_OUT}")
+  string(REGEX REPLACE ".*Revision: ([^ ]+).*" "\\1" VERSION_PATCH "${svn_int}" )
+  set(VERSION_PATCH "svn_${VERSION_PATCH}")
+endif(SVN)
+
+set(AUTHOR "Charles Patterson")
+set(AUTHOR_DETAILS "charles.patterson@tcd.ie")
+set(DESCRIPTION "Exciton")
+
+cmake_minimum_required(VERSION 2.6)
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0004 NEW)
+endif(COMMAND cmake_policy)
+
+##########################
+###source files and target name
+set(src_dir source)
+set(target_name exciton21)
+##########################
+
+########################################
+## place to put some useful stuff
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Utils")
+#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Modules")
+#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/Util")
+
+find_package(MPI REQUIRED)
+##########################################
+### Make sure the compiler can find include files from our project
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include
+${PROJECT_SOURCE_DIR}/libxc/include)
+#${MPI_INCLUDE_PATH}
+#${PROJECT_SOURCE_DIR}/libxc/include)
+
+##
+##########################
+## external libs
+
+SET(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+find_package(MKL REQUIRED)
+
+#SET(BUILD_SHARED_LIBS OFF)
+#SET(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+
+#find_package(MPI REQUIRED)
+
+#message("MPI Libraries:  ${MPI_LIBRARIES} \n\n")
+#message("MPI INCLUDE: ${MPI_INCLUDE_PATH} \n\n" )
+#message("MPI FLAGS: ${MPI_COMPILER_FLAGS} \n\n")
+
+#message("MPI_FOUND ${MPI_FOUND}\nMPI_COMPILER ${MPI_COMPILER} \nMPI_LIBRARY ${MPI_LIBRARY} \nMPI_COMPILE_FLAGS ${MPI_COMPILE_FLAGS}\nMPI_INCLUDE_PATH ${MPI_INCLUDE_PATH} \nMPI_EXTRA_LIBRARY ${MPI_EXTRA_LIBRARY} \nMPI_LINK_FLAGS ${MPI_LINK_FLAGS} \nMPI_LIBRARIES ${MPI_LIBRARIES}\n\n")
+
+#set(MPI_C_LINK_FLAGS "-Wl,-rpath -Wl,/home/support/apps/cports/rhel-6.x86_64/gnu5.3.0/openmpi/1.10.2/lib -Wl,--enable-new-dtags")
+
+####find_package(GSL REQUIRED)
+
+##OMPIGCCset(GCC_LIBRARIES /usr/lib/gcc/x86_64-redhat-linux/4.4.7/libgcc.a)
+
+#set(GSL_LIBRARIES /home/support/apps/cports/rhel-6.x86_64/gnu4.8.2/gsl/1.16/lib/libgsl.a /home/support/apps/cports/rhel-6.x86_64/gnu4.8.2/gsl/1.16/lib/libgslcblas.a)
+
+###message("Using this linkage for gsl: ${GSL_LIBRARIES} with flags  ${CMAKE_GSL_CXX_FLAGS}\n\n")
+####INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR})
+###set(LIBS ${CMAKE_GSL_CXX_FLAGS} ${GSL_LIBRARIES}
+set (LIBS ${PROJECT_SOURCE_DIR}/libxc/lib/libxc.a)
+
+set(MKL_BLACS_MPI INTELMPI)
+
+#set(-L${MKLROOT}/lib/intel64 -lmkl_scalapack_ilp64 -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lpthread -lm -ldl  -DMKL_ILP64 -I${MKLROOT}/include)
+
+#set(MKL_LINKER_FLAGS -L${MKLROOT}/lib/intel64 -lmkl_scalapack_ilp64 -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lpthread -lm -ldl -DMKL_ILP64 -I${MKLROOT}/include)
+set(MKL_LINKER_FLAGS  -L${MKLROOT}/lib/intel64 -lmkl_scalapack_lp64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_lp64 -lpthread -lm -ldl  -I${MKLROOT}/include)
+
+#set (MKL_LINKER_FLAGS -DMKL_ILP64 -I${MKLROOT}/include)
+#set(MKL_LINKER_FLAGS -L${MKLROOT}/lib/intel64 -lmkl_scalapack_ilp64 -lmkl_intel_ilp64 -lmkl_intel_thread -lmkl_core -lmkl_blacs_intelmpi_ilp64 -liomp5 -lpthread -lm -ldl  -DMKL_ILP64 -I${MKLROOT}/include)
+
+#OMPIset (MKL_LINKER_FLAGS ${MKL_ROOT_DIR}/lib/intel64/libmkl_scalapack_lp64.a -Wl,--start-group ${MKL_ROOT_DIR}/lib/intel64/libmkl_intel_lp64.a ${MKL_ROOT_DIR}/lib/intel64/libmkl_sequential.a ${MKL_ROOT_DIR}/lib/intel64/libmkl_core.a ${MKL_ROOT_DIR}/lib/intel64/libmkl_blacs_openmpi_lp64.a -Wl,--end-group -lpthread -lm -ldl)
+
+message("MKLROOT IS ${MKL_ROOT_DIR} \n")
+message("MKLROOT IS ${MKLROOT} \n")
+
+message("\nMKL LINKER FLAGS ${MKL_LINKER_FLAGS}\n")
+
+#message("\nMKL LINKER FLAGS ${MKL_LINKER_FLAGS}\n")
+
+set(LIBS ${LIBS} ${LAPACK_LINKER_FLAGS} ${MKL_LINKER_FLAGS} ) #${MKL_LP_LIBRARY} ${MKL_LAPACK_LIBRARY} ${MKL_BLACS_LIBRARY} ${MKL_CORE_LIBRARY} ${MKL_SEQUENTIAL_LIBRARY} ${MKL_IOMP5_LIBRARY} ${LAPACK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+#set(LIBS ${LIBS} ${LAPACK_LINKER_FLAGS} ${MKL_LP_LIBRARY} ${MKL_LAPACK_LIBRARY} ${MKL_BLACS_LIBRARY} ${MKL_CORE_LIBRARY} ${MKL_SEQUENTIAL_LIBRARY} ${MKL_IOMP5_LIBRARY} ${LAPACK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+message("\nAll libraries: ${LIBS} \n")
+
+message("\nLapack libraries: ${LAPACK_LIBRARIES} \n")
+
+message("\nMKL_LAPACK_LIBRARY libraries: ${MKL_LAPACK_LIBRARY} \n")
+
+#find_library(EFENCE_LIBRARY "libefence.a")
+
+##########################
+#message("MPI_FOUND ${MPI_FOUND}\n\nMPI_COMPILER ${MPI_COMPILER}\n\nMPI_LIBRARY ${MPI_LIBRARY}\n\nMPI_COMPILE_FLAGS ${MPI_COMPILE_FLAGS}\n\nMPI_INCLUDE_PATH ${MPI_INCLUDE_PATH}\n\nMPI_EXTRA_LIBRARY ${MPI_EXTRA_LIBRARY}\n\nMPI_LINK_FLAGS ${MPI_LINK_FLAGS}\n\nMPI_LIBRARIES ${MPI_LIBRARIES}\n\n")
+message("MPI_CXX_FOUND ${MPI_CXX_FOUND}\n\nMPI_CXX_COMPILER ${MPI_CXX_COMPILER}\n\nMPI_CXX_COMPILE_FLAGS ${MPI_CXX_COMPILE_FLAGS}\n\nMPI_CXX_INCLUDE_PATH ${MPI_CXX_INCLUDE_PATH}\n\nMPI_CXX_LINK_FLAGS ${MPI_CXX_LINK_FLAGS}\n\nMPI_CXX_LIBRARIES ${MPI_CXX_LIBRARIES}\n\n")
+#message("MPI Libraries: ${MPI_LIBRARIES}\n\n")
+#message("MPI INCLUDE: ${MPI_INCLUDE_PATH}\n\n" )
+#message("MPI FLAGS: ${MPI_COMPILER_FLAGS}\n\n")
+
+######################
+###documentation
+#set(doc_dir doc)
+#find_package(Doxygen)
+######################
+
+##set the output folder for libs and bins
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+###################
+
+
+######
+## adds user libs
+
+#add_library(algebra SHARED
+add_library(algebra STATIC
+${src_dir}/linalg.f90
+)
+
+
+####################
+#~ set_source_files_properties(${src_dir}/SCF2.f90
+#~ 	PROPERTIES COMPILE_FLAGS /Od)
+####################
+##### adds the main target
+add_executable(${target_name}
+#COMMON SOURCE FILES
+${src_dir}/TOOLS.cpp                             #            ${src_dir}/TOOLS.cpp                                          
+${src_dir}/ERRORS.cpp                            #            ${src_dir}/ERRORS.cpp                                         
+${src_dir}/HEADER.cpp                            #            ${src_dir}/HEADER.cpp                                         
+${src_dir}/SETUP_ATOMS.cpp                       #            ${src_dir}/SETUP_ATOMS.cpp                                    
+${src_dir}/SETUP_RECIPROCAL_LATTICE.cpp          #            ${src_dir}/SETUP_RECIPROCAL_LATTICE.cpp                       
+${src_dir}/FOURIER_TRANSFORM.cpp                 #            ${src_dir}/FOURIER_TRANSFORM.cpp                              
+${src_dir}/IVANIC_RUEDENBERG.cpp                 #            ${src_dir}/IVANIC_RUEDENBERG.cpp                              
+${src_dir}/SYMMETRY_ADAPTATION.cpp               #            ${src_dir}/SYMMETRY_ADAPTATION.cpp                            
+${src_dir}/LINEAR_ALGEBRA_UTIL.cpp               #            ${src_dir}/LINEAR_ALGEBRA_UTIL.cpp                            
+${src_dir}/MATRIX_UTIL.cpp                       #            ${src_dir}/MATRIX_UTIL.cpp                                    
+${src_dir}/PARALLEL.cpp                          #            ${src_dir}/PARALLEL.cpp                                       
+${src_dir}/SCALAPACK.cpp                         #            ${src_dir}/SCALAPACK.cpp                                      
+${src_dir}/ROTATIONS_MOLECULE.cpp                #            ${src_dir}/ROTATIONS_MOLECULE.cpp                             
+${src_dir}/SCF_ATOM.cpp                          #            ${src_dir}/SCF_ATOM.cpp                                       
+${src_dir}/SCF_MOLECULE.cpp                      #            ${src_dir}/SCF_MOLECULE.cpp                                   
+${src_dir}/GW_BSE_MOLECULE.cpp                   #            ${src_dir}/GW_BSE_MOLECULE.cpp                                
+${src_dir}/DENSITY_MATRIX_MOLECULE.cpp           #            ${src_dir}/DENSITY_MATRIX_MOLECULE.cpp                        
+${src_dir}/DENSITY_FITTING_MOLECULE.cpp          #            ${src_dir}/DENSITY_FITTING_MOLECULE.cpp                       
+${src_dir}/INTEGRALS1.cpp                        #            ${src_dir}/INTEGRALS1.cpp  
+${src_dir}/INTEGRALS_2C_MOLECULE.cpp             #            ${src_dir}/INTEGRALS_2C_MOLECULE.cpp                          
+${src_dir}/INTEGRALS_3C_MOLECULE.cpp             #            ${src_dir}/INTEGRALS_3C_MOLECULE.cpp                          
+${src_dir}/INTEGRALS_4C_MOLECULE.cpp             #            ${src_dir}/INTEGRALS_4C_MOLECULE.cpp                          
+${src_dir}/E_COEFFICIENTS.cpp                    #            ${src_dir}/E_COEFFICIENTS.cpp                                 
+${src_dir}/MCMURCHIE_DAVIDSON.cpp                #            ${src_dir}/MCMURCHIE_DAVIDSON.cpp                             
+${src_dir}/CARTESIAN_TO_SH.cpp                   #            ${src_dir}/CARTESIAN_TO_SH.cpp                                
+${src_dir}/RECURSION.cpp                         #            ${src_dir}/RECURSION.cpp                                      
+${src_dir}/INCOMPLETE_GAMMA.cpp                  #            ${src_dir}/INCOMPLETE_GAMMA.cpp                               
+${src_dir}/OPTICAL_SPECTRUM_MOLECULE.cpp         #            ${src_dir}/OPTICAL_SPECTRUM_MOLECULE.cpp                      
+${src_dir}/PRINT_MOLECULE.cpp                    #            ${src_dir}/PRINT_MOLECULE.cpp                                 
+${src_dir}/PAIRS_QUADS.cpp                       #            ${src_dir}/PAIRS_QUADS.cpp                                    
+#DISTINCT SOURCE FILES                           #         
+${src_dir}/SETUP_RUNTIME_CRYSTAL.cpp             #            ${src_dir}/SETUP_RUNTIME_MOLECULE.cpp                         
+                                                 #            ${src_dir}/SETUP_SYMMETRY_MOLECULE.cpp                        
+${src_dir}/BUILD_FOCK_MATRIX.cpp                 #            ${src_dir}/BUILD_FOCK_MATRIX_MOLECULE.cpp                     
+${src_dir}/ALLOCATE_MEMORY.cpp                   #            ${src_dir}/ALLOCATE_MEMORY_MOLECULE.cpp                       
+${src_dir}/DENSITY_FITTING_CRYSTAL.cpp           #          
+${src_dir}/SCF_CRYSTAL.cpp                       #                                                                          
+${src_dir}/INTEGRALS_2C_CRYSTAL.cpp              #                                                                          
+${src_dir}/INTEGRALS_3C_CRYSTAL.cpp              #                                                                          
+${src_dir}/INTEGRALS_4C_CRYSTAL.cpp              #                                                                          
+${src_dir}/KPOINTS.cpp                           #             
+${src_dir}/DENSITY_MATRIX_CRYSTAL.cpp            #                                                                          
+${src_dir}/TDHF_CRYSTAL.cpp                      #                                                                          
+${src_dir}/SETUP_REAL_LATTICE.cpp                #                                                                          
+${src_dir}/OPTICAL_SPECTRUM.cpp                  #     
+${src_dir}/INPUT_ALL.cpp                         #                            
+${src_dir}/SETUP_SYMMETRY.cpp                    #
+${src_dir}/SETUP_CRYSTAL.cpp                     #
+${src_dir}/CRYSTAL09.cpp
+#${src_dir}/PLOTTING.cpp                         #     
+#${src_dir}/DFT.cpp                              #     
+#${src_dir}/LEBEDEV_LAIKOV.cpp                   #     
+#${src_dir}/DIELECTRIC_FUNCTION.cpp                    
+#${src_dir}/INTEGRALS_TEST.cpp                         
+)                                                      
+####################                                   
+                                                       
+#################
+## sets the linking
+link_directories (${LIBRARY_OUTPUT_PATH})
+target_link_libraries(${target_name} algebra ${LIBS})
+#target_link_libraries(${target_name} algebra ${LIBS} ${MPI_CXX_LIBRARIES})
+#OMPItarget_link_libraries(${target_name} algebra ${LIBS} -static-libgfortran -static-libgcc -static-libstdc++)
+#target_link_libraries(${target_name} algebra ${LIBS} -nostartfiles -nostdlib -nodefaultlibs -static-libgfortran -static-libgcc -static-libstdc++)
+#################
+
+if(DOXYGEN)
+  configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.cmake Doxyfile)
+  add_custom_target(docs
+    ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile)
+endif(DOXYGEN)
