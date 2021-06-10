@@ -255,9 +255,11 @@ Complex fac;
 
        } // close switch
 
-       mcmurchie_davidson_3c_reversed_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
+       //mcmurchie_davidson_3c_reversed_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
        C1x,C1y,C1z,C2x,C2y,C2z,shells,shells_ax,job,file);
-       three_center_cartesian_to_sh_shell_ax_reversed_complex(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
+       mcmurchie_davidson_ija_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
+       C1x,C1y,C1z,C2x,C2y,C2z,shells,shells_ax,job,file);
+       three_centre_cartesian_to_sh_ija_complex(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
        bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
        free(fgtuv);
        bfposk   += shelk;

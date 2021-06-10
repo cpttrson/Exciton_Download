@@ -234,12 +234,16 @@ if (fabs(q_G->sqr[0]) < 0.00001) start = 1;
 
               //for (i=0;i<mm0;i++) fprintf(file.out,"2C FGTUV1 %3d %14.8f %14.8f\n",i,(fgtuv[i]).real(),(fgtuv[i]).imag());
             //mcmurchie_davidson_2c(coulomb_cart,index_i,index_j,bfposi1,bfposj1,nd2,C1x,C1y,C1z,C2x,C2y,C2z,fgtuv,shells,job,file);
-              mcmurchie_davidson_2c_complex(coulomb_cart,fgtuv,index_i,index_j,bfposi1,bfposj1,nd2,C1x,C1y,C1z,C2x,C2y,C2z,\
+              //mcmurchie_davidson_2c_complex(coulomb_cart,fgtuv,index_i,index_j,bfposi1,bfposj1,nd2,C1x,C1y,C1z,C2x,C2y,C2z,\
+              shells,job,file);
+              mcmurchie_davidson_ij_complex(coulomb_cart,fgtuv,index_i,index_j,bfposi1,bfposj1,nd2,C1x,C1y,C1z,C2x,C2y,C2z,\
               shells,job,file);
               free(fgtuv);
               //two_center_cartesian_to_sh_shell_complex(coulomb_cart,&V_q->a[0][0],index_i,index_j,bfposi,bfposj,bfposi1, \
               bfposj1,nd2,nd4,shells,job,file);
-	      two_centre_cartesian_to_sh_shell_ij_complex(coulomb_cart,coulomb_sh,index_i,index_j,bfposi,bfposj,bfposi1, \
+	      //two_centre_cartesian_to_sh_shell_ij_complex(coulomb_cart,coulomb_sh,index_i,index_j,bfposi,bfposj,bfposi1, \
+              bfposj1,nd2,nd4,shells,job,file);
+	      four_centre_cartesian_to_sh_ijij_complex(coulomb_cart,coulomb_sh,index_i,index_j,bfposi,bfposj,bfposi1, \
               bfposj1,nd2,nd4,shells,job,file);
               //two_center_cartesian_to_sh_shell_complex(coulomb_cart,coulomb_sh,index_i,index_j,bfposi,bfposj,bfposi1, \
               bfposj1,nd2,nd4,shells,job,file);

@@ -1,19 +1,3 @@
-/*
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <sys/types.h>
-#include "mylogical.h"
-#include "mycomplex.h"
-#include "conversion_factors.h"
-#include "ATOM_SCF.h" // for f000m
-#include "INTEGRALS.h"
-#include "SYMMETRY.h"
-*/
 #include <cstring>
 #include <mpi.h>
 #include "myconstants.h"
@@ -440,12 +424,14 @@ double D_erf[16 + 1], D_exp[16 + 1], derivative_1[16 + 1], derivative_2[16 + 1];
              }
 */
 
-  mcmurchie_davidson(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
+  mcmurchie_davidson_ijkl(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
+  //mcmurchie_davidson(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
   free(fgtuv);
   //four_centre_cartesian_to_sh(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
   int dimFsh = sheli1 * shelj1 * shelk1 * shell1;
   ResetDoubleArray(F_sh,&dimFsh);
-  four_centre_cartesian_to_sh_atom_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+  four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+  //four_centre_cartesian_to_sh_atom_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
 
 //fprintf(file.out,"F_sh %20.10lf\n",F_sh[0]);
 
@@ -701,12 +687,14 @@ int shell_index;
               //continue;
              //}
 
-  mcmurchie_davidson(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
+  mcmurchie_davidson_ijkl(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
+  //mcmurchie_davidson(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
   free(fgtuv);
   //four_centre_cartesian_to_sh(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
   int dimFsh = sheli1 * shelj1 * shelk1 * shell1;
   ResetDoubleArray(F_sh,&dimFsh);
-  four_centre_cartesian_to_sh_atom_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+  four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+  //four_centre_cartesian_to_sh_atom_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
 
 //fprintf(file.out,"INDEX %3d %3d %3d %3d    %3d %3d %3d %3d\n",index_i,index_j,index_k,index_l,bfposi1,bfposj1,bfposk1,bfposl1);
 
@@ -989,10 +977,12 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
               }
              }
             }
-        mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        //mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
         free(fgtuv);
         //two_center_cartesian_to_sh_shell1(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        //four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         bfposj   += shelj;
         bfposj1  += shelj1;
         gausposj += shells->ng_sh[index_j];
@@ -1127,10 +1117,12 @@ void integrals_crystal_exchange_screen_ijij(double *F_sh, int ip, int jp, int gj
                }
               }
              }
-        mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        //mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
         free(fgtuv);
         //two_center_cartesian_to_sh_shell1(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        //four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         bfposj   += shelj;
         bfposj1  += shelj1;
         gausposj += shells->ng_sh[index_j];
@@ -1485,20 +1477,25 @@ void integrals_crystal_screen_complex(Complex *F_sh, int ip, int jp, int gj, REA
  //             }
  //            }
  //           }
- //      mcmurchie_davidson_3c_reversed_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
+ //      //mcmurchie_davidson_3c_reversed_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
+ //      C1x,C1y,C1z,C2x,C2y,C2z,shells,shells_ax,job,file);
+ //      mcmurchie_davidson_ija_complex(Coulomb_cart,fgtuv,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,\
  //      C1x,C1y,C1z,C2x,C2y,C2z,shells,shells_ax,job,file);
  //      //for (int ggg = 0; ggg < dimtp; ggg++) fprintf(file.out,"ggg %3d %10.4lf\n",ggg,Coulomb_cart[ggg]);
  //      three_center_cartesian_to_sh_shell_ax_reversed_complex(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
  //      bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
  //      //for (int ggg = 0; ggg < dimtp; ggg++) fprintf(file.out,"ggg %3d %10.4lf\n",ggg,Coulomb[ggg]);
  //      free(fgtuv);
-        mcmurchie_davidson_screen_complex(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        mcmurchie_davidson_ijij_complex(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+        //mcmurchie_davidson_screen_complex(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
 
 //int num = sheli1 * shelj1 * sheli1 * shelj1;
 
    //for (int ggg = 0; ggg < num; ggg++) fprintf(file.out,"ggg %3d %16.10f %16.10f\n",ggg,(F_cart[ggg]).real(),(F_cart[ggg]).imag());
         free(fgtuv);
-        two_centre_cartesian_to_sh_shell_ij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+//void four_centre_cartesian_to_sh_ijij_complex(Complex*, Complex*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*,FILES);
+        four_centre_cartesian_to_sh_ijij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        //two_centre_cartesian_to_sh_shell_ij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         //two_center_cartesian_to_sh_shell1_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         bfposj   += shelj;
         bfposj1  += shelj1;

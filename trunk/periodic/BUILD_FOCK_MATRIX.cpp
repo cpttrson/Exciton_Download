@@ -1351,8 +1351,9 @@ MPI_Win win;
 
       time8 = MPI_Wtime();
       count = 0; 
-      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
+      //integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
       symmetry,crystal,job,file);
+      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,R,atoms,shells,gaussians,symmetry,job,file);
       total_integrals += integral_list.num;
       time7 += MPI_Wtime() - time8;
       time10 = MPI_Wtime();
@@ -2009,8 +2010,9 @@ MPI_Win win;
 
       time6 = MPI_Wtime();
       count = 0; 
-      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
+      //integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
       symmetry,crystal,job,file);
+      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,R,atoms,shells,gaussians,symmetry,job,file);
       total_integrals += integral_list.num;
       time5 += MPI_Wtime() - time6;
 
