@@ -1,5 +1,3 @@
-//#include <cstdlib>
-//#include "conversion_factors.h"
 #include <mpi.h>
 #include "myconstants.h"
 #include "USER_DATA.h"
@@ -14,7 +12,7 @@
 
 using namespace std;
 
-void integrals_ij_alpha(int p, TRIPLE_TRAN *triple, double *Coulomb, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+void integrals_molecule_ija(int p, TRIPLE_TRAN *triple, double *Coulomb, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
@@ -38,7 +36,6 @@ int gausposi, gausposj, gausposk;
 int tpupvp2, tpupvpsign;
 double Rsqrd, p_inv_ex, fn[55];
 double gamma_0, root_gamma_0;
-double f[13][13][13][13];
 double fgtuv_max, fgtuv_temp;
 double fac1;
 
@@ -53,7 +50,6 @@ double time1, time2;
 
 int ijk;
 int index_R, index_S, index_G;
-VECTOR_DOUBLE r_12, t_12, Rvec_tmp;
 double en[R->last_ewald_vector][55], em[R->last_ewald_vector][55], in[55], hn[55];
 double sum5[16 + 1], sum2[16 + 1], x;
 double fac2, fac3, Rzsqrd, expfac, x1, x2, sign, dot_product;
@@ -63,94 +59,92 @@ double *p_fgtuv;
 double gamma_1;
 double pi_vol = pi / crystal->primitive_cell_volume;
 double gamma_1_inv = G->gamma_0_inv;
+VECTOR_DOUBLE r_12, t_12, Rvec_tmp;
 
   gamma_0 = k_one / G->gamma_0_inv;
   root_gamma_0 = sqrt(gamma_0);
   gamma_1 = k_one / G->gamma_0_inv;
 
   q = triple->posn[p];
-
   dimtp = atoms->bfnnumb[triple->cell1[q]] * atoms->bfnnumb[triple->cell2[q]] * atoms_ax->bfnnumb[triple->cell3[q]];
   AllocateDoubleArray(&Coulomb_cart,&dimtp,job);
   ResetDoubleArray(Coulomb_cart,&dimtp);
-  //fprintf(file.out,"%3d   %3d %3d %3d   %3d %3d %3d  %3d\n",q,triple->cell1[q],triple->cell2[q],triple->cell3[q],\
-  atoms->bfnnumb[triple->cell1[q]],atoms->bfnnumb[triple->cell2[q]],atoms_ax->bfnnumb[triple->cell3[q]],dimtp);
 
-    ip = triple->cell1[q];
-    jp = triple->cell2[q];
-    kp = triple->cell3[q];
-    gi = 0;
-    gj = 0;
-    gk = 0;
-    gi =  triple->latt1[q];
-    gj =  triple->latt2[q];
-    nd1 = atoms->bfnnumb[ip];
-    nd2 = atoms->bfnnumb[jp];
-    nd3 = atoms_ax->bfnnumb[kp];
-    nd4 = atoms->bfnnumb_sh[ip];
-    nd5 = atoms->bfnnumb_sh[jp];
-    nd6 = atoms_ax->bfnnumb_sh[kp];
-    R_AB_1e.comp1 = atoms->cell_vector[jp].comp1 + R->vec_ai[gj].comp1 - atoms->cell_vector[ip].comp1 - R->vec_ai[gi].comp1;
-    R_AB_1e.comp2 = atoms->cell_vector[jp].comp2 + R->vec_ai[gj].comp2 - atoms->cell_vector[ip].comp2 - R->vec_ai[gi].comp2;
-    R_AB_1e.comp3 = atoms->cell_vector[jp].comp3 + R->vec_ai[gj].comp3 - atoms->cell_vector[ip].comp3 - R->vec_ai[gi].comp3;
-    R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
-    bfposi   = 0;
-    bfposi1  = 0;
-    shelposi = atoms->shelposn_sh[ip];
-    gausposi = atoms->gausposn_sh[ip];
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
-      sheli  = shells->cart[index_i];
-      sheli1 = shells->shar[index_i];
-      imax   = shells->imax_sh[index_i];
-      bfposj   = 0;
-      bfposj1  = 0;
-      shelposj = atoms->shelposn_sh[jp];
-      gausposj = atoms->gausposn_sh[jp];
-      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
-        shelj  = shells->cart[index_j];
-        shelj1 = shells->shar[index_j];
-        jmax   = shells->imax_sh[index_j];
-        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
-        double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
-        double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
-        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
-        shells,gaussians,job,file);
-        bfposk   = 0;
-        bfposk1  = 0;
-        shelposk = atoms_ax->shelposn_sh[kp];
-        gausposk = atoms_ax->gausposn_sh[kp];
-        for (index_k = shelposk; index_k < shelposk + atoms_ax->nshel_sh[kp]; index_k++) {
-          shelk  = shells_ax->cart[index_k];
-          shelk1 = shells_ax->shar[index_k];
-          kmax   = shells_ax->imax_sh[index_k];
-          double pc_inv[shells_ax->ng_sh[index_k]];
-          double sc[shells_ax->ng_sh[index_k]];
-          double C2x[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
-          double C2y[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
-          double C2z[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
-          E_coefficients_1c(index_k,gausposk,C2x,C2y,C2z,&C2_max,shells_ax,gaussians_ax,job,file);
-          for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
-          sc[j4] = pi32 / sqrt(gaussians_ax->expo_sh[gausposk + j4]) / gaussians_ax->expo_sh[gausposk + j4] * \
-          gaussians_ax->c_sh[gausposk +j4];
-          pc_inv[j4] = k_one / gaussians_ax->expo_sh[gausposk + j4];
-         }
-          mm  = imax + jmax + kmax;
-          mm4 = shells_ax->ng_sh[index_k];
-          mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
-          mm2 = (mm + 1) * mm3;
-          mm1 = (mm + 1) * mm2;
-          mm0 = (mm + 1) * mm1;
-          double *fgtuv, *p_fgtuv;
-          fgtuv = (double *) calloc(mm0, sizeof(double));
-          if (fgtuv == NULL) {
-          if (job->taskid == 0)
-          fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
-          MPI_Finalize();
-          exit(1);
-         }
+  ip = triple->cell1[q];
+  jp = triple->cell2[q];
+  kp = triple->cell3[q];
+  gi = 0;
+  gj = 0;
+  gk = 0;
+  gi =  triple->latt1[q];
+  gj =  triple->latt2[q];
+  nd1 = atoms->bfnnumb[ip];
+  nd2 = atoms->bfnnumb[jp];
+  nd3 = atoms_ax->bfnnumb[kp];
+  nd4 = atoms->bfnnumb_sh[ip];
+  nd5 = atoms->bfnnumb_sh[jp];
+  nd6 = atoms_ax->bfnnumb_sh[kp];
+  R_AB_1e.comp1 = atoms->cell_vector[jp].comp1 + R->vec_ai[gj].comp1 - atoms->cell_vector[ip].comp1 - R->vec_ai[gi].comp1;
+  R_AB_1e.comp2 = atoms->cell_vector[jp].comp2 + R->vec_ai[gj].comp2 - atoms->cell_vector[ip].comp2 - R->vec_ai[gi].comp2;
+  R_AB_1e.comp3 = atoms->cell_vector[jp].comp3 + R->vec_ai[gj].comp3 - atoms->cell_vector[ip].comp3 - R->vec_ai[gi].comp3;
+  R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
+  bfposi   = 0;
+  bfposi1  = 0;
+  shelposi = atoms->shelposn_sh[ip];
+  gausposi = atoms->gausposn_sh[ip];
+  for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
+    sheli  = shells->cart[index_i];
+    sheli1 = shells->shar[index_i];
+    imax   = shells->imax_sh[index_i];
+    bfposj   = 0;
+    bfposj1  = 0;
+    shelposj = atoms->shelposn_sh[jp];
+    gausposj = atoms->gausposn_sh[jp];
+    for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
+      shelj  = shells->cart[index_j];
+      shelj1 = shells->shar[index_j];
+      jmax   = shells->imax_sh[index_j];
+      double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
+      double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
+      double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax + jmax + 1) * (imax + 1) * (jmax + 1)];
+      double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
+      shells,gaussians,job,file);
+      bfposk   = 0;
+      bfposk1  = 0;
+      shelposk = atoms_ax->shelposn_sh[kp];
+      gausposk = atoms_ax->gausposn_sh[kp];
+      for (index_k = shelposk; index_k < shelposk + atoms_ax->nshel_sh[kp]; index_k++) {
+        shelk  = shells_ax->cart[index_k];
+        shelk1 = shells_ax->shar[index_k];
+        kmax   = shells_ax->imax_sh[index_k];
+        double pc_inv[shells_ax->ng_sh[index_k]];
+        double sc[shells_ax->ng_sh[index_k]];
+        double C2x[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
+        double C2y[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
+        double C2z[shells_ax->ng_sh[index_k] * (kmax + 1) * (kmax + 1)];
+        E_coefficients_1c(index_k,gausposk,C2x,C2y,C2z,&C2_max,shells_ax,gaussians_ax,job,file);
+        for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
+        sc[j4] = pi32 / sqrt(gaussians_ax->expo_sh[gausposk + j4]) / gaussians_ax->expo_sh[gausposk + j4] * \
+        gaussians_ax->c_sh[gausposk +j4];
+        pc_inv[j4] = k_one / gaussians_ax->expo_sh[gausposk + j4];
+       }
+        mm  = imax + jmax + kmax;
+        mm4 = shells_ax->ng_sh[index_k];
+        mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
+        mm2 = (mm + 1) * mm3;
+        mm1 = (mm + 1) * mm2;
+        mm0 = (mm + 1) * mm1;
+        double *fgtuv;
+        fgtuv = (double *) calloc(mm0, sizeof(double));
+        if (fgtuv == NULL) {
+        if (job->taskid == 0)
+        fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
+        MPI_Finalize();
+        exit(1);
+       }
 
  switch (crystal->type[0]) {
 
@@ -166,26 +160,18 @@ double gamma_1_inv = G->gamma_0_inv;
      fac1 = sab[i4] * sc[j4];
      p_fgtuv = fgtuv + i4 * mm4 + j4;
     *p_fgtuv -= pi_vol * fac1 * (gamma_1_inv - pab_inv[i4] - pc_inv[j4]);
-     //fprintf(file.out,"pi_vol %f\n", pi_vol * fac1 * (gamma_1_inv - pab_inv[i4] - pc_inv[j4]));
      count = 1;
      for (index_S = 1; index_S < G->number_of_shells; index_S++) {
        fac2 = fac1 * G->EXPFAC[index_S];
-       //double test = G->EXPFAC[index_S] * fac1 * \
-       (k_one > G->shell_mag[index_S * 9 + mm] ? k_one : G->shell_mag[index_S * 9 + mm]);
-       //if (fabs(test) * C_max < 1.0e-18) break;
-       //fac2 = fac1 * expfac * exp(-G->sqr[index_S] / four * p_inv_ex) / G->sqr[index_S];
        for (index_G = 0; index_G < G->num[index_S]; index_G++) {
          dot_product = G->vec_b2[count].comp1 * s_12.comp1 + G->vec_b2[count].comp2 * s_12.comp2 + G->vec_b2[count].comp3 * \
          s_12.comp3;
-         //fprintf(file.out,"fac2 dot %f %f\n", fac2, dot_product);
          for (i = 0; i <= mm; i++) {
            for (j = 0; j <= mm; j++) {
              for (k = 0; k <= mm; k++) {
                ijk = i + j + k;
                if (ijk > mm) break;
-               fgtuv_temp = fac2 * G->x[count * 9 + i] * G->y[count * 9 + j] * G->z[count * 9 + k] * \
-               cosfactor(ijk, dot_product);
-               //fprintf(file.out,"fgtuv %f\n", fgtuv_temp);
+               fgtuv_temp = fac2 * G->x[count * 9 + i] * G->y[count * 9 + j] * G->z[count * 9 + k] * cosfactor(ijk, dot_product);
                p_fgtuv = fgtuv + i * mm1 + j * mm2 + k * mm3  + i4 * mm4 + j4;
               *p_fgtuv += fgtuv_temp;
                fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
@@ -198,7 +184,6 @@ double gamma_1_inv = G->gamma_0_inv;
          }
         }
        }
-       //for (i=0;i<mm0;i++) fprintf(file.out,"3C FGTUV2 %3d %10.4f\n",i,fgtuv[i]);
 
   for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
     for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
@@ -229,32 +214,25 @@ double gamma_1_inv = G->gamma_0_inv;
                 r_12.comp1 = t_12.comp1 + R->vec_ai[index_R].comp1;
                 r_12.comp2 = t_12.comp2 + R->vec_ai[index_R].comp2;
                 r_12.comp3 = t_12.comp3 + R->vec_ai[index_R].comp3;
-                non_recursive_ftuvn(mm, index_R, f, en, &r_12);
-                //replace for G functions fgtuv_temp = sab[i4] * sc[j4] * ftuvn(m,n,pm,0,&em[0][0],s_12);
                 for (i = 0; i <= mm; i++) {
                   for (j = 0; j <= mm; j++) {
                     for (k = 0; k <= mm; k++) {
                       ijk = i + j + k;
                       if (ijk > mm) break;
-                   //2019fgtuv_temp = fac1 * ftuvn(i,j,k,0,&em[index_R][0],r_12);
-                      fgtuv_temp = fac1 * f[i][j][k][0];
-                      p_fgtuv  = fgtuv + i * mm1 + j * mm2 + k * mm3  + i4 * mm4 + j4;
-                     *p_fgtuv += fgtuv_temp;
-                      //fprintf(file.out,"fgtuv1 %3d %20.10lf\n",k,fgtuv_temp);
+                      fgtuv_temp = fac1 * ftuvn(i,j,k,0,&em[index_R][0],r_12);
+                      fgtuv[i * mm1 + j * mm2 + k * mm3  + i4 * mm4 + j4] += fgtuv_temp;
                      }
                     }
                    }
                   } 
                  } 
                 } 
-           //for (i=0;i<mm0;i++) fprintf(file.out,"3C FGTUV3 %3d %10.4f\n",i,fgtuv[i]);
 
            break;
 
            case 'S':
 
-//need to check reversal of ax and non ax atoms here to agree with triples reversed order
-
+          //need to check reversal of ax and non ax atoms here to agree with triples reversed order
           fgtuv_max = k_zero;
           for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
            for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
@@ -306,7 +284,6 @@ double gamma_1_inv = G->gamma_0_inv;
                           if (ijk > mm) break;
                           fac2 = fac1 * two * pi / crystal->primitive_cell_volume * sum2[k];
                           fgtuv_temp = fac2 * G->x[count * 9 + i] * G->y[count * 9 + j] * cosfactor(i + j, dot_product);
-                          //fprintf(file.out,"Reci sum %3d %3d %14.6e %3d\n",i4,j4,fgtuv_temp,index_S);
                           p_fgtuv = fgtuv + i * mm1 + j * mm2 + k * mm3  + i4 * mm4 + j4;
                          *p_fgtuv += fgtuv_temp;
                           fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
@@ -321,12 +298,6 @@ double gamma_1_inv = G->gamma_0_inv;
                   }
 
           fgtuv_max = k_zero;
-          //for (i4 = 0; i4 < shells_ax->ng_sh[index_i]; i4++) {
-           //for (j4 = 0; j4 < shells->ng_sh[index_j] * shells->ng_sh[index_k]; j4++) {
-             //s_12.comp1 = atoms_ax->cell_vector[ip].comp1 - R_BC[j4].comp1;
-             //s_12.comp2 = atoms_ax->cell_vector[ip].comp2 - R_BC[j4].comp2;
-             //s_12.comp3 = atoms_ax->cell_vector[ip].comp3 - R_BC[j4].comp3;
-             //p_inv_ex = pa_inv[i4] + pbc_inv[j4];
           for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
            for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
              s_12.comp1 = R_AB[i4].comp1 - atoms_ax->cell_vector[kp].comp1;
@@ -337,7 +308,6 @@ double gamma_1_inv = G->gamma_0_inv;
              f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
              Rzsqrd = s_12.comp3 * s_12.comp3;
              fac1 = sab[i4] * sc[j4];
-             //fac1 = sa[i4] * sbc[j4];
              map_to_wigner(crystal,&s_12, &t_12, &Rvec_tmp); // map s_12 back to primitive cell to accelerate convergence
              count = 0;
              for (index_S = 0; index_S < R->number_of_ewald_shells; index_S++) {
@@ -355,24 +325,22 @@ double gamma_1_inv = G->gamma_0_inv;
             shell_sum += fabs(en[count][0]);
             count++;
            } // end loop on index_R
-            //if (fabs(fac1 * shell_sum * C_max) < 1.0e-14)
-              //break;
-      //fprintf(file.out,"Real sum %3d %3d %3d %3d %14.6e %14.6e %14.6e %14.6e %3d %3d\n",i4,j4,k4,l4,1.0/p_inv_ex,Rsqrd/p_inv_ex,en[count][0],shell_sum,index_S,index_R);
-              //fprintf(file.out,"cc shell sum %3d %12.5e %12.5e\n",index_S,shell_sum,fac1);
              } // end loop on index_S
               for (index_R = 0; index_R < count; index_R++) {
                 r_12.comp1 = t_12.comp1 + R->vec_ai[index_R].comp1;
                 r_12.comp2 = t_12.comp2 + R->vec_ai[index_R].comp2;
                 r_12.comp3 = t_12.comp3 + R->vec_ai[index_R].comp3;
-                non_recursive_ftuvn(mm, index_R, f, en, &r_12);
+                //non_recursive_ftuvn(mm, index_R, f, en, &r_12);
                 for (i = 0; i <= mm; i++) {
                   for (j = 0; j <= mm; j++) {
                     for (k = 0; k <= mm; k++) {
                       ijk = i + j + k;
                       if (ijk > mm) break;
-                      fgtuv_temp = fac1 * f[i][j][k][0];
-                      p_fgtuv  = fgtuv + i * mm1 + j * mm2 + k * mm3  + i4;
-                     *p_fgtuv += fgtuv_temp;
+                      fgtuv_temp = fac1 * ftuvn(i,j,k,0,&en[index_R][0],r_12);
+                      fgtuv[i * mm1 + j * mm2 + k * mm3  + i4] += fgtuv_temp;
+                      //fgtuv_temp = fac1 * f[i][j][k][0];
+                      //p_fgtuv  = fgtuv + i * mm1 + j * mm2 + k * mm3  + i4;
+                     //*p_fgtuv += fgtuv_temp;
                      }
                     }
                    }
@@ -385,36 +353,20 @@ double gamma_1_inv = G->gamma_0_inv;
            case 'M':
 
           fgtuv_max = k_zero;
-          //for (i4 = 0; i4 < shells_ax->ng_sh[index_i]; i4++) {
-           //for (j4 = 0; j4 < shells->ng_sh[index_j] * shells->ng_sh[index_k]; j4++) {
-             //s_12.comp1 = atoms_ax->cell_vector[ip].comp1 - R_BC[j4].comp1;
-             //s_12.comp2 = atoms_ax->cell_vector[ip].comp2 - R_BC[j4].comp2;
-             //s_12.comp3 = atoms_ax->cell_vector[ip].comp3 - R_BC[j4].comp3;
-             //p_inv_ex = pa_inv[i4] + pbc_inv[j4];
           for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
            for (j4 = 0; j4 < shells_ax->ng_sh[index_k]; j4++) {
              s_12.comp1 = R_AB[i4].comp1 - atoms_ax->cell_vector[kp].comp1;
              s_12.comp2 = R_AB[i4].comp2 - atoms_ax->cell_vector[kp].comp2;
              s_12.comp3 = R_AB[i4].comp3 - atoms_ax->cell_vector[kp].comp3;
-//fprintf(file.out,"imax %3d %3d %3d  %3d %3d %10.4lf %10.4lf %10.4lf\n",imax,jmax,kmax,i4,j4,s_12.comp1,s_12.comp2,s_12.comp3);
              p_inv_ex = pab_inv[i4] + pc_inv[j4];
              Rsqrd = double_vec_dot(&s_12, &s_12);
              f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
-             //non_recursive_ftuvn(mm, 0, f, em, &s_12);
              for (m = 0; m <= mm; m++) {
                for (n = 0; n <= mm; n++) {
                  for (pm = 0; pm <= mm; pm++) {
                    if (m + n + pm > mm) break;
-                   //CHANGES2015 CHANGEMEBACK
                    fgtuv_temp = sab[i4] * sc[j4] * ftuvn(m,n,pm,0,&em[0][0],s_12);
-                   //fgtuv_temp = sa[i4] * sbc[j4] * ftuvn(m,n,pm,0,&em[0][0],s_12);
-                   //fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&em[0][0],s_12);
-                 //fprintf(file.out,"%3d %3d %3d %10.4f %10.4f %10.4f %10.4f %10.4f\n",m,n,pm,pab_inv[i4],pc_inv[j4],sab[i4],sc[j4],\
-                   ftuvn(m,n,pm,0,&em[0][0],s_12));
-                   //fgtuv_temp = fac1 * f[m][n][pm][0];
-                   p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
-                  *p_fgtuv += fgtuv_temp;
-//fprintf(file.out,"%3d %3d %3d %3d %3d %3d %3d %3d %3d %10.4lf\n",m,n,pm,i4,j4,mm1,mm2,mm3,mm4,fgtuv_temp); fflush(file.out);
+                   fgtuv[m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4] += fgtuv_temp;
                    fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
                    fgtuv_max = k_one;
                   }
@@ -427,13 +379,15 @@ double gamma_1_inv = G->gamma_0_inv;
 
        } // close switch
 
-       mcmurchie_davidson_3c_reversed(Coulomb_cart,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,C1x,C1y,C1z,C2x,C2y,C2z, \
+       mcmurchie_davidson_ija(Coulomb_cart,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,C1x,C1y,C1z,C2x,C2y,C2z, \
        fgtuv,shells,shells_ax,job,file);
-       //three_centre_cartesian_to_sh_shell_ax_reversed(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
-       bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
-       three_centre_cartesian_to_sh_shell_ij_alpha(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
+       three_centre_cartesian_to_sh_ija(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
        bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
        free(fgtuv);
+       //three_centre_cartesian_to_sh_shell_ax_reversed(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
+       bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
+       //three_centre_cartesian_to_sh_shell_ij_alpha(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
+       bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
        bfposk   += shelk;
        bfposk1  += shelk1;
        gausposk += shells_ax->ng_sh[index_k];

@@ -1,8 +1,3 @@
-/*
-#include <cstdlib>
-#include "mycomplex.h"
-#include "myconstants.h"
-*/
 #include <cstdio>
 #include <ctime>
 #include <cstring>

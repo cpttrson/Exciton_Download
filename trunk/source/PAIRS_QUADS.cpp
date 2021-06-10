@@ -1,12 +1,3 @@
-/*
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <ctime>
-#include <mpi.h>
-#include <sys/types.h>
-*/
 #include "myconstants.h"
 #include "conversion_factors.h"
 #include "USER_DATA.h"
@@ -63,7 +54,6 @@ void count_pairs4(PAIR_TRAN *pair_p, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *s
             R->vec_ai[atom_p->O[j * symmetry->number_of_operators + k]].comp3 + R->vec_ai[l].comp3;
             for (m = 0; m < R->max_vector; m++) { 
             if (check_vec(&Rvec_tmp, &R->vec_ai[m]) == 1) {
-            //fprintf(file.out,"m %3d\n",m);
             if (m > R->margin_vector) R->margin_vector = m;
             break;
            }
@@ -534,7 +524,6 @@ int unique_pairs, total_pairs;
         lat_n1 = 0;
         keeper = 1;
         pair_index_0 = lat_n2 * dim2 + atm_n1 * dim1 + atm_n2;
-        //pair_index_0 = atm_n1 * dim3 + atm_n2 * dim4 + lat_n2;
 
         for (pm = 0; pm < number_of_permutations; pm++) {
           for (k = 0; k < symmetry->number_of_operators; k++) {
@@ -749,8 +738,6 @@ exit(0);
 
   for (i = 0; i < pair_p->nump; i++)
       pair_p->numb[i] = 0;
-  //for (i = 0; i < pair_p->nump; i++)
-      //pair_p->numi[i] = 0;
   for (i = 0; i < pair_p->nump; i++)
       pair_p->Off[i] = 0;
   for (i = 0; i < pair_p->tot; i++)
@@ -793,7 +780,6 @@ exit(0);
          lat_n1 = 0;
          keeper = 1;
          pair_index_0 = lat_n2 * dim2 + atm_n1 * dim1 + atm_n2;
-         //pair_index_0 = atm_n1 * dim3 + atm_n2 * dim4 + lat_n2;
 
          for (pm = 0; pm < number_of_permutations; pm++) {
            for (k = 0; k < symmetry->number_of_operators; k++) {
@@ -997,138 +983,6 @@ exit(0);
      //fprintf(file.out,"unique_pairs %5d total_pairs %5d input pairs %5d\n",pair_p->nump,pair_p->tot,count4);
      //for(j=0;j<dim2 * R_tables->last_vector;j++) fprintf(file.out,"pairs %3d  ptr %3d Ptr %3d uniq %3d\n",\
      j,pair_p->ptr[j],pair_p->Ptr[j],pair_p->uniq[j]);
-
-}
-
-void generate_triples(TRIPLE_TRAN *Triple, int atm_n1, int atm_n2, int atm_n3, int lat_n1, int lat_n2, int lat_n3, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
-//void generate_triples(TRIPLE_TRAN *Triple, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
-
-{
-  
-int i, j, k, pm;
-int cell1_temp, cell2_temp, cell3_temp, O1_temp, O2_temp, O3_temp;
-int latt1_temp, latt2_temp, latt3_temp;
-int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
-int rotated_cell3, rotated_latt3;
-int dil1 = R_tables->last_vector;
-int dim1 = atoms->number_of_atoms_in_unit_cell;
-int dil2 = dim1 * dil1;
-int dil3 = dil1 * dil2;
-int dil4 = dil3 * dim1;
-int keeper, number_of_permutations;
-int triple_index_0, triple_index_1;
-
-    if (job->pms == 0) number_of_permutations = 1;
-    else               number_of_permutations = 6;
-
-     Triple->tot = 0;
-
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->cell1[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->cell2[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->cell3[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->latt1[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->latt2[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Triple->latt3[i] = -1;
-
-     triple_index_0 = atm_n1 * dil4 + atm_n2 * dil3 + lat_n2 * dil2 + atm_n3 * dil1 + lat_n3;
-
-     //fprintf(file.out,"INPUT  %5d %3d %3d %3d  %3d %3d %3d\n",triple_index_0,atm_n1,atm_n2,atm_n3,lat_n1,lat_n2,lat_n3);
-
-    for (pm = 0; pm < number_of_permutations; pm++) {
-      for (k = 0; k < symmetry->number_of_operators; k++) {
-
-      keeper = 0;
-
-      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-
-      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
-
-      latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->margin_vector + O1_temp];
-      latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->margin_vector + O2_temp];
-      latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->margin_vector + O3_temp];
-
-     //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,latt3_temp);
-
-        switch (pm) {
-
-           case 0:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-            break;
-
-           case 1:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-            break;
-
-           } // close switch
-
-            triple_index_1 = rotated_cell1 * dil4 + rotated_cell2 * dil3 + rotated_latt2 * dil2 + rotated_cell3 * dil1 + rotated_latt3;
-
-           //fprintf(file.out,"UNIQ pm %3d op %3d  indices %5d %5d      %5d %5d %5d    %5d %5d %5d\n", \
-           pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,\
-           rotated_latt2,rotated_latt3);
-
-
-
-           if (triple_index_1 >= triple_index_0) keeper = 1;
-           if (triple_index_1 < triple_index_0) { Triple->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-
-            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d  latt  %3d %3d %3d\n",i,pm,k,rotated_cell1,rotated_cell2,\
-            rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3); fflush(file.out);
-
-            if (!keeper) continue;
-
-            for (j = 0; j <= Triple->tot; j++) {
-              if (rotated_cell1 == Triple->cell1[j] && rotated_latt1 == Triple->latt1[j] && \
-                  rotated_cell2 == Triple->cell2[j] && rotated_latt2 == Triple->latt2[j] && \
-                  rotated_cell3 == Triple->cell3[j] && rotated_latt3 == Triple->latt3[j])
-                  break;
-            if (j == Triple->tot && rotated_latt2 < R_tables->last_vector && rotated_latt3 < R_tables->last_vector && \
-                 (rotated_cell1 != Triple->cell1[j] || rotated_latt1 != Triple->latt1[j] || \
-                  rotated_cell2 != Triple->cell2[j] || rotated_latt2 != Triple->latt2[j] || \
-                  rotated_cell3 != Triple->cell3[j] || rotated_latt3 != Triple->latt3[j])) {
-                  Triple->cell1[j] = rotated_cell1;
-                  Triple->cell2[j] = rotated_cell2;
-                  Triple->cell3[j] = rotated_cell3;
-                  Triple->latt1[j] = rotated_latt1;
-                  Triple->latt2[j] = rotated_latt2;
-                  Triple->latt3[j] = rotated_latt3;
-                  Triple->k[j] = k;
-                  Triple->p[j] = pm;
-                  (Triple->tot)++;
-                  //fprintf(file.out,"Triples %3d %3d pm %3d op %2d      %3d %3d %3d       %3d %3d %3d     %3d %3d %3d  %3d %3d %3d  %3d\n",\
-                  j,Triple->tot,Triple->p[j],k, \
-                  rotated_cell1,rotated_cell2,rotated_cell3,Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],\
-                  rotated_latt1,rotated_latt2,rotated_latt3,Triple->latt1[j],Triple->latt2[j],Triple->latt3[j],keeper); 
-                  //printf("Triples %3d %3d pm %3d op %2d      %3d %3d %3d       %3d %3d %3d        %3d\n",j,Triple->tot,Triple->p[j],k, \
-                  rotated_cell1,rotated_cell2,rotated_cell3,Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],keeper); 
-                  break;
-                 }
-                } // close loop over j
-               } // close loop over k
-              } // close loop over pm
-
-              //if (Triple->tot > 0) fprintf(file.out,"\n");
-              //for(j=0;j<Triple->tot;j++) fprintf(file.out,"gathered e Triples %3d pm %3d op %3d   %3d %3d %3d   %3d %3d %3d\n",\
-              j,Triple->p[j],Triple->k[j],Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],\
-              Triple->latt1[j],Triple->latt2[j],Triple->latt3[j]);
-              //printf("\n");
-              //for(j=0;j<Triple->tot;j++) printf("gathered e Triples %3d pm %3d op %3d   %3d %3d %3d   %3d %3d %3d\n",\
-              j,Triple->p[j],Triple->k[j],Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],\
-              Triple->latt1[j],Triple->latt2[j],Triple->latt3[j]);
 
 }
 
@@ -1709,26 +1563,22 @@ void count_triples1_reversed(int atm_n3, TRIPLE_TRAN *Triple, ATOM *atoms, ATOM_
   
 int i, j, k, pm;
 int atm_n1, atm_n2, lat_n1, lat_n2, lat_n3;
-//int atm_n1, atm_n2, atm_n3, lat_n1, lat_n2, lat_n3;
 int cell1_temp, cell2_temp, cell3_temp, O1_temp, O2_temp, O3_temp;
 int latt1_temp, latt2_temp, latt3_temp;
 int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
 int rotated_cell3, rotated_latt3;
 int dim2 = R_tables->last_vector;
 int dim1 = atoms->number_of_atoms_in_unit_cell * dim2;
-//int dil3 = atoms->number_of_atoms_in_unit_cell * dim1;
-//int dim3 = dim2 * dil3;
-//int dil1 = R_tables->last_vector;
-//int dim3 = dil1;
-//int dil2 = atoms->number_of_atoms_in_unit_cell * dil1;
-//int dim2 = dil1 * dil2;
-//int dim1 = dil2 * dil2;
 int keeper, number_of_permutations;
 int triple_index_0, triple_index_1;
 int unique_triples, total_triples;
 TRIPLE_TMP triples;
 double Rsqrd12, Rsqrd13, Rsqrd23;
 VECTOR_DOUBLE Rvec_tmp;
+
+  // ******************************************************************************************
+  // *  Count triples (atm1|O)(atm2|lat2)(atm3|O)                                             *
+  // ******************************************************************************************
 
   for (i = 0; i < MXT; i++) triples.cell1[i] = -1;
   for (i = 0; i < MXT; i++) triples.cell2[i] = -1;
@@ -1751,279 +1601,244 @@ VECTOR_DOUBLE Rvec_tmp;
    Triple->nump = 0;
    unique_triples = 0;
    total_triples = 0;
-
    lat_n3 = 0;
 
    for (atm_n1 = 0; atm_n1 < atoms->number_of_atoms_in_unit_cell; atm_n1++) {
      for (atm_n2 = 0; atm_n2 < atoms->number_of_atoms_in_unit_cell; atm_n2++) {
-       //for (atm_n3 = 0; atm_n3 < atoms->number_of_atoms_in_unit_cell; atm_n3++) {
-         for (lat_n2 = 0; lat_n2 < R->max_vector; lat_n2++) {
-           //for (lat_n3 = 0; lat_n3 < R->max_vector; lat_n3++) {
-             Rvec_tmp.comp1 = atoms->cell_vector[atm_n1].comp1 - atoms->cell_vector[atm_n2].comp1 - R->vec_ai[lat_n2].comp1;
-             Rvec_tmp.comp2 = atoms->cell_vector[atm_n1].comp2 - atoms->cell_vector[atm_n2].comp2 - R->vec_ai[lat_n2].comp2;
-             Rvec_tmp.comp3 = atoms->cell_vector[atm_n1].comp3 - atoms->cell_vector[atm_n2].comp3 - R->vec_ai[lat_n2].comp3;
-             Rsqrd12 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
-             Rvec_tmp.comp1 = atoms->cell_vector[atm_n1].comp1 - atoms->cell_vector[atm_n3].comp1 - R->vec_ai[lat_n3].comp1;
-             Rvec_tmp.comp2 = atoms->cell_vector[atm_n1].comp2 - atoms->cell_vector[atm_n3].comp2 - R->vec_ai[lat_n3].comp2;
-             Rvec_tmp.comp3 = atoms->cell_vector[atm_n1].comp3 - atoms->cell_vector[atm_n3].comp3 - R->vec_ai[lat_n3].comp3;
-             Rsqrd13 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
-             Rvec_tmp.comp1 = atoms->cell_vector[atm_n2].comp1 + R->vec_ai[lat_n2].comp1 - atoms->cell_vector[atm_n3].comp1 - \
-             R->vec_ai[lat_n3].comp1;
-             Rvec_tmp.comp2 = atoms->cell_vector[atm_n2].comp2 + R->vec_ai[lat_n2].comp2 - atoms->cell_vector[atm_n3].comp2 - \
-             R->vec_ai[lat_n3].comp2;
-             Rvec_tmp.comp3 = atoms->cell_vector[atm_n2].comp3 + R->vec_ai[lat_n2].comp3 - atoms->cell_vector[atm_n3].comp3 - \
-             R->vec_ai[lat_n3].comp3;
-             Rsqrd23 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
-           //fprintf(file.out,"INPUT  %5d %3d %3d %3d  %3d %3d %3d\n",triple_index_0,atm_n1,atm_n2,atm_n3,lat_n1,lat_n2,lat_n3);
-           //fflush(file.out);
-           if (Rsqrd12 < R->cutoff * R->cutoff) { // Rsqrd13 and Rsqrd23 are Coulombic separations and are not restricted
-           //if (Rsqrd12 < R->cutoff * R->cutoff && Rsqrd13 < R->cutoff * R->cutoff && Rsqrd23 < R->cutoff * R->cutoff) {
-           //if (Rsqrd12 < R->cutoff * R->cutoff) {
-             lat_n1 = 0;
-             keeper = 1;
+       for (lat_n2 = 0; lat_n2 < R->max_vector; lat_n2++) {
+         Rvec_tmp.comp1 = atoms->cell_vector[atm_n1].comp1 - atoms->cell_vector[atm_n2].comp1 - R->vec_ai[lat_n2].comp1;
+         Rvec_tmp.comp2 = atoms->cell_vector[atm_n1].comp2 - atoms->cell_vector[atm_n2].comp2 - R->vec_ai[lat_n2].comp2;
+         Rvec_tmp.comp3 = atoms->cell_vector[atm_n1].comp3 - atoms->cell_vector[atm_n2].comp3 - R->vec_ai[lat_n2].comp3;
+         Rsqrd12 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
+         Rvec_tmp.comp1 = atoms->cell_vector[atm_n1].comp1 - atoms->cell_vector[atm_n3].comp1 - R->vec_ai[lat_n3].comp1;
+         Rvec_tmp.comp2 = atoms->cell_vector[atm_n1].comp2 - atoms->cell_vector[atm_n3].comp2 - R->vec_ai[lat_n3].comp2;
+         Rvec_tmp.comp3 = atoms->cell_vector[atm_n1].comp3 - atoms->cell_vector[atm_n3].comp3 - R->vec_ai[lat_n3].comp3;
+         Rsqrd13 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
+         Rvec_tmp.comp1 = atoms->cell_vector[atm_n2].comp1 + R->vec_ai[lat_n2].comp1 - atoms->cell_vector[atm_n3].comp1 - \
+         R->vec_ai[lat_n3].comp1;
+         Rvec_tmp.comp2 = atoms->cell_vector[atm_n2].comp2 + R->vec_ai[lat_n2].comp2 - atoms->cell_vector[atm_n3].comp2 - \
+         R->vec_ai[lat_n3].comp2;
+         Rvec_tmp.comp3 = atoms->cell_vector[atm_n2].comp3 + R->vec_ai[lat_n2].comp3 - atoms->cell_vector[atm_n3].comp3 - \
+         R->vec_ai[lat_n3].comp3;
+         Rsqrd23 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
+         //fprintf(file.out,"INPUT  %5d %3d %3d %3d  %3d %3d %3d\n",triple_index_0,atm_n1,atm_n2,atm_n3,lat_n1,lat_n2,lat_n3);
+         //fflush(file.out);
+         if (Rsqrd12 < R->cutoff * R->cutoff) { // Rsqrd13 and Rsqrd23 are Coulombic separations and are not restricted
+         lat_n1 = 0;
+         keeper = 1;
+         // modified for new order for atm_n1, atm_n2 and atm_n3
+         triple_index_0 = atm_n1 * dim1 + atm_n2 * dim2 + lat_n2;
+         for (pm = 0; pm < number_of_permutations; pm++) {
+           for (k = 0; k < symmetry->number_of_operators; k++) {
+             cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
+             cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
+             cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+             if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
 
-             // modified for new order for atm_n1, atm_n2 and atm_n3
-             triple_index_0 = atm_n1 * dim1 + atm_n2 * dim2 + lat_n2;
-             //triple_index_0 = atm_n3 * dim3 + lat_n3 * dil3 + atm_n1 * dim1 + atm_n2 * dim2 + lat_n2;
-             //triple_index_0 = atm_n1 * dim1 + atm_n2 * dim2 + lat_n2 * dil2 + atm_n3 * dim3 + lat_n3;
+             O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
+             O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
+             O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
 
-             for (pm = 0; pm < number_of_permutations; pm++) {
-               for (k = 0; k < symmetry->number_of_operators; k++) {
+             latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O1_temp];
+             latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O2_temp];
+             latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O3_temp];
+             //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,latt3_temp);
+             //fflush(file.out);
 
-                 cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-                 cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-                 cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+             switch (pm) {
 
-                 if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
+               case 0:
+                rotated_cell1 = cell1_temp;
+                rotated_cell2 = cell2_temp;
+                rotated_cell3 = cell3_temp;
+                rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+                break;
+                // for reversed routine swap cases 1 and 2 for permutations
+               case 1:
+                rotated_cell1 = cell2_temp;
+                rotated_cell2 = cell1_temp;
+                rotated_cell3 = cell3_temp;
+                rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+                break;
 
-                 O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-                 O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-                 O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
+               case 2:
+                rotated_cell1 = cell1_temp;
+                rotated_cell2 = cell3_temp;
+                rotated_cell3 = cell2_temp;
+                rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+                break;
 
-                 latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O1_temp];
-                 latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O2_temp];
-                 latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O3_temp];
+               case 3:
+                rotated_cell1 = cell2_temp;
+                rotated_cell2 = cell3_temp;
+                rotated_cell3 = cell1_temp;
+                rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+                break;
 
-                 //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,\
-                 latt3_temp);
-                 //fflush(file.out);
+               case 4:
+                rotated_cell1 = cell3_temp;
+                rotated_cell2 = cell1_temp;
+                rotated_cell3 = cell2_temp;
+                rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+                break;
 
-                 switch (pm) {
+               case 5:
+                rotated_cell1 = cell3_temp;
+                rotated_cell2 = cell2_temp;
+                rotated_cell3 = cell1_temp;
+                rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+                break;
 
-                   case 0:
-                    rotated_cell1 = cell1_temp;
-                    rotated_cell2 = cell2_temp;
-                    rotated_cell3 = cell3_temp;
-                    rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                    break;
-                    // for reversed routine swap cases 1 and 2 for permutations
-                   case 1:
-                    rotated_cell1 = cell2_temp;
-                    rotated_cell2 = cell1_temp;
-                    rotated_cell3 = cell3_temp;
-                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    break;
+               } // close switch
 
-                   case 2:
-                    rotated_cell1 = cell1_temp;
-                    rotated_cell2 = cell3_temp;
-                    rotated_cell3 = cell2_temp;
-                    rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-                    //rotated_cell1 = cell2_temp;
-                    //rotated_cell2 = cell1_temp;
-                    //rotated_cell3 = cell3_temp;
-                    //rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    //rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    //rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    break;
+                // modified for new order for atm_n1, atm_n2 and atm_n3
+                triple_index_1 = rotated_cell1 * dim1 + rotated_cell2 * dim2 + rotated_latt2;
+                //fprintf(file.out,"UNIQ pm %3d op %3d  indices %5d %5d      %5d %5d %5d    %5d %5d %5d\n", \
+                pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3);
 
-                   case 3:
-                    rotated_cell1 = cell2_temp;
-                    rotated_cell2 = cell3_temp;
-                    rotated_cell3 = cell1_temp;
-                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    break;
+             if (triple_index_1 < triple_index_0) { keeper = 0; pm = number_of_permutations; k = symmetry->number_of_operators; }
+               //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell %3d %3d %3d latt  %3d %3d %3d\n",i,pm,k,rotated_cell1,\
+               rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3); fflush(file.out);
 
-                   case 4:
-                    rotated_cell1 = cell3_temp;
-                    rotated_cell2 = cell1_temp;
-                    rotated_cell3 = cell2_temp;
-                    rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-                    break;
+             } // close loop over k
+            } // close loop over pm
 
-                   case 5:
-                    rotated_cell1 = cell3_temp;
-                    rotated_cell2 = cell2_temp;
-                    rotated_cell3 = cell1_temp;
-                    rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-                    break;
+         if (!keeper) continue;
 
-                   } // close switch
+         for (pm = 0; pm < number_of_permutations; pm++) {
+           for (k = 0; k < symmetry->number_of_operators; k++) {
+             cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
+             cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
+             cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+             if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
 
-                    // modified for new order for atm_n1, atm_n2 and atm_n3
-                    triple_index_1 = rotated_cell1 * dim1 + rotated_cell2 * dim2 + rotated_latt2;
-                    //triple_index_1 = rotated_cell3 * dim3 + rotated_latt3 * dil3 + rotated_cell1 * dim1 + rotated_cell2 * dim2 + \
-                    rotated_latt2;
-                    //triple_index_1 = rotated_cell1 * dim1 + rotated_cell2 * dim2 + rotated_latt2 * dil2 + rotated_cell3 * dim3 + \
-                    rotated_latt3;
-                    //fprintf(file.out,"UNIQ pm %3d op %3d  indices %5d %5d      %5d %5d %5d    %5d %5d %5d\n", \
-                    pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,\
-                    rotated_latt2,rotated_latt3);
+             O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
+             O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
+             O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
 
-                 if (triple_index_1 < triple_index_0) { keeper = 0; pm = number_of_permutations; k = symmetry->number_of_operators; }
+             latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O1_temp];
+             latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O2_temp];
+             latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * \
+             R_tables->margin_vector + O3_temp];
 
-                    //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell %3d %3d %3d latt  %3d %3d %3d\n",i,pm,k,rotated_cell1,\
-                    rotated_cell2,\
-                    rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3); fflush(file.out);
+             //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,latt3_temp);
+             //fflush(file.out);
 
-                       } // close loop over k
-                      } // close loop over pm
+             switch (pm) {
 
-                    if (!keeper) continue;
+               case 0:
+                rotated_cell1 = cell1_temp;
+                rotated_cell2 = cell2_temp;
+                rotated_cell3 = cell3_temp;
+                rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+                break;
 
-             for (pm = 0; pm < number_of_permutations; pm++) {
-               for (k = 0; k < symmetry->number_of_operators; k++) {
+                // for reversed routine swap cases 1 and 2 for permutations
+               case 1:
+                rotated_cell1 = cell2_temp;
+                rotated_cell2 = cell1_temp;
+                rotated_cell3 = cell3_temp;
+                rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+                break;
 
-                 cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-                 cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-                 cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+               case 2:
+                rotated_cell1 = cell1_temp;
+                rotated_cell2 = cell3_temp;
+                rotated_cell3 = cell2_temp;
+                rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+                rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+                break;
 
-                 if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
+               case 3:
+                rotated_cell1 = cell2_temp;
+                rotated_cell2 = cell3_temp;
+                rotated_cell3 = cell1_temp;
+                rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+                rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+                break;
 
-                 O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-                 O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-                 O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
+               case 4:
+                rotated_cell1 = cell3_temp;
+                rotated_cell2 = cell1_temp;
+                rotated_cell3 = cell2_temp;
+                rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+                break;
 
-                 latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O1_temp];
-                 latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O2_temp];
-                 latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * \
-                 R_tables->margin_vector + O3_temp];
+               case 5:
+                rotated_cell1 = cell3_temp;
+                rotated_cell2 = cell2_temp;
+                rotated_cell3 = cell1_temp;
+                rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+                rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+                break;
 
-                 //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,\
-                 latt3_temp);
-                 //fflush(file.out);
+               } // close switch
 
-                 switch (pm) {
+                //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d    %3d %3d %3d   %3d %3d %3d   %3d %3d\n",\
+                pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,\
+	        rotated_latt3,Triple->tot,total_triples);
 
-                   case 0:
-                    rotated_cell1 = cell1_temp;
-                    rotated_cell2 = cell2_temp;
-                    rotated_cell3 = cell3_temp;
-                    rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                    break;
+                  for (j = 0; j <= total_triples; j++) {
+                    if (rotated_cell1 == triples.cell1[j] && rotated_latt1 == triples.latt1[j] && \
+                        rotated_cell2 == triples.cell2[j] && rotated_latt2 == triples.latt2[j] && \
+                        rotated_cell3 == triples.cell3[j] && rotated_latt3 == triples.latt3[j])
+                        break;
+                  if (j == total_triples && rotated_latt2 < R_tables->last_vector && rotated_latt3 < R_tables->last_vector && \
+                       (rotated_cell1 != triples.cell1[j] || rotated_latt1 != triples.latt1[j] || \
+                        rotated_cell2 != triples.cell2[j] || rotated_latt2 != triples.latt2[j] || \
+                        rotated_cell3 != triples.cell3[j] || rotated_latt3 != triples.latt3[j])) {
+                        triples.cell1[j] = rotated_cell1;
+                        triples.cell2[j] = rotated_cell2;
+                        triples.cell3[j] = rotated_cell3;
+                        triples.latt1[j] = rotated_latt1;
+                        triples.latt2[j] = rotated_latt2;
+                        triples.latt3[j] = rotated_latt3;
+                        total_triples++;
+                        //fprintf(file.out,"triples %3d %3d  %3d pm %3d op %2d  %3d %3d %3d   %3d %3d %3d  %3d %3d %3d  %3d %3d %3d  %3d\n",\
+                        j,unique_triples+1,total_triples, pm, k, \
+                        rotated_cell1,rotated_cell2,rotated_cell3,triples.cell1[j],triples.cell2[j],triples.cell3[j],\
+                        rotated_latt1,rotated_latt2,rotated_latt3,triples.latt1[j],triples.latt2[j],triples.latt3[j],keeper); 
+                        break;
+                       }
+                      } // close loop over j
+                     } // close loop over k
+                    } // close loop over pm
+                     unique_triples++;
+                     Triple->tot = total_triples;
+                    } // close if (Rsqrd > 
+                   //} // close loop over lat_n3
+                  } // close loop over lat_n2
+                 //} // close loop over atm_n3
+                } // close loop over atm_n2
+               } // close loop over atm_n1
 
-                    // for reversed routine swap cases 1 and 2 for permutations
-                   case 1:
-                    rotated_cell1 = cell2_temp;
-                    rotated_cell2 = cell1_temp;
-                    rotated_cell3 = cell3_temp;
-                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    break;
-
-                   case 2:
-                    rotated_cell1 = cell1_temp;
-                    rotated_cell2 = cell3_temp;
-                    rotated_cell3 = cell2_temp;
-                    rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                    rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-                    //rotated_cell1 = cell2_temp;
-                    //rotated_cell2 = cell1_temp;
-                    //rotated_cell3 = cell3_temp;
-                    //rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    //rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    //rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    break;
-
-                   case 3:
-                    rotated_cell1 = cell2_temp;
-                    rotated_cell2 = cell3_temp;
-                    rotated_cell3 = cell1_temp;
-                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                    rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-                    break;
-
-                   case 4:
-                    rotated_cell1 = cell3_temp;
-                    rotated_cell2 = cell1_temp;
-                    rotated_cell3 = cell2_temp;
-                    rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-                    break;
-
-                   case 5:
-                    rotated_cell1 = cell3_temp;
-                    rotated_cell2 = cell2_temp;
-                    rotated_cell3 = cell1_temp;
-                    rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-                    rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-                    break;
-
-                   } // close switch
-
-         //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d    %3d %3d %3d   %3d %3d %3d   %3d %3d\n",\
-         pm,k,triple_index_0,triple_index_1,\
-         rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3,Triple->tot,total_triples);
-
-                    for (j = 0; j <= total_triples; j++) {
-                      if (rotated_cell1 == triples.cell1[j] && rotated_latt1 == triples.latt1[j] && \
-                          rotated_cell2 == triples.cell2[j] && rotated_latt2 == triples.latt2[j] && \
-                          rotated_cell3 == triples.cell3[j] && rotated_latt3 == triples.latt3[j])
-                          break;
-                    if (j == total_triples && rotated_latt2 < R_tables->last_vector && rotated_latt3 < R_tables->last_vector && \
-                         (rotated_cell1 != triples.cell1[j] || rotated_latt1 != triples.latt1[j] || \
-                          rotated_cell2 != triples.cell2[j] || rotated_latt2 != triples.latt2[j] || \
-                          rotated_cell3 != triples.cell3[j] || rotated_latt3 != triples.latt3[j])) {
-                          triples.cell1[j] = rotated_cell1;
-                          triples.cell2[j] = rotated_cell2;
-                          triples.cell3[j] = rotated_cell3;
-                          triples.latt1[j] = rotated_latt1;
-                          triples.latt2[j] = rotated_latt2;
-                          triples.latt3[j] = rotated_latt3;
-                          total_triples++;
-                //fprintf(file.out,"triples %3d %3d  %3d pm %3d op %2d  %3d %3d %3d   %3d %3d %3d  %3d %3d %3d  %3d %3d %3d  %3d\n",\
-                          j,unique_triples+1,total_triples, pm, k, \
-                          rotated_cell1,rotated_cell2,rotated_cell3,triples.cell1[j],triples.cell2[j],triples.cell3[j],\
-                          rotated_latt1,rotated_latt2,rotated_latt3,triples.latt1[j],triples.latt2[j],triples.latt3[j],keeper); 
-                          break;
-                         }
-                        } // close loop over j
-                       } // close loop over k
-                      } // close loop over pm
-                       unique_triples++;
-                       Triple->tot = total_triples;
-                      } // close if (Rsqrd > 
-                     //} // close loop over lat_n3
-                    } // close loop over lat_n2
-                   //} // close loop over atm_n3
-                  } // close loop over atm_n2
-                 } // close loop over atm_n1
-
-                 Triple->nump = unique_triples;
+               Triple->nump = unique_triples;
 
 }
 
@@ -2031,30 +1846,26 @@ void generate_triples1_reversed(int atm_n3, TRIPLE_TRAN *Triple, ATOM *atoms, AT
 
 {
   
+  // ******************************************************************************************
+  // *  Generate triples (atm1|O)(atm2|lat2)(atm3|O)                                          *
+  // ******************************************************************************************
+
 int i, j, k, pm;
 int atm_n1, atm_n2, lat_n1, lat_n2, lat_n3;
-//int atm_n1, atm_n2, atm_n3, lat_n1, lat_n2, lat_n3;
 int cell1_temp, cell2_temp, cell3_temp, O1_temp, O2_temp, O3_temp;
 int latt1_temp, latt2_temp, latt3_temp;
 int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
 int rotated_cell3, rotated_latt3;
 int dim2 = R_tables->last_vector;
 int dim1 = atoms->number_of_atoms_in_unit_cell * dim2;
-//int dil1 = R_tables->last_vector;
-//int dim3 = dil1;
-//int dil2 = atoms->number_of_atoms_in_unit_cell * dil1;
-//int dim2 = dil1 * dil2;
-//int dim1 = dil2 * dil2;
 int keeper, number_of_permutations;
 int triple_index_0, triple_index_1;
 int unique_triples, total_triples; //
-//int pos3, unique_pos3_triples;
 double Rsqrd12, Rsqrd13, Rsqrd23;
 VECTOR_DOUBLE Rvec_tmp;
 
-
-    if (job->pms == 0) number_of_permutations = 1;
-    else               number_of_permutations = 2;
+  if (job->pms == 0) number_of_permutations = 1;
+  else               number_of_permutations = 2;
 
   for (i = 0; i < Triple->nump; i++)
       Triple->numb[i] = 0;
@@ -2074,27 +1885,11 @@ VECTOR_DOUBLE Rvec_tmp;
   Triple->tot = 0;
   unique_triples = 0;
   total_triples = 0;
-
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->cell1[i] = -1;
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->cell2[i] = -1;
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->cell3[i] = -1;
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->latt1[i] = -1;
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->latt2[i] = -1;
-  //for (i=0;i<number_of_permutations * symmetry->number_of_operators;i++) Triple->latt3[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->cell1[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->cell2[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->cell3[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->latt1[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->latt2[i] = -1;
-  for (i=0;i<Triple->tot;i++) Triple->latt3[i] = -1;
-
   lat_n3 = 0;
 
       for (atm_n1 = 0; atm_n1 < atoms->number_of_atoms_in_unit_cell; atm_n1++) {
         for (atm_n2 = 0; atm_n2 < atoms->number_of_atoms_in_unit_cell; atm_n2++) {
-        //for (atm_n3 = 0; atm_n3 < atoms->number_of_atoms_in_unit_cell; atm_n3++) {
           for (lat_n2 = 0; lat_n2 < R->max_vector; lat_n2++) {
-          //for (lat_n3 = 0; lat_n3 < R->max_vector; lat_n3++) {
             Rvec_tmp.comp1 = atoms->cell_vector[atm_n1].comp1 - atoms->cell_vector[atm_n2].comp1 - R->vec_ai[lat_n2].comp1;
             Rvec_tmp.comp2 = atoms->cell_vector[atm_n1].comp2 - atoms->cell_vector[atm_n2].comp2 - R->vec_ai[lat_n2].comp2;
             Rvec_tmp.comp3 = atoms->cell_vector[atm_n1].comp3 - atoms->cell_vector[atm_n2].comp3 - R->vec_ai[lat_n2].comp3;
@@ -2111,27 +1906,18 @@ VECTOR_DOUBLE Rvec_tmp;
             R->vec_ai[lat_n3].comp3;
             Rsqrd23 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
             if (Rsqrd12 < R->cutoff * R->cutoff) { // Rsqrd13 and Rsqrd23 are Coulombic separations and are not restricted
-            //if (Rsqrd12 < R->cutoff * R->cutoff && Rsqrd13 < R->cutoff * R->cutoff && Rsqrd23 < R->cutoff * R->cutoff) {
-            //if (Rsqrd12 < R->cutoff * R->cutoff) {
             lat_n1 = 0;
             keeper = 1;
-
             // modified for new order for atm_n1, atm_n2 and atm_n3
             triple_index_0 = atm_n1 * dim1 + atm_n2 * dim2 + lat_n2;
-            //triple_index_0 = atm_n3 * dim3 + lat_n3 * dil3 + atm_n1 * dim1 + atm_n2 * dim2 + lat_n2;
-
-            //triple_index_0 = atm_n1 * dim1 + atm_n2 * dim2 + lat_n2 * dil2 + atm_n3 * dim3 + lat_n3;
             //fprintf(file.out,"INPUT %10.4lf %10.4lf %10.4lf %10.4lf %5d   %3d %3d %3d  %3d %3d %3d\n", \
             Rsqrd12,Rsqrd13,Rsqrd23,R->cutoff * R->cutoff,triple_index_0,atm_n1,atm_n2,atm_n3,lat_n1,lat_n2,lat_n3);
             //fflush(file.out);
-
             for (pm = 0; pm < number_of_permutations; pm++) {
               for (k = 0; k < symmetry->number_of_operators; k++) {
-
                 cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
                 cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
                 cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-
                 if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
 
                 O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
@@ -2144,9 +1930,7 @@ VECTOR_DOUBLE Rvec_tmp;
                 R_tables->margin_vector + O2_temp];
                 latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * \
                 R_tables->margin_vector + O3_temp];
-
-                //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,\
-                latt3_temp);
+                //fprintf(file.out,"OUTPUT %3d %3d %3d  %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,latt1_temp,latt2_temp,latt3_temp);
                 //fflush(file.out);
 
                 switch (pm) {
@@ -2168,12 +1952,6 @@ VECTOR_DOUBLE Rvec_tmp;
                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                   //rotated_cell1 = cell1_temp;
-                   //rotated_cell2 = cell3_temp;
-                   //rotated_cell3 = cell2_temp;
-                   //rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                   //rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                   //rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
                    break;
 
                   case 2:
@@ -2216,32 +1994,23 @@ VECTOR_DOUBLE Rvec_tmp;
 
                    // modified for new order for atm_n1, atm_n2 and atm_n3
                    triple_index_1 = rotated_cell1 * dim1 + rotated_cell2 * dim2 + rotated_latt2;
-                   //triple_index_1 = rotated_cell3 * dim3 + rotated_latt3 * dil3 + rotated_cell1 * dim1 + \
-                   rotated_cell2 * dim2 + rotated_latt2;
-                   //triple_index_1 = rotated_cell1 * dim1 + rotated_cell2 * dim2 + rotated_latt2 * dil2 + \
-                   rotated_cell3 * dim3 + rotated_latt3;
                    //fprintf(file.out,"UNIQ pm %3d op %3d  indices %5d %5d      %5d %5d %5d    %5d %5d %5d\n", \
-                   pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,\
-                   rotated_latt2,rotated_latt3);
+                   pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3);
 
                  if (triple_index_1 < triple_index_0) { keeper = 0; pm = number_of_permutations; k = symmetry->number_of_operators; }
-
                    //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d  latt  %3d %3d %3d\n",\
-                   i,pm,k,rotated_cell1,rotated_cell2,\
-                   rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3); fflush(file.out);
+                   i,pm,k,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3); fflush(file.out);
 
-                      } // close loop over k
-                     } // close loop over pm
+                } // close loop over k
+               } // close loop over pm
 
-                   if (!keeper) continue;
+            if (!keeper) continue;
 
             for (pm = 0; pm < number_of_permutations; pm++) {
               for (k = 0; k < symmetry->number_of_operators; k++) {
-
                 cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
                 cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
                 cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-
                 if (cell3_temp != atm_n3) continue; // only retain rotations which leave atm_n3 fixed
 
                 O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
@@ -2276,12 +2045,6 @@ VECTOR_DOUBLE Rvec_tmp;
                    rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
                    rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
                    rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-                   //rotated_cell1 = cell1_temp;
-                   //rotated_cell2 = cell3_temp;
-                   //rotated_cell3 = cell2_temp;
-                   //rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-                   //rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-                   //rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
                    break;
 
                   case 2:
@@ -2322,9 +2085,9 @@ VECTOR_DOUBLE Rvec_tmp;
 
                   } // close switch
 
-        //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d      %3d %3d %3d   %3d %3d %3d   %3d %3d\n", \
-        pm,k,triple_index_0,triple_index_1,\
-        rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,rotated_latt3,Triple->tot,total_triples);
+                   //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d      %3d %3d %3d   %3d %3d %3d   %3d %3d\n", \
+                   pm,k,triple_index_0,triple_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_latt1,rotated_latt2,\
+                   rotated_latt3,Triple->tot,total_triples);
 
                    for (j = 0; j <= total_triples; j++) {
                      if (rotated_cell1 == Triple->cell1[j] && rotated_latt1 == Triple->latt1[j] && \
@@ -2345,11 +2108,11 @@ VECTOR_DOUBLE Rvec_tmp;
                          Triple->p[j] = pm;
                         (Triple->numb[unique_triples])++;
                          total_triples++;
-              //fprintf(file.out,"Triples %3d %3d %3d %3d pm %3d op %2d  %3d %3d %3d  %3d %3d %3d %3d %3d %3d  %3d %3d %3d  %3d\n",\
+                         //fprintf(file.out,"Triples %3d %3d %3d %3d pm %3d op %2d  %3d %3d %3d  %3d %3d %3d %3d %3d %3d  %3d %3d %3d  %3d\n",\
                          j,unique_triples+1,total_triples,Triple->numb[unique_triples],pm,k, \
                          rotated_cell1,rotated_cell2,rotated_cell3,Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],\
                          rotated_latt1,rotated_latt2,rotated_latt3,Triple->latt1[j],Triple->latt2[j],Triple->latt3[j],keeper); 
-              //printf("Triples %3d %3d pm %3d op %2d    %3d %3d %3d       %3d %3d %3d        %3d\n",j,Triple->tot,Triple->p[j],k, \
+                         //printf("Triples %3d %3d pm %3d op %2d    %3d %3d %3d       %3d %3d %3d        %3d\n",j,Triple->tot,Triple->p[j],k, \
                          rotated_cell1,rotated_cell2,rotated_cell3,Triple->cell1[j],Triple->cell2[j],Triple->cell3[j],keeper); 
                          break;
                         }
@@ -2360,11 +2123,9 @@ VECTOR_DOUBLE Rvec_tmp;
                       unique_triples++;
                       Triple->tot = total_triples;
                      } // close if (Rsqrd >
-                    //} // close loop over lat_n3
-                   } // close loop over lat_n2
-                  //} // close loop over atm_n3
-                 } // close loop over atm_n2
-                } // close loop over atm_n1
+                    } // close loop over lat_n2
+                   } // close loop over atm_n2
+                  } // close loop over atm_n1
 
                   Triple->nump = unique_triples;
 
@@ -2381,6 +2142,706 @@ VECTOR_DOUBLE Rvec_tmp;
 
 }
 
+void generate_molecule_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
+
+{
+  
+  // ******************************************************************************************
+  // *  Generate quads (atm1|O)(atm2|lat2)(atm3|O)(atm4|O)                                    *
+  // ******************************************************************************************
+
+int i, j, k, pm;
+int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
+int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
+int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
+int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
+int dim1 = atoms->number_of_atoms_in_unit_cell;
+int dim2 = dim1 * dim1;
+int dim3 = dim1 * dim2;
+int keeper, number_of_permutations;
+int quad_index_0, quad_index_1;
+
+    if (job->pms == 0) number_of_permutations = 1;
+    else               number_of_permutations = 8;
+
+    Quad->tot = 0;
+    for (i = 0; i < 8 * symmetry->number_of_operators; i++) Quad->cell1[i] = -1;
+    for (i = 0; i < 8 * symmetry->number_of_operators; i++) Quad->cell2[i] = -1;
+    for (i = 0; i < 8 * symmetry->number_of_operators; i++) Quad->cell3[i] = -1;
+    for (i = 0; i < 8 * symmetry->number_of_operators; i++) Quad->cell4[i] = -1;
+
+    quad_index_0 = atm_n1 * dim3 + atm_n2 * dim2 + atm_n3 * dim1 + atm_n4;
+    //fprintf(file.out,"INPUT  %3d %3d %3d %3d  %3d %3d %3d %3d\n",atm_n1, atm_n2,atm_n3,atm_n4,lat_n1,lat_n2,lat_n3,lat_n4);
+    //fflush(file.out);
+
+    for (pm = 0; pm < number_of_permutations; pm++) {
+      for (k = 0; k < symmetry->number_of_operators; k++) {
+
+      keeper = 0;
+
+      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
+      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
+      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+      cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
+
+      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
+      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
+      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
+      O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
+
+      latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->max_vector + O1_temp];
+      latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->max_vector + O2_temp];
+      latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->max_vector + O3_temp];
+      latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->max_vector + O4_temp];
+      //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,latt2_temp,latt3_temp,latt4_temp);
+      //fflush(file.out);
+
+        switch (pm) {
+
+           case 0:
+            rotated_cell1 = cell1_temp;
+            rotated_cell2 = cell2_temp;
+            rotated_cell3 = cell3_temp;
+            rotated_cell4 = cell4_temp;
+            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
+            break;
+
+           case 1:
+            rotated_cell1 = cell1_temp;
+            rotated_cell2 = cell2_temp;
+            rotated_cell3 = cell4_temp;
+            rotated_cell4 = cell3_temp;
+            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
+            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
+            break;
+
+           case 2:
+            rotated_cell1 = cell2_temp;
+            rotated_cell2 = cell1_temp;
+            rotated_cell3 = cell3_temp;
+            rotated_cell4 = cell4_temp;
+            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
+            break;
+
+           case 3:
+            rotated_cell1 = cell2_temp;
+            rotated_cell2 = cell1_temp;
+            rotated_cell3 = cell4_temp;
+            rotated_cell4 = cell3_temp;
+            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
+            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
+            break;
+
+           case 4:
+            rotated_cell1 = cell3_temp;
+            rotated_cell2 = cell4_temp;
+            rotated_cell3 = cell1_temp;
+            rotated_cell4 = cell2_temp;
+            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
+            break;
+
+           case 5:
+            rotated_cell1 = cell3_temp;
+            rotated_cell2 = cell4_temp;
+            rotated_cell3 = cell2_temp;
+            rotated_cell4 = cell1_temp;
+            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
+            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
+            break;
+
+           case 6:
+            rotated_cell1 = cell4_temp;
+            rotated_cell2 = cell3_temp;
+            rotated_cell3 = cell1_temp;
+            rotated_cell4 = cell2_temp;
+            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
+            break;
+
+           case 7:
+            rotated_cell1 = cell4_temp;
+            rotated_cell2 = cell3_temp;
+            rotated_cell3 = cell2_temp;
+            rotated_cell4 = cell1_temp;
+            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
+            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
+            break;
+
+           } // close switch
+
+            quad_index_1 = rotated_cell1 * dim3 + rotated_cell2 * dim2 + rotated_cell3 * dim1 + rotated_cell4;
+
+           //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d      %3d %3d %3d %3d    %3d %3d %3d %3d    %3d\n",\
+           pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
+           rotated_latt2,rotated_latt3,rotated_latt4,pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2]);
+           //fflush(file.out);
+           // needed for F_ijg
+           if ((pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] == -1 || \
+           pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] == -1) && quad_index_1 >= quad_index_0) 
+           keeper = 1; 
+  
+           if (job->type == 1) keeper = 1; // do all integrals for BSE calculation
+
+           if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
+           //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d latt %3d %3d %3d %3d\n",i,pm,k,rotated_cell1,\
+           rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4); fflush(file.out);
+           //fflush(file.out);
+
+           if (!keeper) continue;
+
+           for (j = 0; j <= Quad->tot; j++) {
+             if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
+                 rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
+                 rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
+                 rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
+                 break;
+             if (j == Quad->tot && \
+                (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
+                 rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
+                 rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
+                 rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
+                 Quad->cell1[j] = rotated_cell1;
+                 Quad->cell2[j] = rotated_cell2;
+                 Quad->cell3[j] = rotated_cell3;
+                 Quad->cell4[j] = rotated_cell4;
+                 Quad->latt1[j] = rotated_latt1;
+                 Quad->latt2[j] = rotated_latt2;
+                 Quad->latt3[j] = rotated_latt3;
+                 Quad->latt4[j] = rotated_latt4;
+                 Quad->k[j] = k;
+                 Quad->p[j] = pm;
+                 (Quad->tot)++;
+                 //printf("Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d        %3d\n",\
+                 j,Quad->tot,Quad->p[j],k, \
+                 rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
+                 Quad->cell1[j],Quad->cell2[j],Quad->cell1[j],Quad->cell2[j],keeper); 
+                 break;
+                }
+               } // close loop over j
+              } // close loop over k
+             } // close loop over pm
+
+             //if (Quad->tot > 0) fprintf(file.out,"\n");
+             //for(j = 0; j < Quad->tot;j++) 
+             //fprintf(file.out,"gathered m Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
+             j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
+             Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
+
+}
+
+void generate_c_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
+
+{
+  
+  // ******************************************************************************************
+  // *  Generate quads (atm1|lat1)(atm2|lat2)(atm3|lat3)(atm4|lat4)                           *
+  // ******************************************************************************************
+
+int i, j, k, pm;
+int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
+int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
+int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
+int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
+int dim1 = atoms->number_of_atoms_in_unit_cell;
+int keeper, number_of_permutations;
+long long dil1 = R_tables->last_vector;
+long long dil2 = dim1 * dil1;
+long long dil3 = dil1 * dil2;
+long long dil4 = dil3 * dim1;
+long long dil5 = dil4 * dil1;
+long long dil6 = dil5 * dim1;
+long long dim2 = dim1 * dim1;
+long long quad_index_0, quad_index_1;
+
+    if (job->pms == 0) number_of_permutations = 1;
+    else               number_of_permutations = 8;
+
+    Quad->tot = 0;
+
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->p[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->k[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell1[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell2[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell3[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell4[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt1[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt2[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt3[i] = -1;
+    for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt4[i] = -1;
+
+    quad_index_0 = atm_n1 * dil6 + atm_n2 * dil5 + lat_n2 * dil4 + atm_n3 * dil3 + lat_n3 * dil2 + atm_n4 * dil1 + lat_n4;
+    //fprintf(file.out,"INPUT  %5d %3d %3d %3d %3d  %3d %3d %3d %3d\n",quad_index_0,atm_n1,atm_n2,atm_n3,atm_n4,lat_n1,lat_n2,lat_n3,lat_n4);
+
+    for (pm = 0; pm < number_of_permutations; pm++) {
+      for (k = 0; k < symmetry->number_of_operators; k++) {
+
+      keeper = 0;
+
+      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
+      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
+      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+      cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
+
+      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
+      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
+      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
+      O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
+
+      latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->margin_vector + O1_temp];
+      latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->margin_vector + O2_temp];
+      latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->margin_vector + O3_temp];
+      latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->margin_vector + O4_temp];
+      //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,latt2_temp,latt3_temp,latt4_temp);
+
+        switch (pm) {
+
+           case 0:
+            rotated_cell1 = cell1_temp;
+            rotated_cell2 = cell2_temp;
+            rotated_cell3 = cell3_temp;
+            rotated_cell4 = cell4_temp;
+            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
+            break;
+
+           case 1:
+            rotated_cell1 = cell1_temp;
+            rotated_cell2 = cell2_temp;
+            rotated_cell3 = cell4_temp;
+            rotated_cell4 = cell3_temp;
+            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
+            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+            break;
+
+           case 2:
+            rotated_cell1 = cell2_temp;
+            rotated_cell2 = cell1_temp;
+            rotated_cell3 = cell3_temp;
+            rotated_cell4 = cell4_temp;
+            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
+            break;
+
+           case 3:
+            rotated_cell1 = cell2_temp;
+            rotated_cell2 = cell1_temp;
+            rotated_cell3 = cell4_temp;
+            rotated_cell4 = cell3_temp;
+            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
+            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+            break;
+
+           case 4:
+            rotated_cell1 = cell3_temp;
+            rotated_cell2 = cell4_temp;
+            rotated_cell3 = cell1_temp;
+            rotated_cell4 = cell2_temp;
+            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+            break;
+
+           case 5:
+            rotated_cell1 = cell3_temp;
+            rotated_cell2 = cell4_temp;
+            rotated_cell3 = cell2_temp;
+            rotated_cell4 = cell1_temp;
+            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+            break;
+
+           case 6:
+            rotated_cell1 = cell4_temp;
+            rotated_cell2 = cell3_temp;
+            rotated_cell3 = cell1_temp;
+            rotated_cell4 = cell2_temp;
+            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
+            break;
+
+           case 7:
+            rotated_cell1 = cell4_temp;
+            rotated_cell2 = cell3_temp;
+            rotated_cell3 = cell2_temp;
+            rotated_cell4 = cell1_temp;
+            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
+            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
+            break;
+
+           } // close switch
+
+            quad_index_1 = rotated_cell1 * dil6 + rotated_cell2 * dil5 + rotated_latt2 * dil4 + rotated_cell3 * dil3 + \
+            rotated_latt3 * dil2 + rotated_cell4 * dil1 + rotated_latt4;
+            //fprintf(file.out,"UNIQ pm %3d op %3d  indices %11lli %11lli      %3d %3d %3d %3d    %3d %3d %3d %3d    %3d\n",\
+            pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
+            rotated_latt2,rotated_latt3,rotated_latt4,pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2]);
+
+            // use these two conditions alone to test algorithm - number of quads should be square of number of pairs
+            if (quad_index_1 >= quad_index_0 || rotated_latt3 != 0) keeper = 1;
+            if (rotated_latt3 == 0 && quad_index_1 < quad_index_0) { 
+            Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
+            //if (rotated_latt3 == 0 && quad_index_1 < quad_index_0) { Quad->tot = -1; pm = 8; k = symmetry->number_of_operators; }
+
+            if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
+
+            // use this additional condition for quads needed for SCF
+            // keep if (pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
+            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d  latt  %3d %3d %3d %3d keep %3d\n",\
+            i,pm,k,rotated_cell1,rotated_cell2,\
+            rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4,keeper); fflush(file.out);
+            //if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
+
+            if (!keeper) continue;
+
+            if ((rotated_latt4 >= R_tables->last_vector || rotated_latt2 >= R_tables->last_vector) && (pm == 0 && k == 0)) {
+                 Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
+
+            if (rotated_latt4 >= R_tables->last_vector || rotated_latt2 >= R_tables->last_vector) continue;
+
+            for (j = 0; j <= Quad->tot; j++) {
+              if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
+                  rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
+                  rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
+                  rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
+                  break;
+              if (j == Quad->tot && rotated_latt3 == 0 && rotated_latt2 < R_tables->last_vector && \
+              rotated_latt4 < R_tables->last_vector &&
+                 (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
+                  rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
+                  rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
+                  rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
+                  Quad->cell1[j] = rotated_cell1;
+                  Quad->cell2[j] = rotated_cell2;
+                  Quad->cell3[j] = rotated_cell3;
+                  Quad->cell4[j] = rotated_cell4;
+                  Quad->latt1[j] = rotated_latt1;
+                  Quad->latt2[j] = rotated_latt2;
+                  Quad->latt3[j] = rotated_latt3;
+                  Quad->latt4[j] = rotated_latt4;
+                  Quad->k[j] = k;
+                  Quad->p[j] = pm;
+                  (Quad->tot)++;
+                  //fprintf(file.out,"Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d     %3d %3d %3d %3d   %3d %3d %3d %3d  %3d\n",\
+                  j,Quad->tot,Quad->p[j],k, \
+                  rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
+                  rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4,Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j],keeper); 
+                  break;
+                 }
+                } // close loop over j
+               } // close loop over k
+              } // close loop over pm
+
+              //if (Quad->tot > 0) fprintf(file.out,"\n");
+              //for (j = 0; j < Quad->tot; j++) fprintf(file.out,"gathered c Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
+              j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
+              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
+
+              //if (Quad->tot > 0) printf("\n");
+              //for (j = 0; j < Quad->tot; j++) \
+              printf("%3d gathered c Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
+              job->taskid,j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
+              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
+
+}
+
+void generate_e_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
+
+{
+  
+  // ******************************************************************************************
+  // *  Generate quads (atm1|lat1)(atm2|lat2)(atm3|lat3)(atm4|lat4)                           *
+  // ******************************************************************************************
+
+int i, j, k, pm;
+int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
+int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
+int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
+int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
+int keeper, number_of_permutations;
+long long dil1 = R_tables->last_vector;
+long long dim1 = atoms->number_of_atoms_in_unit_cell;
+long long dil2 = dim1 * dil1;
+long long dil3 = dil1 * dil2;
+long long dil4 = dil3 * dim1;
+long long dil5 = dil4 * dil1;
+long long dil6 = dil5 * dim1;
+long long dim2 = dim1 * dim1;
+long long quad_index_0, quad_index_1;
+
+  if (job->pms == 0) number_of_permutations = 1;
+  else               number_of_permutations = 8;
+
+  Quad->tot = 0;
+
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->p[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->k[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell1[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell2[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell3[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell4[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt1[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt2[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt3[i] = -1;
+  for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt4[i] = -1;
+
+  quad_index_0 = atm_n1 * dil6 + atm_n2 * dil5 + lat_n2 * dil4 + atm_n3 * dil3 + lat_n3 * dil2 + atm_n4 * dil1 + lat_n4;
+
+  //fprintf(file.out,"INPUT  %11lli %3d %3d %3d %3d  %3d %3d %3d %3d\n",quad_index_0,atm_n1,atm_n2,atm_n3,atm_n4,lat_n1,lat_n2,lat_n3,lat_n4);
+  //fprintf(file.out,"%lli %lli %lli %lli %lli %lli\n",dil1,dil2,dil3,dil4,dil5,dil6);
+  for (pm = 0; pm < number_of_permutations; pm++) {
+    for (k = 0; k < symmetry->number_of_operators; k++) {
+
+    keeper = 0;
+
+    cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
+    cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
+    cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
+    cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
+
+    O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
+    O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
+    O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
+    O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
+
+    latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->margin_vector + O1_temp];
+    latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->margin_vector + O2_temp];
+    latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->margin_vector + O3_temp];
+    latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->margin_vector + O4_temp];
+    //if (latt1_temp > R_tables->last_vector || latt2_temp > R_tables->last_vector || latt3_temp > R_tables->last_vector || \
+    latt4_temp > R_tables->last_vector) continue;
+    //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,\
+    latt2_temp,latt3_temp,latt4_temp);
+
+      switch (pm) {
+
+         case 0:
+          rotated_cell1 = cell1_temp;
+          rotated_cell2 = cell2_temp;
+          rotated_cell3 = cell3_temp;
+          rotated_cell4 = cell4_temp;
+          rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
+          break;
+
+         case 1:
+          rotated_cell1 = cell1_temp;
+          rotated_cell2 = cell2_temp;
+          rotated_cell3 = cell4_temp;
+          rotated_cell4 = cell3_temp;
+          rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
+          rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
+          break;
+
+         case 2:
+          rotated_cell1 = cell2_temp;
+          rotated_cell2 = cell1_temp;
+          rotated_cell3 = cell3_temp;
+          rotated_cell4 = cell4_temp;
+          rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
+          break;
+
+         case 3:
+          rotated_cell1 = cell2_temp;
+          rotated_cell2 = cell1_temp;
+          rotated_cell3 = cell4_temp;
+          rotated_cell4 = cell3_temp;
+          rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
+          rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
+          break;
+
+         case 4:
+          rotated_cell1 = cell3_temp;
+          rotated_cell2 = cell4_temp;
+          rotated_cell3 = cell1_temp;
+          rotated_cell4 = cell2_temp;
+          rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+          break;
+
+         case 5:
+          rotated_cell1 = cell3_temp;
+          rotated_cell2 = cell4_temp;
+          rotated_cell3 = cell2_temp;
+          rotated_cell4 = cell1_temp;
+          rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
+          rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
+          break;
+
+         case 6:
+          rotated_cell1 = cell4_temp;
+          rotated_cell2 = cell3_temp;
+          rotated_cell3 = cell1_temp;
+          rotated_cell4 = cell2_temp;
+          rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
+          break;
+
+         case 7:
+          rotated_cell1 = cell4_temp;
+          rotated_cell2 = cell3_temp;
+          rotated_cell3 = cell2_temp;
+          rotated_cell4 = cell1_temp;
+          rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
+          rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
+          break;
+
+         } // close switch
+
+          quad_index_1 = rotated_cell1 * dil6 + rotated_cell2 * dil5 + rotated_latt2 * dil4 + rotated_cell3 * dil3 + \
+          rotated_latt3 * dil2 + rotated_cell4 * dil1 + rotated_latt4;
+
+         //fprintf(file.out,"UNIQ pm %3d op %3d indices %11lli %11lli  %3d %3d %3d %3d    %3d %3d %3d %3d    %4d %4d %4d   %3d\n",\
+         pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
+         rotated_latt2,rotated_latt3,rotated_latt4,R_tables->diffvec[rotated_latt4 * R_tables->last_vector + rotated_latt2],\
+         rotated_latt3,R_tables->last_vector, pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3]);
+
+         if (quad_index_1 >= quad_index_0) keeper = 1;
+         if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
+         if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] != -1) continue;
+         //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d  latt  %3d %3d %3d %3d\n",\
+         i,pm,k,rotated_cell1,rotated_cell2,\
+         rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4); fflush(file.out);
+
+         if (!keeper) continue;
+
+         if (R_tables->diffvec[rotated_latt4 * R_tables->margin_vector + rotated_latt2] >= R_tables->last_vector || \
+             R_tables->diffvec[rotated_latt3 * R_tables->margin_vector + rotated_latt1] >= R_tables->last_vector || \
+             rotated_latt2 >= R_tables->last_vector || \
+             rotated_latt3 >= R_tables->last_vector || \
+             rotated_latt4 >= R_tables->last_vector) continue;
+
+         for (j = 0; j <= Quad->tot; j++) {
+           if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
+               rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
+               rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
+               rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
+               break;
+         if (j == Quad->tot && rotated_latt2 < R_tables->last_vector && rotated_latt3 < R_tables->last_vector && rotated_latt4 < \
+             R_tables->last_vector && \
+              (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
+               rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
+               rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
+               rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
+               Quad->cell1[j] = rotated_cell1;
+               Quad->cell2[j] = rotated_cell2;
+               Quad->cell3[j] = rotated_cell3;
+               Quad->cell4[j] = rotated_cell4;
+               Quad->latt1[j] = rotated_latt1;
+               Quad->latt2[j] = rotated_latt2;
+               Quad->latt3[j] = rotated_latt3;
+               Quad->latt4[j] = rotated_latt4;
+               Quad->k[j] = k;
+               Quad->p[j] = pm;
+              (Quad->tot)++;
+               //fprintf(file.out,"Quads %3d %3d pm %3d op %2d  %3d %3d %3d %3d   %3d %3d %3d %3d  %3d %3d %3d %3d  %3d %3d %3d %3d  %3d\n",\
+               j,Quad->tot,Quad->p[j],k,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
+               Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],rotated_latt1,rotated_latt2,rotated_latt3,\
+               rotated_latt4,Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j],keeper); 
+               //printf("Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d        %3d\n",j,Quad->tot,Quad->p[j],k, \
+               rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
+               Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],keeper); 
+               break;
+              }
+             } // close loop over j
+            } // close loop over k
+           } // close loop over pm
+
+          //for(j=0;j<Quad->tot;j++) fprintf(file.out,"gathered e Quads %3d pm %3d op %3d  %3d %3d %3d %3d  %3d %3d %3d %3d  %3d\n",\
+          j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],Quad->latt1[j],Quad->latt2[j],\
+          Quad->latt3[j],Quad->latt4[j],pair_p->uniq[Quad->latt3[j] * dim2 + Quad->cell1[j] * dim1 + Quad->cell3[j]]);
+          //if (Quad->tot > 0) printf("\n"); \
+          for(j=0;j<Quad->tot;j++) printf("gathered e Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
+          j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
+          Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
+
+}
+
+void print_pairs(PAIR_TRAN *pair_p, ATOM *atoms, REAL_LATTICE *R, JOB_PARAM *job, FILES file)
+    
+{   
+   
+int i, j, q, qi;
+int atm1, atm2, latt1, latt2;
+double RAB2;
+VECTOR_DOUBLE Rvec_tmp;
+
+  if (job->taskid >= 0 && (job->verbosity > 1 || job->print_pairs == 1)) {
+    for (i = 0; i < pair_p->nump; i++) {
+      q  = pair_p->posn[i];
+      for (j = 0; j < pair_p->numb[i]; j++) {
+        atm1 = pair_p->cell1[q + j];
+        atm2 = pair_p->cell2[q + j];
+        latt1 = pair_p->latt1[q + j];
+        latt2 = pair_p->latt2[q + j];
+        Rvec_tmp.comp1 = atoms->cell_vector[atm1].comp1 + R->vec_ai[latt1].comp1 - atoms->cell_vector[atm2].comp1 - \
+        R->vec_ai[latt2].comp1;
+        Rvec_tmp.comp2 = atoms->cell_vector[atm1].comp2 + R->vec_ai[latt1].comp2 - atoms->cell_vector[atm2].comp2 - \
+        R->vec_ai[latt2].comp2;
+        Rvec_tmp.comp3 = atoms->cell_vector[atm1].comp3 + R->vec_ai[latt1].comp3 - atoms->cell_vector[atm2].comp3 - \
+        R->vec_ai[latt2].comp3;
+        RAB2 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
+        fprintf(file.out,"pair[%5d]   %3d %3d  %3d   transforms to pair[%5d]  %3d %3d  %5d under operator %2d permutation %2d %10.4lf\n",\
+        q, pair_p->cell1[q], pair_p->cell2[q], pair_p->latt2[q], q + j, pair_p->cell1[q + j], pair_p->cell2[q + j], \
+        pair_p->latt2[q + j],pair_p->k[q + j],pair_p->p[q + j],sqrt(RAB2) * bohr_to_AA);
+       }
+       fprintf(file.out,"\n");
+      }
+     }
+
+}
+
+/*
 void count_triples2_reversed(int atm_n3, TRIPLE_TRAN *Triple, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
 
 {
@@ -2790,10 +3251,8 @@ VECTOR_DOUBLE Rvec_tmp;
         for (atm_n2 = 0; atm_n2 < atoms->number_of_atoms_in_unit_cell; atm_n2++) {
         //for (atm_n3 = 0; atm_n3 < atoms->number_of_atoms_in_unit_cell; atm_n3++) {
 
-/*
-          for (lat_n1 = 0; lat_n1 < R->max_vector; lat_n1++) {
-            for (lat_n2 = 0; lat_n2 < 1; lat_n2++) { // FIX
-*/
+          //for (lat_n1 = 0; lat_n1 < R->max_vector; lat_n1++) {
+            //for (lat_n2 = 0; lat_n2 < 1; lat_n2++) { // FIX
           for (lat_n1 = 0; lat_n1 < 1; lat_n1++) { // FIX
             for (lat_n2 = 0; lat_n2 < R->max_vector; lat_n2++) {
 
@@ -3797,796 +4256,4 @@ VECTOR_DOUBLE Rvec_tmp;
                   printf("\n"); }
 
 }
-
-void generate_molecule_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
-
-{
-  
-int i, j, k, pm;
-int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
-int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
-int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
-int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
-int dim1 = atoms->number_of_atoms_in_unit_cell;
-int dim2 = dim1 * dim1;
-int dim3 = dim1 * dim2;
-int keeper, number_of_permutations;
-int quad_index_0, quad_index_1;
-
-    if (job->pms == 0) number_of_permutations = 1;
-    else               number_of_permutations = 8;
-
-     Quad->tot = 0;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell1[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell2[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell3[i] = -1;
-     for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell4[i] = -1;
-
-     quad_index_0 = atm_n1 * dim3 + atm_n2 * dim2 + atm_n3 * dim1 + atm_n4;
-
-     //fprintf(file.out,"INPUT  %3d %3d %3d %3d  %3d %3d %3d %3d\n",atm_n1, atm_n2,atm_n3,atm_n4,lat_n1,lat_n2,lat_n3,lat_n4);
-     //fflush(file.out);
-
-    //for (pm = 0; pm < 8; pm++) {
-    for (pm = 0; pm < number_of_permutations; pm++) {
-      for (k = 0; k < symmetry->number_of_operators; k++) {
-
-      keeper = 0;
-
-      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-      cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
-
-      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
-      O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
-
-      //latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->max_vector+O1_temp];
-      //latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->max_vector+O2_temp];
-      //latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->max_vector+O3_temp];
-      //latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->max_vector+O4_temp];
-      latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->max_vector + O1_temp];
-      latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->max_vector + O2_temp];
-      latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->max_vector + O3_temp];
-      latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->max_vector + O4_temp];
-
-     //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,latt2_temp,latt3_temp,latt4_temp);
-     //fflush(file.out);
-
-        switch (pm) {
-
-           case 0:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            //rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
-            break;
-
-           case 1:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            //rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
-            break;
-
-           case 2:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            //rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
-            break;
-
-           case 3:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            //rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
-            break;
-
-           case 4:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            //rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
-            break;
-
-           case 5:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            //rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt3_temp];
-            break;
-
-           case 6:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            //rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
-            //rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
-            break;
-
-           case 7:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            //rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
-            //rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt3_temp];
-            //rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt2_temp];
-            //rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt1_temp];
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->max_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->max_vector + latt4_temp];
-            break;
-
-           } // close switch
-
-            quad_index_1 = rotated_cell1 * dim3 + rotated_cell2 * dim2 + rotated_cell3 * dim1 + rotated_cell4;
-
-           //fprintf(file.out,"UNIQ pm %3d op %3d  indices %3d %3d      %3d %3d %3d %3d    %3d %3d %3d %3d    %3d\n",\
-           pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
-           rotated_latt2,rotated_latt3,rotated_latt4,pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2]);
-           //fflush(file.out);
-           // needed for F_ijg
-           if ((pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] == -1 || \
-           pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] == -1) && quad_index_1 >= quad_index_0) 
-           keeper = 1; 
-  
-           if (job->type == 1) keeper = 1; // do all integrals for BSE calculation
-
-           if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-           //if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = 8; k = symmetry->number_of_operators; }
-
-            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d latt %3d %3d %3d %3d\n",i,pm,k,rotated_cell1,\
-            rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4); fflush(file.out);
-            //fflush(file.out);
-
-            if (!keeper) continue;
-
-            for (j = 0; j <= Quad->tot; j++) {
-              if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
-                  rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
-                  rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
-                  rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
-                  break;
-              if (j == Quad->tot && \
-                 (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
-                  rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
-                  rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
-                  rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
-                  Quad->cell1[j] = rotated_cell1;
-                  Quad->cell2[j] = rotated_cell2;
-                  Quad->cell3[j] = rotated_cell3;
-                  Quad->cell4[j] = rotated_cell4;
-                  Quad->latt1[j] = rotated_latt1;
-                  Quad->latt2[j] = rotated_latt2;
-                  Quad->latt3[j] = rotated_latt3;
-                  Quad->latt4[j] = rotated_latt4;
-                  Quad->k[j] = k;
-                  Quad->p[j] = pm;
-                  (Quad->tot)++;
-                  //printf("Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d        %3d\n",\
-                  j,Quad->tot,Quad->p[j],k, \
-                  rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
-                  Quad->cell1[j],Quad->cell2[j],Quad->cell1[j],Quad->cell2[j],keeper); 
-                  break;
-                 }
-                } // close loop over j
-               } // close loop over k
-              } // close loop over pm
-
-              //if (Quad->tot > 0) fprintf(file.out,"\n");
-              //for(j = 0; j < Quad->tot;j++) 
-              //fprintf(file.out,"gathered m Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
-              j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
-              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
-
-}
-
-void generate_c_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
-
-{
-  
-int i, j, k, pm;
-int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
-int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
-int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
-int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
-int dim1 = atoms->number_of_atoms_in_unit_cell;
-int keeper, number_of_permutations;
-long long dil1 = R_tables->last_vector;
-long long dil2 = dim1 * dil1;
-long long dil3 = dil1 * dil2;
-long long dil4 = dil3 * dim1;
-long long dil5 = dil4 * dil1;
-long long dil6 = dil5 * dim1;
-long long dim2 = dim1 * dim1;
-long long quad_index_0, quad_index_1;
-
-    if (job->pms == 0) number_of_permutations = 1;
-    else               number_of_permutations = 8;
-
-     Quad->tot = 0;
-
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->p[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->k[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell1[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell2[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell3[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell4[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt1[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt2[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt3[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt4[i] = -1;
-
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell1[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell2[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell3[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->cell4[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->latt1[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->latt2[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->latt3[i] = -1;
-     //for (i=0;i<8 * symmetry->number_of_operators;i++) Quad->latt4[i] = -1;
-
-     quad_index_0 = atm_n1 * dil6 + atm_n2 * dil5 + lat_n2 * dil4 + atm_n3 * dil3 + lat_n3 * dil2 + atm_n4 * dil1 + lat_n4;
-
-     //fprintf(file.out,"INPUT  %5d %3d %3d %3d %3d  %3d %3d %3d %3d\n",quad_index_0,atm_n1,atm_n2,atm_n3,atm_n4,lat_n1,lat_n2,lat_n3,lat_n4);
-
-    for (pm = 0; pm < number_of_permutations; pm++) {
-      for (k = 0; k < symmetry->number_of_operators; k++) {
-
-      keeper = 0;
-
-      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-      cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
-
-      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
-      O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
-
-   latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->margin_vector + O1_temp];
-   latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->margin_vector + O2_temp];
-   latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->margin_vector + O3_temp];
-   latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->margin_vector + O4_temp];
-
-     //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,latt2_temp,latt3_temp,latt4_temp);
-
-        switch (pm) {
-
-           case 0:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
-            break;
-
-           case 1:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-            break;
-
-           case 2:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
-            break;
-
-           case 3:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-            break;
-
-           case 4:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-            break;
-
-           case 5:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-            break;
-
-           case 6:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
-            break;
-
-           case 7:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
-            break;
-
-           } // close switch
-
-            quad_index_1 = rotated_cell1 * dil6 + rotated_cell2 * dil5 + rotated_latt2 * dil4 + rotated_cell3 * dil3 + \
-            rotated_latt3 * dil2 + rotated_cell4 * dil1 + rotated_latt4;
-
-           //fprintf(file.out,"UNIQ pm %3d op %3d  indices %11lli %11lli      %3d %3d %3d %3d    %3d %3d %3d %3d    %3d\n",\
-           pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
-           rotated_latt2,rotated_latt3,rotated_latt4,pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2]);
-
-           // use these two conditions alone to test algorithm - number of quads should be square of number of pairs
-           if (quad_index_1 >= quad_index_0 || rotated_latt3 != 0) keeper = 1;
-           if (rotated_latt3 == 0 && quad_index_1 < quad_index_0) { 
-           Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-           //if (rotated_latt3 == 0 && quad_index_1 < quad_index_0) { Quad->tot = -1; pm = 8; k = symmetry->number_of_operators; }
-
-           if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
-
-           // use this additional condition for quads needed for SCF
-           ////keep if (pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
-
-            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d  latt  %3d %3d %3d %3d keep %3d\n",\
-            i,pm,k,rotated_cell1,rotated_cell2,\
-            rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4,keeper); fflush(file.out);
-
-            //if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] != -1) continue;
-
-            if (!keeper) continue;
-
-            if ((rotated_latt4 >= R_tables->last_vector || rotated_latt2 >= R_tables->last_vector) && (pm == 0 && k == 0)) {
-                 Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-
-            if (rotated_latt4 >= R_tables->last_vector || rotated_latt2 >= R_tables->last_vector) continue;
-
-            for (j = 0; j <= Quad->tot; j++) {
-              if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
-                  rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
-                  rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
-                  rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
-                  break;
-              //if (j == Quad->tot && rotated_latt3 == 0 && 
-              if (j == Quad->tot && rotated_latt3 == 0 && rotated_latt2 < R_tables->last_vector && \
-              rotated_latt4 < R_tables->last_vector &&
-                 (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
-                  rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
-                  rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
-                  rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
-                  Quad->cell1[j] = rotated_cell1;
-                  Quad->cell2[j] = rotated_cell2;
-                  Quad->cell3[j] = rotated_cell3;
-                  Quad->cell4[j] = rotated_cell4;
-                  Quad->latt1[j] = rotated_latt1;
-                  Quad->latt2[j] = rotated_latt2;
-                  Quad->latt3[j] = rotated_latt3;
-                  Quad->latt4[j] = rotated_latt4;
-                  Quad->k[j] = k;
-                  Quad->p[j] = pm;
-                  (Quad->tot)++;
-                  //fprintf(file.out,"Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d     %3d %3d %3d %3d   %3d %3d %3d %3d  %3d\n",\
-                  j,Quad->tot,Quad->p[j],k, \
-                  rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
-                  rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4,Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j],keeper); 
-                  break;
-                 }
-                } // close loop over j
-               } // close loop over k
-              } // close loop over pm
-
-              //if (Quad->tot > 0) fprintf(file.out,"\n");
-      //for (j = 0; j < Quad->tot; j++) fprintf(file.out,"gathered c Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
-              j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
-              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
-
-              //if (Quad->tot > 0) printf("\n");
-              //for (j = 0; j < Quad->tot; j++) \
-              printf("%3d gathered c Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
-              job->taskid,j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
-              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
-
-}
-
-void generate_e_quads(PAIR_TRAN *pair_p, QUAD_TRAN *Quad, int atm_n1, int atm_n2, int atm_n3, int atm_n4, int lat_n1, int lat_n2, int lat_n3, int lat_n4, ATOM *atoms, ATOM_TRAN *atom_p, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
-
-{
-  
-int i, j, k, pm;
-int cell1_temp, cell2_temp, cell3_temp, cell4_temp, O1_temp, O2_temp, O3_temp, O4_temp;
-int latt_tmp, latt_temp, latt1_temp, latt2_temp, latt3_temp, latt4_temp, latt3_tmp, latt4_tmp;
-int rotated_cell1, rotated_cell2, rotated_latt1, rotated_latt2;
-int rotated_cell3, rotated_cell4, rotated_latt3, rotated_latt4;
-int keeper, number_of_permutations;
-long long dil1 = R_tables->last_vector;
-long long dim1 = atoms->number_of_atoms_in_unit_cell;
-long long dil2 = dim1 * dil1;
-long long dil3 = dil1 * dil2;
-long long dil4 = dil3 * dim1;
-long long dil5 = dil4 * dil1;
-long long dil6 = dil5 * dim1;
-long long dim2 = dim1 * dim1;
-long long quad_index_0, quad_index_1;
-
-    if (job->pms == 0) number_of_permutations = 1;
-    else               number_of_permutations = 8;
-
-     Quad->tot = 0;
-
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->p[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->k[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell1[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell2[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell3[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->cell4[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt1[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt2[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt3[i] = -1;
-     for (i = 0; i < number_of_permutations * symmetry->number_of_operators; i++) Quad->latt4[i] = -1;
-
-     quad_index_0 = atm_n1 * dil6 + atm_n2 * dil5 + lat_n2 * dil4 + atm_n3 * dil3 + lat_n3 * dil2 + atm_n4 * dil1 + lat_n4;
-
-     //fprintf(file.out,"INPUT  %11lli %3d %3d %3d %3d  %3d %3d %3d %3d\n",quad_index_0,atm_n1,atm_n2,atm_n3,atm_n4,\
-     lat_n1,lat_n2,lat_n3,lat_n4);
-     //fprintf(file.out,"%lli %lli %lli %lli %lli %lli\n",dil1,dil2,dil3,dil4,dil5,dil6);
-
-    //for (pm = 0; pm < 8; pm++) {
-    for (pm = 0; pm < number_of_permutations; pm++) {
-      for (k = 0; k < symmetry->number_of_operators; k++) {
-
-      keeper = 0;
-
-      cell1_temp = atom_p->K[atm_n1 * symmetry->number_of_operators + k];
-      cell2_temp = atom_p->K[atm_n2 * symmetry->number_of_operators + k];
-      cell3_temp = atom_p->K[atm_n3 * symmetry->number_of_operators + k];
-      cell4_temp = atom_p->K[atm_n4 * symmetry->number_of_operators + k];
-
-      O1_temp = atom_p->O[atm_n1 * symmetry->number_of_operators + k];
-      O2_temp = atom_p->O[atm_n2 * symmetry->number_of_operators + k];
-      O3_temp = atom_p->O[atm_n3 * symmetry->number_of_operators + k];
-      O4_temp = atom_p->O[atm_n4 * symmetry->number_of_operators + k];
-
-   latt1_temp = R_tables->diffvec[R_tables->lattvec[lat_n1 * symmetry->number_of_operators + k] * R_tables->margin_vector + O1_temp];
-   latt2_temp = R_tables->diffvec[R_tables->lattvec[lat_n2 * symmetry->number_of_operators + k] * R_tables->margin_vector + O2_temp];
-   latt3_temp = R_tables->diffvec[R_tables->lattvec[lat_n3 * symmetry->number_of_operators + k] * R_tables->margin_vector + O3_temp];
-   latt4_temp = R_tables->diffvec[R_tables->lattvec[lat_n4 * symmetry->number_of_operators + k] * R_tables->margin_vector + O4_temp];
-
-      //if (latt1_temp > R_tables->last_vector || latt2_temp > R_tables->last_vector || latt3_temp > R_tables->last_vector || \
-      latt4_temp > R_tables->last_vector) continue;
-      //fprintf(file.out,"OUTPUT %3d %3d %3d %3d  %3d %3d %3d %3d\n",cell1_temp,cell2_temp,cell3_temp,cell4_temp,latt1_temp,\
-      latt2_temp,latt3_temp,latt4_temp);
-
-        switch (pm) {
-
-           case 0:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
-            break;
-
-           case 1:
-            rotated_cell1 = cell1_temp;
-            rotated_cell2 = cell2_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            rotated_latt1 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt2 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt1_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt1_temp];
-            break;
-
-           case 2:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell3_temp;
-            rotated_cell4 = cell4_temp;
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
-            break;
-
-           case 3:
-            rotated_cell1 = cell2_temp;
-            rotated_cell2 = cell1_temp;
-            rotated_cell3 = cell4_temp;
-            rotated_cell4 = cell3_temp;
-            rotated_latt1 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt2 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt3 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt2_temp];
-            rotated_latt4 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt2_temp];
-            break;
-
-           case 4:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-            break;
-
-           case 5:
-            rotated_cell1 = cell3_temp;
-            rotated_cell2 = cell4_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            rotated_latt1 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt2 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt3_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt3_temp];
-            break;
-
-           case 6:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell1_temp;
-            rotated_cell4 = cell2_temp;
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
-            break;
-
-           case 7:
-            rotated_cell1 = cell4_temp;
-            rotated_cell2 = cell3_temp;
-            rotated_cell3 = cell2_temp;
-            rotated_cell4 = cell1_temp;
-            rotated_latt1 = R_tables->diffvec[latt4_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt2 = R_tables->diffvec[latt3_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt3 = R_tables->diffvec[latt2_temp * R_tables->margin_vector + latt4_temp];
-            rotated_latt4 = R_tables->diffvec[latt1_temp * R_tables->margin_vector + latt4_temp];
-            break;
-
-           } // close switch
-
-            quad_index_1 = rotated_cell1 * dil6 + rotated_cell2 * dil5 + rotated_latt2 * dil4 + rotated_cell3 * dil3 + \
-            rotated_latt3 * dil2 + rotated_cell4 * dil1 + rotated_latt4;
-
-           //fprintf(file.out,"UNIQ pm %3d op %3d indices %11lli %11lli  %3d %3d %3d %3d    %3d %3d %3d %3d    %4d %4d %4d   %3d\n",\
-           pm,k,quad_index_0,quad_index_1,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,rotated_latt1,\
-           rotated_latt2,rotated_latt3,rotated_latt4,R_tables->diffvec[rotated_latt4 * R_tables->last_vector + rotated_latt2],\
-           rotated_latt3,R_tables->last_vector, pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3]);
-
-/*
-           //generate_molecule_quads conditions
-           
-           // don't need this if ((pair_p->uniq[rotated_latt2 * dim2 + rotated_cell1 * dim1 + rotated_cell2] == -1 ||
-           if ((pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] == -1) && quad_index_1 >= quad_index_0) \
-           keeper = 1;
-           // needed for F_ijg
-  
-           if (job->type == 1) keeper = 1; // do all integrals for BSE calculation
-
-           if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-           //if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = 8; k = symmetry->number_of_operators; }
-
-            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d  latt  %3d %3d %3d %3d\n",\
-            i,pm,k,rotated_cell1,rotated_cell2,\\
-            rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4); fflush(file.out);
-
-            if (!keeper) continue;
-
-           // in comments - these were previously conditions for e_quads - use molecule quads above instead
 */
-
-            if (quad_index_1 >= quad_index_0) keeper = 1;
-            if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-            //if (quad_index_1 < quad_index_0) { Quad->tot = -1; pm = 8; k = symmetry->number_of_operators; }
-
-            if ((pm > 0 || k > 0) && pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] != -1) continue;
-            //2019 if (pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] != -1) continue;
-            //if (pair_p->uniq[rotated_latt3 * dim2 + rotated_cell1 * dim1 + rotated_cell3] == -1 && quad_index_1 >= quad_index_0) \
-            keeper = 1;
-
-            //fprintf(file.out,"rotated i %3d pm %3d op %3d  cell  %3d %3d %3d %3d  latt  %3d %3d %3d %3d\n",\
-            i,pm,k,rotated_cell1,rotated_cell2,\
-            rotated_cell3,rotated_cell4,rotated_latt1,rotated_latt2,rotated_latt3,rotated_latt4); fflush(file.out);
-
-            if (!keeper) continue;
-/* temporary
-          if ((R_tables->diffvec[rotated_latt4 * R_tables->margin_vector + rotated_latt2] >= R_tables->last_vector || \
-               R_tables->diffvec[rotated_latt3 * R_tables->margin_vector + rotated_latt1] >= R_tables->last_vector || \
-               rotated_latt2 >= R_tables->last_vector || \
-               rotated_latt3 >= R_tables->last_vector || \
-               rotated_latt4 >= R_tables->last_vector) && (pm == 0 && k == 0)) {
-           //fprintf(file.out,"diffvec %3d %3d    %3d %3d %3d   %3d\n", \
-           R_tables->diffvec[rotated_latt4 * R_tables->margin_vector + rotated_latt2], \
-           R_tables->diffvec[rotated_latt3 * R_tables->margin_vector + rotated_latt1], \
-               rotated_latt2, rotated_latt3, rotated_latt4,R_tables->last_vector);
-           Quad->tot = -1; pm = number_of_permutations; k = symmetry->number_of_operators; }
-
-           if (R_tables->diffvec[rotated_latt4 * R_tables->margin_vector + rotated_latt2] >= R_tables->last_vector || \
-               R_tables->diffvec[rotated_latt3 * R_tables->margin_vector + rotated_latt1] >= R_tables->last_vector) continue; 
-temporary */
-
-           if (R_tables->diffvec[rotated_latt4 * R_tables->margin_vector + rotated_latt2] >= R_tables->last_vector || \
-               R_tables->diffvec[rotated_latt3 * R_tables->margin_vector + rotated_latt1] >= R_tables->last_vector || \
-               rotated_latt2 >= R_tables->last_vector || \
-               rotated_latt3 >= R_tables->last_vector || \
-               rotated_latt4 >= R_tables->last_vector) continue;
-
-
-            for (j = 0; j <= Quad->tot; j++) {
-              if (rotated_cell1 == Quad->cell1[j] && rotated_cell2 == Quad->cell2[j] && \
-                  rotated_latt1 == Quad->latt1[j] && rotated_latt2 == Quad->latt2[j] && \
-                  rotated_cell3 == Quad->cell3[j] && rotated_cell4 == Quad->cell4[j] && \
-                  rotated_latt3 == Quad->latt3[j] && rotated_latt4 == Quad->latt4[j])
-                  break;
-              //if (j == Quad_1->tot && 
-            if (j == Quad->tot && rotated_latt2 < R_tables->last_vector && rotated_latt3 < R_tables->last_vector && rotated_latt4 < \
-                R_tables->last_vector && \
-                 (rotated_cell1 != Quad->cell1[j] || rotated_cell2 != Quad->cell2[j] || \
-                  rotated_latt1 != Quad->latt1[j] || rotated_latt2 != Quad->latt2[j] || \
-                  rotated_cell3 != Quad->cell3[j] || rotated_cell4 != Quad->cell4[j] || \
-                  rotated_latt3 != Quad->latt3[j] || rotated_latt4 != Quad->latt4[j])) {
-                  Quad->cell1[j] = rotated_cell1;
-                  Quad->cell2[j] = rotated_cell2;
-                  Quad->cell3[j] = rotated_cell3;
-                  Quad->cell4[j] = rotated_cell4;
-                  Quad->latt1[j] = rotated_latt1;
-                  Quad->latt2[j] = rotated_latt2;
-                  Quad->latt3[j] = rotated_latt3;
-                  Quad->latt4[j] = rotated_latt4;
-                  Quad->k[j] = k;
-                  Quad->p[j] = pm;
-                  (Quad->tot)++;
-      //fprintf(file.out,"Quads %3d %3d pm %3d op %2d  %3d %3d %3d %3d   %3d %3d %3d %3d  %3d %3d %3d %3d  %3d %3d %3d %3d  %3d\n",\
-                  j,Quad->tot,Quad->p[j],k,rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
-                  Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],rotated_latt1,rotated_latt2,rotated_latt3,\
-                  rotated_latt4,Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j],keeper); 
-         //printf("Quads %3d %3d pm %3d op %2d      %3d %3d %3d %3d       %3d %3d %3d %3d        %3d\n",j,Quad->tot,Quad->p[j],k, \
-                  rotated_cell1,rotated_cell2,rotated_cell3,rotated_cell4,\
-                  Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],keeper); 
-                  break;
-                 }
-                } // close loop over j
-               } // close loop over k
-              } // close loop over pm
-            //if (Quad->tot > 0 && (Quad->cell1[0] > 16 || Quad->cell1[0] < -1)) { printf("%3d\n",job->taskid); fprintf(file.out,"\n");
-
-          //for(j=0;j<Quad->tot;j++) fprintf(file.out,"gathered e Quads %3d pm %3d op %3d  %3d %3d %3d %3d  %3d %3d %3d %3d  %3d\n",\
-              j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],Quad->latt1[j],Quad->latt2[j],\
-              Quad->latt3[j],Quad->latt4[j],pair_p->uniq[Quad->latt3[j] * dim2 + Quad->cell1[j] * dim1 + Quad->cell3[j]]);
-              //if (Quad->tot > 0) printf("\n"); \
-              for(j=0;j<Quad->tot;j++) printf("gathered e Quads %3d pm %3d op %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",\
-              j,Quad->p[j],Quad->k[j],Quad->cell1[j],Quad->cell2[j],Quad->cell3[j],Quad->cell4[j],\
-              Quad->latt1[j],Quad->latt2[j],Quad->latt3[j],Quad->latt4[j]);
-
-}
-
-void print_pairs(PAIR_TRAN *pair_p, ATOM *atoms, REAL_LATTICE *R, JOB_PARAM *job, FILES file)
-    
-{   
-   
-int i, j, q, qi;
-int atm1, atm2, latt1, latt2;
-double RAB2;
-VECTOR_DOUBLE Rvec_tmp;
-
-  if (job->taskid >= 0 && (job->verbosity > 1 || job->print_pairs == 1)) {
-    for (i = 0; i < pair_p->nump; i++) {
-      q  = pair_p->posn[i];
-      for (j = 0; j < pair_p->numb[i]; j++) {
-        atm1 = pair_p->cell1[q + j];
-        atm2 = pair_p->cell2[q + j];
-        latt1 = pair_p->latt1[q + j];
-        latt2 = pair_p->latt2[q + j];
-        Rvec_tmp.comp1 = atoms->cell_vector[atm1].comp1 + R->vec_ai[latt1].comp1 - atoms->cell_vector[atm2].comp1 - \
-        R->vec_ai[latt2].comp1;
-        Rvec_tmp.comp2 = atoms->cell_vector[atm1].comp2 + R->vec_ai[latt1].comp2 - atoms->cell_vector[atm2].comp2 - \
-        R->vec_ai[latt2].comp2;
-        Rvec_tmp.comp3 = atoms->cell_vector[atm1].comp3 + R->vec_ai[latt1].comp3 - atoms->cell_vector[atm2].comp3 - \
-        R->vec_ai[latt2].comp3;
-        RAB2 = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
-   fprintf(file.out,"pair[%5d]   %3d %3d  %3d   transforms to pair[%5d]  %3d %3d  %5d under operator %2d permutation %2d %10.4lf\n",\
-        q, pair_p->cell1[q], pair_p->cell2[q], pair_p->latt2[q], q + j, pair_p->cell1[q + j], pair_p->cell2[q + j], \
-        pair_p->latt2[q + j],pair_p->k[q + j],pair_p->p[q + j],sqrt(RAB2) * bohr_to_AA);
-       }
-       fprintf(file.out,"\n");
-      }
-     }
-
-}

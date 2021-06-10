@@ -1,4 +1,3 @@
-
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"

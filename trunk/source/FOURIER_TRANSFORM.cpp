@@ -125,16 +125,13 @@ void fourier_transform_3(double *matrix_reduced, Complex *matrix_k, KPOINT_TRAN 
       i = pair_p->posn[p];
       nd1 = atoms->bfnnumb_sh[pair_p->cell1[i]];
       nd2 = atoms->bfnnumb_sh[pair_p->cell2[i]];
-      //new_rotate_tensor1_pair(p, pair_p, &matrix_reduced[3 * dim3], matrix, atoms, shells, symmetry, job, file);
       rotate_permute_expand_tensor1(p, pair_p, &matrix_reduced[3 * dim3], matrix, atoms, shells, symmetry, job, file);
 
       dim3 += nd1 * nd2 ;
 
       k1 = 0;
-      //fprintf(file.out,"pair_p %d   [%3d][%3d]  [%3d]\n",i,pair_p->cell1[i],pair_p->cell2[i],pair_p->latt2[i]);
       for (k = nk[0]; k <= nk[1]; k++) {
       for (j = 0; j < pair_p->numb[p]; j++) {
-      //fprintf(file.out,"pair_p %d   [%3d][%3d]  [%3d]\n",i,pair_p->cell1[i + j],pair_p->cell2[i + j],pair_p->latt2[i + j]);
         nd1 = atoms->bfnnumb_sh[pair_p->cell1[i + j]];
         nd2 = atoms->bfnnumb_sh[pair_p->cell2[i + j]];
       //temp1 = -double_vec_dot(&knet->cart[k], &R->vec_ai[pair_p->latt2[i + j]]);
@@ -232,6 +229,77 @@ void fourier_transform_molecule(double *matrix_reduced, double *matrix_k, PAIR_T
   double time2 = MPI_Wtime();
   if (job->verbosity > 1)
   fprintf(file.out, "Time for Fourier Transform %10.4e\n", (double) time2 - time1);
+
+}
+
+void rotate_permute_expand_tensor_3(double *matrix_reduced, double *matrix_k, PAIR_TRAN *pair_p, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
+      int i, j, l, m, n, p, dim2, dim3, dim4 = atoms->number_of_sh_bfns_in_unit_cell * atoms->number_of_sh_bfns_in_unit_cell;
+      int atm1, atm2, nd1, nd2, pm;
+      double *p_matrix_reduced, *p_matrix, *matrix, *p_matrix_k ;
+      double time1 = MPI_Wtime();
+
+  // Routine similar to fourier_transform_3 which expands, permutes and rotates pairs for finite systems
+
+      dim2 = 0 ;
+
+      for (i = 0; i < pair_p->nump; i++) {
+      atm1 = pair_p->cell1[pair_p->posn[i]];
+      atm2 = pair_p->cell2[pair_p->posn[i]];
+      nd1 = atoms->bfnnumb_sh[atm1];
+      nd2 = atoms->bfnnumb_sh[atm2];
+      dim2 += nd1 * nd2 * pair_p->numb[i];
+     }
+
+      matrix = (double *) malloc(dim2 * 3 * sizeof(double)) ;
+      if (matrix==NULL) { fprintf(stderr, "ERROR: not enough memory for double matrix! \n") ; exit(1) ; }
+
+      p_matrix = matrix ;
+      for (i = 0; i < dim2 * 3; i++) {
+      *p_matrix = k_zero ; p_matrix++ ; }
+
+      p_matrix_k = matrix_k ;
+      for ( i = 0; i < dim4 * 3; i++) {
+      *p_matrix_k = k_zero ;
+       p_matrix_k++ ; }
+
+      dim3 = 0 ;
+
+      for ( p = 0; p < pair_p->nump; p++) {
+      i = pair_p->posn[p];
+      nd1 = atoms->bfnnumb_sh[pair_p->cell1[i]];
+      nd2 = atoms->bfnnumb_sh[pair_p->cell2[i]];
+      rotate_permute_expand_tensor1(p, pair_p, &matrix_reduced[3 * dim3], matrix, atoms, shells, symmetry, job, file);
+
+      dim3 += nd1 * nd2 ;
+
+      //fprintf(file.out,"pair_p %d   [%3d][%3d]  [%3d]\n",i,pair_p->cell1[i],pair_p->cell2[i],pair_p->latt2[i]);
+      for (j = 0; j < pair_p->numb[p]; j++) {
+      //fprintf(file.out,"pair_p %d   [%3d][%3d]  [%3d]\n",i,pair_p->cell1[i + j],pair_p->cell2[i + j],pair_p->latt2[i + j]);
+      nd1 = atoms->bfnnumb_sh[pair_p->cell1[i + j]];
+      nd2 = atoms->bfnnumb_sh[pair_p->cell2[i + j]];
+      for (n = 0; n < 3; n++) {
+      p_matrix      = matrix      + nd1 * nd2 * (3 * j + n) ;
+      p_matrix_k = matrix_k + atoms->bfnposn_sh[pair_p->cell1[i + j]] * \
+      atoms->number_of_sh_bfns_in_unit_cell + atoms->bfnposn_sh[pair_p->cell2[i + j]] + dim4 * n;
+      //fprintf(file.out,"%d\n",n);
+      //fprintf(file.out,"M_k address %4d %4d %4d %4d\n",atoms->bfnposn_sh[pair_p->cell1[i + j]] * \
+      atoms->number_of_sh_bfns_in_unit_cell , atoms->bfnposn_sh[pair_p->cell2[i + j]] , dim4 * n,\
+      atoms->number_of_sh_bfns_in_unit_cell - nd2);
+      for (l = 0; l < nd1; l++) {
+      for (m = 0; m < nd2; m++) {
+      *p_matrix_k += *p_matrix; 
+       p_matrix++ ;
+       p_matrix_k++ ;
+      }
+       p_matrix_k += atoms->number_of_sh_bfns_in_unit_cell - nd2;
+      } // close loop on l
+      } // close loop on n
+      } // close loop on j
+      } // close loop on p
+
+      free(matrix) ;
 
 }
 

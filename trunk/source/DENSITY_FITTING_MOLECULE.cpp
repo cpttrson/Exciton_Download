@@ -1,24 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-//#include <xc.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <mkl_scalapack.h>
-#include "mycomplex.h"
-#include "mylogical.h"
-#include "conversion_factors.h"
-#include "MATRIX_UTIL.h"
-#include "INTEGRALS_2C_MOLECULE.h"
-#include "PRINT_MOLECULE.h"
-#include "SCALAPACK.h"
-*/
-
 #include <cstring>
 #include "myconstants.h"
 #include "USER_DATA.h"
@@ -27,6 +6,7 @@
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "ROTATION_OPERATORS.h"
 #include "ROTATIONS_MOLECULE.h"
+#include "PRINT_MOLECULE.h"
 #include "FOURIER_TRANSFORM.h"
 #include "INTEGRALS_2C_MOLECULE.h"
 #include "INTEGRALS_3C_MOLECULE.h"
@@ -35,7 +15,8 @@
 
 using namespace std;
 
-void integrals_molecule_IJ_alpha(double *integral_buffer1, double *integral_buffer2, int *ictxt, int *nbsize, FERMI *fermi, ATOM *atoms, ATOM_TRAN *atom_p, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
+void generate_integral_buffers_molecule_ija(double *integral_buffer1, double *integral_buffer2, int *ictxt, int *nbsize, FERMI *fermi, ATOM *atoms, ATOM_TRAN *atom_p, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
+//void integrals_molecule_IJ_alpha(double *integral_buffer1, double *integral_buffer2, int *ictxt, int *nbsize, FERMI *fermi, ATOM *atoms, ATOM_TRAN *atom_p, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
 {
 
@@ -67,12 +48,7 @@ MPI_File fh;
   
   time3 = MPI_Wtime();
   AllocateDoubleMatrix(&V_inv,&dim1ax,&dim1ax,job);
-  //allocate_INT_1E(&one_ints, dim, Function, job, file);
-  //fock_element_1e1(&one_ints, dim, &pair_p, pair_p.nump, Function, R, G, atoms_ax, shells_ax, gaussians_ax, crystal, job, file);
-  //if (job->taskid == 0) 
   generate_coulomb_matrix_inverse(V_inv,atom_p,atoms,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
-  //free_INT_1E(&one_ints, Function, job, file);
-  //MPI_Bcast(&V_inv->a[0][0],dim1ax*dim1ax,MPI_DOUBLE,0,MPI_COMM_WORLD);
   time4 = MPI_Wtime() - time3;
   if (job->taskid == 0) printf("generate_coulomb_matrix_inverse            %10.2f\n",time4);
 
@@ -98,9 +74,7 @@ MPI_File fh;
   ResetDoubleArray(integral_buffer,&dim_send[job->taskid]);
   MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
   for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
-  contract_integrals_molecule_ij_alpha(&j1,fh,&integral_buffer[offset_j[j1]],fermi,atom_p,atoms,shells,gaussians,atoms_ax, \
-  shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
-  //integrals_occ_occ_vir_vir1(&j1,fh,&integral_buffer[offset_j[j1]],fermi,atom_p,atoms,shells,gaussians,atoms_ax, \
+  contract_integrals_molecule_ija(&j1,fh,&integral_buffer[offset_j[j1]],fermi,atom_p,atoms,shells,gaussians,atoms_ax, \
   shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
   } // close loop on j1
   MPI_File_close(&fh);
@@ -117,7 +91,7 @@ MPI_File fh;
         atoms,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
        }
       }
-     ring_rotate_once1(&integral_buffer,i,num_proc,&dim3,dim_send,dim_recv,job,file);
+     ring_rotate_once(&integral_buffer,i,num_proc,&dim3,dim_send,dim_recv,job,file);
     } // close loop over i
      DestroyDoubleArray(&integral_buffer,&dim_send[job->taskid],job);
      DestroyDoubleMatrix(&V_inv,job);
@@ -129,7 +103,8 @@ MPI_File fh;
 
 }
 
-void contract_integrals_molecule_ij_alpha(int *j1, MPI_File fh, double *integral_buffer, FERMI *fermi, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
+void contract_integrals_molecule_ija(int *j1, MPI_File fh, double *integral_buffer, FERMI *fermi, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
+//void contract_integrals_molecule_ij_alpha(int *j1, MPI_File fh, double *integral_buffer, FERMI *fermi, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
 {
 
@@ -167,7 +142,7 @@ TRIPLE_TRAN triple;
   dim1a = nbands * dim1 * nd6; 
   AllocateDoubleArray(&temp1_buffer,&dim1a,job);
   ResetDoubleArray(temp1_buffer,&dim1a);
-  if (job->taskid == 0) printf("J1 %3d ",*j1);
+  //if (job->taskid == 0) printf("J1 %3d ",*j1);
   count_triples1_reversed(*j1,&triple, atoms, atom_p, symmetry, R, R_tables, job, file);
   allocate_TRIPLE_TRAN(&triple, job, file);
   generate_triples1_reversed(*j1,&triple, atoms, atom_p, symmetry, R, R_tables, job, file);
@@ -179,9 +154,9 @@ TRIPLE_TRAN triple;
     AllocateDoubleArray(&reduced_three_centre_integrals,&dim456,job);
     AllocateDoubleArray(&three_centre_integrals,&dim456,job);
     ResetDoubleArray(reduced_three_centre_integrals,&dim456);
-    //three_centre_coulomb1_reversed2(j,&triple,reduced_three_centre_integrals,R,G,atoms,shells, \
+    integrals_molecule_ija(j,&triple,reduced_three_centre_integrals,R,G,atoms,shells, \
     gaussians,atoms_ax, shells_ax,gaussians_ax,crystal,job,file);
-    integrals_ij_alpha(j,&triple,reduced_three_centre_integrals,R,G,atoms,shells, \
+    //three_centre_coulomb1_reversed2(j,&triple,reduced_three_centre_integrals,R,G,atoms,shells, \
     gaussians,atoms_ax, shells_ax,gaussians_ax,crystal,job,file);
     for (j2 = 0; j2 < triple.numb[j]; j2++) {
       kp = triple.cell1[q + j2];
@@ -195,8 +170,8 @@ TRIPLE_TRAN triple;
       ResetDoubleArray(three_centre_integrals,&dim456);
       //rotate_permute_triple_ax_reversed2(&kp,&lp,j1,&op,&pm,reduced_three_centre_integrals, \
       three_centre_integrals,atom_p,atoms,shells,atoms_ax,shells_ax,symmetry,job,file);
-      rotate_permute_triple_ij_alpha(&kp,&lp,j1,&op,&pm,reduced_three_centre_integrals, \
-      three_centre_integrals,atom_p,atoms,shells,atoms_ax,shells_ax,symmetry,job,file);
+      rotate_permute_triple_ija(&kp,&lp,j1,&op,&pm,reduced_three_centre_integrals,three_centre_integrals,atom_p,atoms,\
+      shells,atoms_ax,shells_ax,symmetry,job,file);
       count = 0;
       for (k1 = 0; k1 < nd4; k1++) {
         for (l1 = 0; l1 < nd5; l1++) {
@@ -227,7 +202,7 @@ TRIPLE_TRAN triple;
           DestroyDoubleArray(&temp1_buffer,&dim1a,job);
           DestroyDoubleArray(&eigvec,&dim2,job);
           time2 = MPI_Wtime() - time1;
-          printf("integrals_occ_occ_vir_vir1                 %10.2f\n",time2);
+          printf("integrals_occ_occ_vir_vir                  %10.2f\n",time2);
 
 }
 
@@ -306,25 +281,64 @@ void contract_coulomb_integrals(int *j1, int *j2, DoubleMatrix *V_inv, double *i
   // ******************************************************************************************
 
 int i, a1, a2;
-int bfposa1, bfposa2, nd6a, nd6b;
+int bfposa1, bfposa2, nd1, nd2;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
 
-  nd6a = atoms_ax->bfnnumb_sh[*j1];
-  nd6b = atoms_ax->bfnnumb_sh[*j2];
+  nd1 = atoms_ax->bfnnumb_sh[*j1];
+  nd2 = atoms_ax->bfnnumb_sh[*j2];
   bfposa1 = atoms_ax->bfnposn_sh[*j1];
   bfposa2 = atoms_ax->bfnposn_sh[*j2];
   for (i = 0; i < nbands * nbands; i++) {
-    for (a1 = 0; a1 < nd6a; a1++) {
-      for (a2 = 0; a2 < nd6b; a2++) {
-        //integral_buffer2[i * nd6a + a1] += V_inv->a[bfposa1 + a1][bfposa2 + a2] * integral_buffer[i * nd6b + a2];
-        integral_buffer2[i * nd6b + a2] += V_inv->a[bfposa2 + a2][bfposa1 + a1] * integral_buffer[i * nd6a + a1]; // 1proc
+    for (a1 = 0; a1 < nd1; a1++) {
+      for (a2 = 0; a2 < nd2; a2++) {
+        integral_buffer2[i * nd2 + a2] += V_inv->a[bfposa2 + a2][bfposa1 + a1] * integral_buffer[i * nd1 + a1];
        }
       }
      }
 
 }
 
-void ring_size_transfer1(double *buffer1, double *buffer2, int dim1, int dim2, int num_procs, JOB_PARAM *job, FILES file)
+void initialise_ring_rotate(int num_procs, int *dim3, int *dims, int *dimr, JOB_PARAM *job, FILES file)
+
+{
+
+int i;
+
+  for (i = 1; i < num_procs; i++) dimr[i] = dims[i - 1];
+  dimr[0] = dims[num_procs - 1];
+ *dim3 = dims[job->taskid];
+
+}
+
+void ring_rotate_once(double **send_buffer, int k, int num_procs, int *dim3, int *dims, int *dimr, JOB_PARAM *job, FILES file)
+
+{   
+
+int i, j, r;
+int dim4;
+double time1, time2;
+double *recv_buffer;
+
+  time1 = MPI_Wtime();
+  if (job->taskid < num_procs) {
+  r = (job->taskid - k) % num_procs;
+  dim4 = dimr[r < 0 ? r + num_procs : r];
+  AllocateDoubleArray(&recv_buffer,&dim4,job);
+  if (job->numtasks == 1)
+  for (i = 0; i < dim4; i++) { recv_buffer[i] = (*send_buffer)[i];  }
+  else if (job->numtasks > 1)
+  ring_transfer(*send_buffer,recv_buffer,*dim3,dim4,num_procs,job,file);
+  DestroyDoubleArray(send_buffer,dim3,job);
+  *dim3 = dim4;
+  AllocateDoubleArray(send_buffer,dim3,job);
+  for (i = 0; i < dim4; i++) { (*send_buffer)[i] = recv_buffer[i];  }
+  DestroyDoubleArray(&recv_buffer,&dim4,job);
+ }
+  time2 += MPI_Wtime() - time1;
+
+}
+
+void ring_transfer(double *buffer1, double *buffer2, int dim1, int dim2, int num_procs, JOB_PARAM *job, FILES file)
 
 {   
 
@@ -345,44 +359,111 @@ double time1, time2;
 
 }
 
-void ring_rotate_once1(double **send_buffer, int k, int num_procs, int *dim3, int *dims, int *dimr, JOB_PARAM *job, FILES file)
+/*
+ void generate_coulomb_matrix_inverse(DoubleMatrix *V_inv_k1, FERMI *fermi, ATOM_TRAN *atom_p, ATOM *atoms, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
-{   
+ {
 
-int i, j, r;
-int dim4;
+int i, j, k;
+int Function[8];
+int dim, dimg, dim1ax = atoms_ax->number_of_sh_bfns_in_unit_cell;
+int info = 0;
+int begin_k, end_k;
+int nk[2];
+int is[3]; //move outside here
+double *eigenvalues;
 double time1, time2;
-double *recv_buffer;
+char uplo = 'U';
+char jobz = 'V';
+char NoTrans = 'N', ConjTrans = 'C';
+KPOINT_TRAN knet;
+FERMI fermi1;
+PAIR_TRAN pair_p;
+ComplexMatrix *V_inv_k, *V_k, *xtrn1, *eigenvectors;
+Complex alpha, beta;
+INT_1E one_ints;
 
-  time1 = MPI_Wtime();
-  if (job->taskid < num_procs) {
-  r = (job->taskid - k) % num_procs;
-  dim4 = dimr[r < 0 ? r + num_procs : r];
-  AllocateDoubleArray(&recv_buffer,&dim4,job);
-  if (job->numtasks == 1)
-  for (i = 0; i < dim4; i++) { recv_buffer[i] = (*send_buffer)[i];  }
-  else if (job->numtasks > 1)
-  ring_size_transfer1(*send_buffer,recv_buffer,*dim3,dim4,num_procs,job,file);
-  DestroyDoubleArray(send_buffer,dim3,job);
-  *dim3 = dim4;
-  AllocateDoubleArray(send_buffer,dim3,job);
-  for (i = 0; i < dim4; i++) { (*send_buffer)[i] = recv_buffer[i];  }
-  //memcpy(*send_buffer, recv_buffer, dim4 * sizeof(double));
-  DestroyDoubleArray(&recv_buffer,&dim4,job);
+  alpha.real() = k_one;
+  alpha.imag() = k_zero;
+  beta.real() = k_zero;
+  beta.imag() = k_zero;
+  Function[0] = 0 ;
+  Function[1] = 0 ;
+  Function[2] = 0 ;
+  Function[3] = 0 ;
+  Function[4] = 1 ; // needed for screened potential
+  Function[5] = 0 ;
+  Function[6] = 0 ;
+  Function[7] = 1 ;
+  is[0] = 1; is[1] = 1; is[2] = 1;
+
+count_k_points(&knet,is,crystal,symmetry,job,file);
+  allocate_k_points(&knet,crystal,job,file);
+  if (job->C09 == 1)
+  read_XCBD_crystal_09(&knet,crystal,job,file);
+  generate_k_points(&knet,is,crystal,symmetry,job,file);
+  fermi1.nkunique = knet.unique;
+  allocate_fermi(&fermi1,atoms,job,file);
+  fermi1.knet = &knet;
+  fermi1.nktot = knet.nktot;
+  count_density_pairs4(&pair_p, atoms, atom_p, symmetry, R, R_tables, job, file);
+  allocate_PAIR_TRAN(&pair_p, atoms, symmetry, R_tables, job, file);
+  generate_density_pairs4(&pair_p, atoms, atom_p, symmetry, R, R_tables, job, file);
+  //print_pairs(&pair_p, atoms, R, job, file);
+  array_dimensions(&dim, &dimg, &pair_p, atoms_ax, job, file); // don't change
+
+  allocate_INT_1E(&one_ints, dim, Function, job, file);
+  two_centre_coulomb1(&one_ints, &pair_p, R, G, atoms_ax, shells_ax, gaussians_ax, crystal, job, file);
+  //for(i = 0; i < dim; i++) fprintf(file.out,"%3d %3d %3d %e\n",dim,dimg,i,one_ints.Coulomb[i]);
+  AllocateComplexMatrix(&V_k,&dim1ax,&dim1ax,job);
+  begin_k = 0;
+  end_k = 1;
+  for (k = begin_k; k < end_k; k++) {
+  nk[0] = knet.ibz[k];
+  nk[1] = knet.ibz[k];
+  fourier_transform(&one_ints.Coulomb[0], &V_k->a[0][0], &knet, nk, &pair_p, R, atoms_ax, shells_ax, symmetry,job,file);
  }
-  time2 += MPI_Wtime() - time1;
+  //print_complex_matrix(V_k, file);
+  free_INT_1E(&one_ints, Function, job, file);
+  free_PAIR_TRAN(&pair_p,job);
+  AllocateComplexMatrix(&xtrn1,&dim1ax,&dim1ax,job);
+  AllocateComplexMatrix(&eigenvectors,&dim1ax,&dim1ax,job);
+  AllocateDoubleArray(&eigenvalues,&dim1ax,job);
+  ResetComplexMatrix(xtrn1);
+
+ResetComplexMatrix(eigenvectors);
+  ResetDoubleArray(eigenvalues,&dim1ax);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  DiagonaliseHermitian(&V_k, &eigenvalues, &eigenvectors, &jobz, &uplo, &info);
+  DestroyComplexMatrix(&V_k,job);
+
+  //for (i = 0; i < dim1ax / 10; i++)
+  //if (eigenvalues[i] < 1e-05) printf("%3d %3d %e\n",job->taskid,i,eigenvalues[i]);
+
+  for (i = 0; i < dim1ax; i++) {
+    for (j = 0; j < dim1ax; j++) {
+      //xtrn1->a[i][j] = eigenvectors->a[i][j] / sqrt(eigenvalues[i]);
+      xtrn1->a[i][j] = eigenvectors->a[i][j] / eigenvalues[i];
+     }
+    }
+  AllocateComplexMatrix(&V_inv_k,&dim1ax,&dim1ax,job);
+  ResetComplexMatrix(V_inv_k);
+  ComplexGEMM1(&ConjTrans, &NoTrans, &alpha, &xtrn1, &eigenvectors, &beta, &V_inv_k);
+  DestroyComplexMatrix(&xtrn1,job);
+  DestroyComplexMatrix(&eigenvectors,job);
+  DestroyDoubleArray(&eigenvalues,&dim1ax,job);
+  //AllocateDoubleMatrix(&V_inv_k1,&dim1ax,&dim1ax,job);
+  for (i = 0; i < dim1ax; i++) {
+    for (j = 0; j < dim1ax; j++) {
+      V_inv_k1->a[i][j] = (V_inv_k->a[i][j]).real();
+     }
+    }
+  DestroyComplexMatrix(&V_inv_k,job);
+  //fprintf(file.out,"V inv k\n");
+  //print_double_matrix(V_inv_k1, file);
+  time2 = MPI_Wtime() - time1;
+  //if (job->taskid == 0) printf("end V_k %3d %f\n",job->taskid,time2);
 
 }
-
-void initialise_ring_rotate(int num_procs, int *dim3, int *dims, int *dimr, JOB_PARAM *job, FILES file)
-
-{
-
-int i;
-
-  for (i = 1; i < num_procs; i++) dimr[i] = dims[i - 1];
-  dimr[0] = dims[num_procs - 1];
- *dim3 = dims[job->taskid];
-
-}
+*/
 

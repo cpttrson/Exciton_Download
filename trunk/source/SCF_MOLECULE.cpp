@@ -364,6 +364,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
         DestroyComplexMatrix(&eigenvectors_S_k[iii],job);
         DestroyComplexMatrix(&S_salc1[iii],job);
        }
+    /*
     count1 = 0;
     for (jjj = 0; jjj < job->mixing_order; jjj++) {
       for (iii = 0; iii < symmetry->number_of_classes; iii++) {
@@ -377,6 +378,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
         count1++;
        }
       }
+      */
      }
 
   // ******************************************************************************************
@@ -412,7 +414,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     for (iii = 0; iii < symmetry->number_of_classes; iii++) {
       dim_salc = symmetry->irp_dim_k[iii] * num_irrep_in_basis[iii];
       if (dim_salc == 0) dim_salc = 1;
-      AllocateComplexMatrix(&Residual[count1],&dim_salc,&dim_salc,job);
+      AllocateComplexMatrix(&Residual[count1],&dim_salc2[iii],&dim_salc2[iii],job);
       AllocateComplexMatrix(&FockHist[count1],&dim_salc,&dim_salc,job);
       ResetComplexMatrix(Residual[count1]);
       ResetComplexMatrix(FockHist[count1]);
@@ -1442,16 +1444,16 @@ ComplexMatrix *Residual_tmp, *xtmp_salc, *xtmp_salc1, *C_element;
       for (jj = 0; jj < nmix; jj++) {
 	ResetComplexMatrix(C_element);
         //if (job->taskid == 0) printf("ii jj %3d %3d iii %3d %3d %3d %3d %3d %3d\n",ii,jj,iii,dim_salc2[iii],\
-        iii+ii * symmetry->number_of_classes,iii + jj * symmetry->number_of_classes,Residual[iii + ii * symmetry->number_of_classes]->iRows,\
-        Residual[iii + jj * symmetry->number_of_classes]->iRows);
+        iii+ii * symmetry->number_of_classes,iii + jj * symmetry->number_of_classes,Residual[iii + ii * symmetry->number_of_classes]->iCols,\
+        Residual[iii + jj * symmetry->number_of_classes]->iCols);
         ComplexGEMM1(&ConjTrans, &NoTrans, &alpha, &Residual[iii + ii * symmetry->number_of_classes], \
 	&Residual[iii + jj * symmetry->number_of_classes], &beta, &C_element);
 	//print_complex_matrix2(C_element,0,7,1.0,file);
 	trace = k_zero;
-	for (kk = 0; kk < dim_salc2[iii]; kk++) trace += (C_element->a[kk][kk]).real();
-	  C->a[ii][jj] += trace;
-	 }
-        }
+        for (kk = 0; kk < dim_salc2[iii]; kk++) trace += (C_element->a[kk][kk]).real();
+        C->a[ii][jj] += trace;
+       }
+      }
      DestroyComplexMatrix(&C_element,job);
     } // close loop on iii
 

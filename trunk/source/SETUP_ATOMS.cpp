@@ -1,11 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-*/
 #include <mpi.h>
 #include <cstring>
 #include "conversion_factors.h"
@@ -272,9 +264,7 @@ void generate_all_atoms(CRYSTAL *crystal, REAL_LATTICE *R, SYMMETRY *symmetry, A
     atoms->cell_vector[i].comp1 = 99999.9;
     atoms->cell_vector[i].comp2 = 99999.9;
     atoms->cell_vector[i].comp3 = 99999.9;
-    //CHANGES2015
     atoms->basis_set[i] = -1;
-    //CHANGES2015
     count1[i] = 0;
   }
 
@@ -760,7 +750,6 @@ VECTOR_DOUBLE Rvec_tmp[2], O_tmp, cell_vec1;
     if (job->taskid == 0 && job->verbosity > 1)
     fprintf(file.out, "TRANSFORMATION OF M ATOMIC POSITIONS BY SYMMETRY OPERATIONS\n");
     for (atm = 0; atm < atoms->number_of_unique_atoms; atm++) {
-      //for (i = count; i < count + count1[atm]; i++) {
       for (i = count; i < count + atom_p->numb[atm]; i++) {
         for (k = 0; k < symmetry->number_of_operators; k++) {
           p_irr = symmetry->irr + k * 9;
@@ -782,7 +771,6 @@ VECTOR_DOUBLE Rvec_tmp[2], O_tmp, cell_vec1;
      atom_p->numb[atm] = atom_p->numb[atm];
      atom_p->posn[atm] = count;
      if (job->verbosity > 1) {
-     //for (i = count; i < count + count1[atm]; i++) {
      for (i = count; i < count + atom_p->numb[atm]; i++) {
        for (k = 0; k < symmetry->number_of_operators; k++) {
          if (job->taskid == 0 && job->verbosity > 1)

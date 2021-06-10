@@ -42,8 +42,8 @@ void print_double_matrix(DoubleMatrix *a, FILES file){
     for (i=0;i<a->iRows;i++){
       //for (j=0;j<a->iCols;j++){
       for (j=0;j<12;j++){
-      fprintf(file.out,"%11.6e  ",a->a[i][k * 12 + j]);
-      //fprintf(file.out,"%8.3lf  ",a->a[i][k * 12 + j]);
+      //fprintf(file.out,"%11.6e  ",a->a[i][k * 12 + j]);
+      fprintf(file.out,"%9.5lf  ",a->a[i][k * 12 + j]);
      }
     fprintf(file.out,"\n");
    }
@@ -56,8 +56,8 @@ void print_double_matrix(DoubleMatrix *a, FILES file){
     fprintf(file.out,"\n\n");
      for (i=0;i<a->iRows;i++){
        for(j = 0; j < remndr; j++) {
-         fprintf(file.out,"%11.6e  ",a->a[i][k * 12 + j]);
-         //fprintf(file.out,"%8.3lf  ",a->a[i][k * 12 + j]);
+         //fprintf(file.out,"%11.6e  ",a->a[i][k * 12 + j]);
+         fprintf(file.out,"%9.5lf  ",a->a[i][k * 12 + j]);
         }
        fprintf(file.out,"\n");
       }

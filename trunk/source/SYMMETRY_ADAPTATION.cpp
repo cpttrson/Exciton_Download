@@ -1,12 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-*/
 #include <mpi.h>
 #include "mycomplex.h"
 #include "myconstants.h"
