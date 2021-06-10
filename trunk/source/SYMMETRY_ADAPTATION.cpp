@@ -6,7 +6,7 @@
 #include "PRINT_UTIL.h"
 #include "ROTATION_OPERATORS.h"
 #include "SYMMETRY_ADAPTATION.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 
 using namespace std;
 

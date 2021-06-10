@@ -15,7 +15,7 @@
 #include "conversion_factors.h"
 #include "USER_DATA.h"
 #include "LIMITS.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "PARALLEL.h"
 #include "PAIRS_QUADS.h"
 #include "ROTATIONS_MOLECULE.h"

@@ -6,7 +6,7 @@
 #include "MATRIX_UTIL.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "PRINT_UTIL.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "TOOLS.h"
 #include "SETUP_SYMMETRY.h"
 
