@@ -13,7 +13,7 @@
 #include "myconstants.h"
 #include "mycomplex.h"
 #include "USER_DATA.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "MATRIX_UTIL.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 
