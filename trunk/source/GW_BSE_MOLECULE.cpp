@@ -1,39 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-#include <xc.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include "mylogical.h"
-#include "SYMMETRY.h"
-#include "TOOLS.h"
-#include "KPOINTS.h"
-#include "CRYSTAL09.h"
-#include "PRINT_UTIL.h"
-#include "PLOTTING.h"
-#include "INTEGRALS.h"
-#include "INTEGRALS_TWO_CENTRE.h"
-#include "INTEGRALS_THREE_CENTRE.h"
-#include "INTEGRALS1.h"
-#include "DENSITY_FITTING.h"
-#include "ATOM_SCF.h"
-#include "DFT.h"
-#include "LIMITS.h"
-#include "SCF_MOLECULE.h"
-#include "GW.h"
-#include "BETHE_SALPETER1.h"
-#include "mkl_blas.h"
-#include "mkl_cblas.h"
-#include "mkl_blacs.h"
-extern "C" int   numroc_( int *n, int *nb, int *iproc, int *isrcproc, int *nprocs);
-extern "C" void  descinit_( int *desc, int *m, int *n, int *mb, int *nb, int *irsrc, int *icsrc, int *ictxt, int *lld, int *info);
-*/
-
 #include <cstring>
 #include <mkl_scalapack.h>
 #include "mycomplex.h"
@@ -117,7 +81,7 @@ DoubleMatrix *Sigma;
   count_integral_buffer_sizes(dim_send,fermi,atoms_ax,job,file);
   AllocateDoubleArray(&integral_buffer1,&dim_send[job->taskid],job);
   AllocateDoubleArray(&integral_buffer2,&dim_send[job->taskid],job);
-  integrals_molecule_IJ_alpha(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
+  generate_integral_buffers_molecule_ija(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
   gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -257,7 +221,7 @@ DoubleMatrix *V_inv;
   AllocateDoubleArray(&integral_buffer2,&dim_send[job->taskid],job);
   //gw_bse_molecule_integrals_in_core(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
   gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
-  integrals_molecule_IJ_alpha(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
+  generate_integral_buffers_molecule_ija(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
   gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
   bse_hamiltonian_in_core1(&ictxt,&nbsize,Ham_buffer1,Ham_buffer2,integral_buffer1,integral_buffer2,fermi,atom_p,atoms, \
   atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
@@ -397,7 +361,7 @@ DoubleMatrix *V_inv;
   count_integral_buffer_sizes(dim_send,fermi,atoms_ax,job,file);
   AllocateDoubleArray(&integral_buffer1,&dim_send[job->taskid],job);
   AllocateDoubleArray(&integral_buffer2,&dim_send[job->taskid],job);
-  integrals_molecule_IJ_alpha(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
+  generate_integral_buffers_molecule_ija(integral_buffer1,integral_buffer2,&ictxt,&nbsize,fermi,atoms,atom_p,shells, \
   gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
   bse_hamiltonian_in_core1(&ictxt,&nbsize,Ham_buffer1,Ham_buffer2,integral_buffer1,integral_buffer2,fermi,atom_p,atoms, \
   atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
@@ -1590,6 +1554,7 @@ char zz5[24] = "cas_evalues";
     (k_one - dSigma_dE[m])) * au_to_eV, Sigma[m] * au_to_eV, Sigma[m] / (k_one - dSigma_dE[m]) * au_to_eV, \
      k_one / (k_one - dSigma_dE[m]));
    }
+  fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
   fflush(file.out);
  }
 
@@ -1797,6 +1762,7 @@ char zz5[24] = "cas_evalues";
     (k_one - dSigma_dE[m])) * au_to_eV, Sigma[m] * au_to_eV, Sigma[m] / (k_one - dSigma_dE[m]) * au_to_eV, \
      k_one / (k_one - dSigma_dE[m]));
    }
+  fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
   fflush(file.out);
  }
 
@@ -2005,6 +1971,7 @@ char zz5[24] = "cas_evalues";
     (k_one - dSigma_dE[m])) * au_to_eV, Sigma[m] * au_to_eV, Sigma[m] / (k_one - dSigma_dE[m]) * au_to_eV, \
      k_one / (k_one - dSigma_dE[m]));
    }
+  fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
   fflush(file.out);
   char zz4[24] = "GW_evalues";
   FILE *evals = fopen(zz4, "wb");

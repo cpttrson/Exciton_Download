@@ -1,23 +1,3 @@
-/*
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <sys/types.h>
-#include "ROTATION_OPERATORS.h"
-#include "ATOM_SCF.h" // for f000m
-#include "INTEGRALS.h"
-#include "mylogical.h"
-#include "mycomplex.h"
-#include "conversion_factors.h"
-#include "LIMITS.h"
-#include "SYMMETRY.h"
-#include "DFT.h"
-*/
 #include <mpi.h>
 #include "myconstants.h"
 #include "USER_DATA.h"
@@ -28,6 +8,7 @@
 #include "E_COEFFICIENTS.h"
 #include "INCOMPLETE_GAMMA.h"
 #include "ALLOCATE_MEMORY_MOLECULE.h"
+#include "MCMURCHIE_DAVIDSON.h"
 #include "INTEGRALS_2C_MOLECULE.h"
 
 using namespace std;
@@ -343,13 +324,17 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
     if (Function[0] || Function[1]) {
         Kinetic(kinetic_cart, index_i, index_j, bfposi1, bfposj1, gausposi, gausposj, nd2, im, jm, E1x, E1y, E1z, sab, \
         shells, gaussians, job, file);
-        two_centre_cartesian_to_sh_shell_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_shell_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[0] || Function[2]) {
         ElecNuc(elecnuc_cart, index_i, index_j, bfposi1, bfposj1, nd2,  im, jm, E1x, E1y, E1z, R_AB, pab_inv, sab, R, G, \
         crystal, atoms,shells,job,file);
-        two_centre_cartesian_to_sh_shell_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_shell_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[3]) {
@@ -357,22 +342,27 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         shells, gaussians, job,file);
         //two_centre_vector_cartesian_to_sh_shell(momentum_cart,&one_ints->Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
-        two_centre_vector_cartesian_to_sh_shell_ij(momentum_cart,&one_ints->Momentum[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints->Momentum[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[4]) {
         Overlap(overlap_cart, index_i, index_j, bfposi1, bfposj1, nd2, im, jm, E1x, E1y, E1z, sab, shells, job, file);
-        two_centre_cartesian_to_sh_shell_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_shell_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[6]) {
         Dipole(dipole_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd1,nd2,ip,im,jm,E1x,E1y,E1z,sab,R_AB,atoms,shells,\
         gaussians,job,file);
         //fix dim
-        two_centre_vector_cartesian_to_sh_shell_ij(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        //two_centre_vector_cartesian_to_sh_shell_ij(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
+        two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[7]) {
+	    /*
         double prefac[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
         double ab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
         count = 0;
@@ -385,10 +375,15 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         count++; 
        }
       }
-        two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi,bfposj,nd2, im,jm,E1x,E1y,E1z,&R_AB_1e,prefac,ab,G,crystal,\
+      */
+        two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,crystal,\
+        atoms,shells,gaussians,job,file);
+        //two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi,bfposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,prefac,ab,G,crystal,\
         atoms,shells,gaussians,job,file);
         //fix dim
-        two_centre_cartesian_to_sh_shell_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        //two_centre_cartesian_to_sh_shell_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        nd2,nd4,shells,job,file);
+        two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
         nd2,nd4,shells,job,file);
        }
         bfposj   += shelj;
@@ -563,48 +558,36 @@ INT_1E one_ints_buffer;
     if (Function[0] || Function[1]) {
         Kinetic(kinetic_cart, index_i, index_j, bfposi1, bfposj1, gausposi, gausposj, nd2, im, jm, E1x, E1y, E1z, sab, \
         shells, gaussians, job, file);
-        two_centre_cartesian_to_sh_shell_ij(kinetic_cart,&one_ints_buffer.Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints_buffer.Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[0] || Function[2]) {
         ElecNuc(elecnuc_cart, index_i, index_j, bfposi1, bfposj1, nd2,  im, jm, E1x, E1y, E1z, R_AB, pab_inv, sab, R, G, \
         crystal, atoms,shells,job,file);
-        two_centre_cartesian_to_sh_shell_ij(elecnuc_cart,&one_ints_buffer.ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints_buffer.ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[3]) {
         Momentum(momentum_cart, index_i, index_j, bfposi1, bfposj1, gausposi, gausposj, nd1, nd2, im, jm, E1x, E1y, E1z, sab, \
         shells, gaussians, job,file);
-        two_centre_vector_cartesian_to_sh_shell_ij(momentum_cart,&one_ints_buffer.Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints_buffer.Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[4]) {
         Overlap(overlap_cart, index_i, index_j, bfposi1, bfposj1, nd2, im, jm, E1x, E1y, E1z, sab, shells, job, file);
-        two_centre_cartesian_to_sh_shell_ij(overlap_cart,&one_ints_buffer.Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints_buffer.Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[6]) {
         Dipole(dipole_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd1,nd2,ip,im,jm,E1x,E1y,E1z,sab,R_AB,atoms,shells,\
         gaussians,job,file);
-        two_centre_vector_cartesian_to_sh_shell_ij(dipole_cart,&one_ints_buffer.Dipole[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints_buffer.Dipole[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[7]) {
-        double prefac[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double ab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        count = 0;
-        for (i4 = 0; i4 < shells->ng_sh[index_i]; i4++) {
-        for (j4 = 0; j4 < shells->ng_sh[index_j]; j4++) {
-        prefac[count] = gaussians->c_sh[gausposi + i4] * gaussians->c_sh[gausposj + j4] * \
-        pi32 * pi32 / gaussians->expo_sh[gausposi + i4] / 
-        gaussians->expo_sh[gausposj + j4] / sqrt(gaussians->expo_sh[gausposi + i4] * gaussians->expo_sh[gausposj + j4]); 
-        ab[count] = k_one / gaussians->expo_sh[gausposi + i4] + k_one /  gaussians->expo_sh[gausposj + j4];
-        count++; 
-       }
-      }
-        two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi,bfposj,nd2, im,jm,E1x,E1y,E1z,&R_AB_1e,prefac,ab,G,crystal,\
+        two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,crystal,\
         atoms,shells,gaussians,job,file);
-        two_centre_cartesian_to_sh_shell_ij(coulomb_cart,&one_ints_buffer.Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints_buffer.Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
         nd2,nd4,shells,job,file);
        }
         bfposj   += shelj;
@@ -650,7 +633,6 @@ INT_1E one_ints_buffer;
   if (Function[4]) MPI_Allreduce(&one_ints_buffer.Overlap[0],  &one_ints->Overlap[0],  dimall,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if (Function[6]) MPI_Allreduce(&one_ints_buffer.Dipole[0],   &one_ints->Dipole[0],   dimall,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if (Function[7]) MPI_Allreduce(&one_ints_buffer.Coulomb[0],  &one_ints->Coulomb[0],  dimall  ,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  printf("dimall %3d %3d\n",dim,Function[7]);
   free_INT_1E(&one_ints_buffer, Function, job, file);
 
   if (Function[0]) {
@@ -662,136 +644,6 @@ INT_1E one_ints_buffer;
    time2 = MPI_Wtime();
 
 }
-
-/*
-void fock_element_elecnuc(double *elecnuc_shar, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
-
-{
-
-  int ip, jp, gi, gj, p;
-  int i, j, i4, j4, k, l, mm, nn, atm0, count;
-  int index_i, index_j;
-  int dim, dim1, dim2, dim3, dim4, dim5, dim6, dim7, dim8, dim9, atm1, atm2;
-  int bfposi, bfposj, bfposi1, bfposj1;
-  int imax, jmax, im, jm;
-  int gausposi, gausposj, shelposi, shelposj;
-  int sheli, shelj, sheli1, shelj1;
-  int nd1, nd2, nd3, nd4, nd12, nd34;
-  int nsheli, nshelj;
-  double R_AB_1esqrd;
-  double E1_max;
-  double time1, time2;
-  VECTOR_DOUBLE R_AB_1e;
-
-  // Function[0] Fock Operator
-  // Function[1] Kinetic Energy Operator
-  // Function[2] Electron-Nuclear Potential Energy = 1 (finite systems) = 2 (extended systems) = 3 (atoms)
-  // Function[3] Momentum Operator Matrix Elements
-  // Function[4] Overlap
-  // Function[5] 
-  // Function[6] Dipole Operator Matrix Elements
-  // Function[7] Coulomb Operator Matrix Elements
-
-  time1 = MPI_Wtime();
-
-    dim = 0;
-    for (p = 0; p < pair_p->nump; p++) {
-    ip = pair_p->cell1[pair_p->posn[p]];
-    jp = pair_p->cell2[pair_p->posn[p]];
-    gi = 0;
-    gj = pair_p->latt2[pair_p->posn[p]];
-    nd1 = atoms->bfnnumb[ip];
-    nd2 = atoms->bfnnumb[jp];
-    nd3 = atoms->bfnnumb_sh[ip];
-    nd4 = atoms->bfnnumb_sh[jp];
-    nd12 = nd1 * nd2;
-    nd34 = nd3 * nd4;
-
-VECTOR_DOUBLE Rvec_tmp;
-double Rsqrd;
-Rvec_tmp.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
-Rvec_tmp.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
-Rvec_tmp.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-Rsqrd = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
-if (Rsqrd > job->itol1 * job->itol1) { dim += nd34;  continue; }
-
-    //double kinetic_cart[nd12]; 
-    double elecnuc_cart[nd12]; 
-    //double momentum_cart[3 * nd12]; 
-    //double overlap_cart[nd12]; 
-    //double dipole_cart[3 * nd12]; 
-    //double coulomb_cart[nd12]; 
-    // order matters for these loops to set im and jm
-    //im = 0;
-    //jm = 0;
-    //if (Function[0] || Function[2]) {
-    for (i = 0; i < nd12; i++) elecnuc_cart[i] = k_zero;
-
-    //fprintf(file.out,"ip jp gj numb %3d %3d %3d %3d %3d\n",p,ip,jp,gj,pair_p->numb[p]) ;
-    shelposi = atoms->shelposn_sh[ip];
-    gausposi = atoms->gausposn_sh[ip];
-    bfposi  = 0;
-    bfposi1 = 0;
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
-      sheli  = shells->type_sh[index_i];
-      sheli1 = shells->type1_sh[index_i];
-      imax   = shells->imax_sh[index_i];
-      shelposj = atoms->shelposn_sh[jp];
-      gausposj = atoms->gausposn_sh[jp];
-      bfposj  = 0;
-      bfposj1 = 0;
-      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
-        R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
-        R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
-        R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-        R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
-        shelj  = shells->type_sh[index_j];
-        shelj1 = shells->type1_sh[index_j];
-        jmax   = shells->imax_sh[index_j];
-        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double E1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+im+jm+1) * (imax+im+1) * (jmax+jm+1)];
-        double E1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+im+jmax+jm+1) * (imax+im+1) * (jmax+jm+1)];
-        double E1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+im+jmax+jm+1) * (imax+im+1) * (jmax+jm+1)];
-        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        E_coefficients1(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,im,jm,E1x,E1y,E1z,&E1_max,sab,pab_inv,&R_AB_1esqrd,\
-        R_AB,R,atoms,shells,gaussians,job,file);
-        ElecNuc(elecnuc_cart, index_i, index_j, bfposi1, bfposj1, nd2,  im, jm, E1x, E1y, E1z, R_AB, pab_inv, sab, R, G, \
-        crystal, atoms,shells,job,file);
-        two_center_cartesian_to_sh_shell(elecnuc_cart,&elecnuc_shar[dim],index_i,index_j,bfposi,bfposj,bfposi1,\
-        bfposj1,nd2,nd4,shells,job,file);
-        bfposj   += shelj;
-        bfposj1  += shelj1;
-        gausposj += shells->ng_sh[index_j];
-       } // close loop over index_j
-      bfposi   += sheli;
-      bfposi1  += sheli1;
-      gausposi += shells->ng_sh[index_i];
-     } // close loop over index_i
-
- if (job->verbosity > 1) {
-  count = 0;
-   fprintf(file.out,"elecnuc\n");
-      fprintf(file.out,"pair %3d ip %3d jp %3d gj %3d\n",p,ip,jp,gj);
-      for(i=0;i<atoms->bfnnumb_sh[ip];i++) {
-        for(j=0;j<atoms->bfnnumb_sh[jp];j++) {
-          fprintf(file.out,"%6.2lf",elecnuc_shar[dim + count]);
-           count++;
-          }
-         fprintf(file.out,"\n");
-        }
-        fprintf(file.out,"\n");
-       }
-
-    dim += nd34;
-
-  } // close loop on p
-
-
-   time2 = MPI_Wtime();
-
-}
-*/
 
 void Kinetic(double *Kinetic, int index_i, int index_j, int bfposi, int bfposj, int gausposi, int gausposj, int nd2,  int im, int jm, double *E1x, double *E1y, double *E1z, double *sab, SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
 
@@ -1374,40 +1226,36 @@ void Dipole(double *Dipole, int index_i, int index_j, int bfposi, int bfposj, in
 
 }
 
-void two_centre_coulomb(double *Coulomb, int index_i, int index_j, int bfposi, int bfposj, int nd2,  int im, int jm, double *E1x, double *E1y, double *E1z, VECTOR_DOUBLE *R_AB_1e, double *prefac, double *ab, RECIPROCAL_LATTICE *G, CRYSTAL *crystal, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
+void two_centre_coulomb(double *Coulomb, int index_i, int index_j, int bfposi1, int bfposj1, int gausposi, int gausposj, int nd2,  int im, int jm, double *E1x, double *E1y, double *E1z, VECTOR_DOUBLE *R_AB_1e, CRYSTAL *crystal, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
 
 {
 
-  int i, j, m, n, p, t, u, v;
-  int i1, i4, j4;
-  int n1, n2, n3, n4, n5, n6;
-  int tmax, umax, vmax;
-  int sheli, shelj;
-  int off1, off2, off3;
-  int imax, jmax;
-  int count;
-  int mm, mm0, mm1, mm2, mm3, mm4;
-  double Rsqrd, p_inv_ex, fn[55];
-  double gamma_0, root_gamma_0;
-  double em[1][55];
-  double f[13][13][13][13];
-  double fgtuv_max, fgtuv_temp;
-  double *fgtuv;
+int t, u, v, i4, j4;
+int imax, jmax;
+int count;
+int mm, mm0, mm1, mm2, mm3;
+double Rsqrd;
+double em[1][55];
+double fgtuv_max, fgtuv_temp;
+double *fgtuv;
 
-  //switch (crystal->type[0]) {
-
-  //case 'M':
+  double prefac[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+  double ab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+  count = 0;
+  for (i4 = 0; i4 < shells->ng_sh[index_i]; i4++) {
+  for (j4 = 0; j4 < shells->ng_sh[index_j]; j4++) {
+  prefac[count] = gaussians->c_sh[gausposi + i4] * gaussians->c_sh[gausposj + j4] * \
+  pi32 * pi32 / gaussians->expo_sh[gausposi + i4] / 
+  gaussians->expo_sh[gausposj + j4] / sqrt(gaussians->expo_sh[gausposi + i4] * gaussians->expo_sh[gausposj + j4]); 
+  ab[count] = k_one / gaussians->expo_sh[gausposi + i4] + k_one /  gaussians->expo_sh[gausposj + j4];
+  count++; 
+ }
+}
 
   imax = shells->imax_sh[index_i];
   jmax = shells->imax_sh[index_j];
-  off3 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-  off2 = (imax + im + jmax + jm + 1) * off3;
-  off1 = (jmax + jm + 1) * off2;
-  sheli = shells->type1_sh[index_i];
-  shelj = shells->type1_sh[index_j];
-
   mm  = imax + jmax;
-  mm3 = off3;
+  mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
   mm2 = (mm + 1) * mm3;
   mm1 = (mm + 1) * mm2;
   mm0 = (mm + 1) * mm1;
@@ -1423,12 +1271,11 @@ void two_centre_coulomb(double *Coulomb, int index_i, int index_j, int bfposi, i
   Rsqrd = double_vec_dot(R_AB_1e, R_AB_1e);
   for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
   f000m(&em[0][0], Rsqrd / ab[i4], k_one / ab[i4], mm);
-  non_recursive_ftuvn(mm, 0, f, em, R_AB_1e);
   for (t = 0; t <= mm; t++) {
     for (u = 0; u <= mm; u++) {
       for (v = 0; v <= mm; v++) {
         if (t + u + v > mm) break;
-          fgtuv_temp = f[t][u][v][0] * prefac[i4];
+          fgtuv_temp = ftuvn(t,u,v,0,&em[0][0],R_AB_1e[0]) * prefac[i4];
           fgtuv[t * mm1 + u * mm2 + v * mm3  + i4] += fgtuv_temp;
           fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
           fgtuv_max = k_one;
@@ -1437,53 +1284,149 @@ void two_centre_coulomb(double *Coulomb, int index_i, int index_j, int bfposi, i
        }
       }
 
-  off3 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-  off2 = (imax + im + jmax + jm + 1) * off3;
-  off1 = (jmax + jm + 1) * off2;
-  sheli = shells->type1_sh[index_i];
-  shelj = shells->type1_sh[index_j];
-  for (i = 0; i < sheli; i++) {
-    for (j = 0; j < shelj; j++) {
-      count = (bfposi + i) * nd2 + bfposj + j;
-      tmax = shells->tuv[imax][i][0] + shells->tuv[jmax][j][0];
-      umax = shells->tuv[imax][i][1] + shells->tuv[jmax][j][1];
-      vmax = shells->tuv[imax][i][2] + shells->tuv[jmax][j][2];
-      n1 = shells->tuv[imax][i][0];
-      n2 = shells->tuv[imax][i][1];
-      n3 = shells->tuv[imax][i][2];
-      n4 = shells->tuv[jmax][j][0];
-      n5 = shells->tuv[jmax][j][1];
-      n6 = shells->tuv[jmax][j][2];
-      for (t = 0; t <= tmax; t++) {
-        for (u = 0; u <= umax; u++) {
-          for (v = 0; v <= vmax; v++) {
-            for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
-              Coulomb[count] += E1x[n1 * off1 + n4 * off2 + t * off3 + i4] * E1y[n2 * off1 + n5 * off2 + u * off3 + i4] * \
-                                E1z[n3 * off1 + n6 * off2 + v * off3 + i4] * fgtuv[t * mm1 + u * mm2 + v * mm3  + i4];
-             }
-            }
-           } // end t u v loop
-          }
-         } // close loop over j
-        } // close loop over i
+  double C1_max, C2_max;
+  double C1x[shells->ng_sh[index_i] * (imax+1) * (imax+1)];
+  double C1y[shells->ng_sh[index_i] * (imax+1) * (imax+1)];
+  double C1z[shells->ng_sh[index_i] * (imax+1) * (imax+1)];
+  double C2x[shells->ng_sh[index_j] * (jmax+1) * (jmax+1)];
+  double C2y[shells->ng_sh[index_j] * (jmax+1) * (jmax+1)];
+  double C2z[shells->ng_sh[index_j] * (jmax+1) * (jmax+1)];
+  E_coefficients_1c(index_i,gausposi,C1x,C1y,C1z,&C1_max,shells,gaussians,job,file);
+  E_coefficients_1c(index_j,gausposj,C2x,C2y,C2z,&C2_max,shells,gaussians,job,file);
+  mcmurchie_davidson_ij(Coulomb,index_i,index_j,bfposi1,bfposj1,nd2,C1x,C1y,C1z,C2x,C2y,C2z,fgtuv,shells,job,file);
+  free(fgtuv);
 
-         free(fgtuv);
-
-  //break;
-
-  //case 'C':
-  //case 'S':
-  //case 'P':
-
-  //imax = shells->imax_sh[index_i];
-  //jmax = shells->imax_sh[index_j];
-  //gamma_0 = k_one / G->gamma_0_inv;
-  //root_gamma_0 = sqrt(gamma_0);
-
-  //break;
-
-      //} // close switch
 }
+
+/*
+void fock_element_elecnuc(double *elecnuc_shar, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+
+{
+
+  int ip, jp, gi, gj, p;
+  int i, j, i4, j4, k, l, mm, nn, atm0, count;
+  int index_i, index_j;
+  int dim, dim1, dim2, dim3, dim4, dim5, dim6, dim7, dim8, dim9, atm1, atm2;
+  int bfposi, bfposj, bfposi1, bfposj1;
+  int imax, jmax, im, jm;
+  int gausposi, gausposj, shelposi, shelposj;
+  int sheli, shelj, sheli1, shelj1;
+  int nd1, nd2, nd3, nd4, nd12, nd34;
+  int nsheli, nshelj;
+  double R_AB_1esqrd;
+  double E1_max;
+  double time1, time2;
+  VECTOR_DOUBLE R_AB_1e;
+
+  // Function[0] Fock Operator
+  // Function[1] Kinetic Energy Operator
+  // Function[2] Electron-Nuclear Potential Energy = 1 (finite systems) = 2 (extended systems) = 3 (atoms)
+  // Function[3] Momentum Operator Matrix Elements
+  // Function[4] Overlap
+  // Function[5] 
+  // Function[6] Dipole Operator Matrix Elements
+  // Function[7] Coulomb Operator Matrix Elements
+
+  time1 = MPI_Wtime();
+
+    dim = 0;
+    for (p = 0; p < pair_p->nump; p++) {
+    ip = pair_p->cell1[pair_p->posn[p]];
+    jp = pair_p->cell2[pair_p->posn[p]];
+    gi = 0;
+    gj = pair_p->latt2[pair_p->posn[p]];
+    nd1 = atoms->bfnnumb[ip];
+    nd2 = atoms->bfnnumb[jp];
+    nd3 = atoms->bfnnumb_sh[ip];
+    nd4 = atoms->bfnnumb_sh[jp];
+    nd12 = nd1 * nd2;
+    nd34 = nd3 * nd4;
+
+VECTOR_DOUBLE Rvec_tmp;
+double Rsqrd;
+Rvec_tmp.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
+Rvec_tmp.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
+Rvec_tmp.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
+Rsqrd = double_vec_dot(&Rvec_tmp,&Rvec_tmp);
+if (Rsqrd > job->itol1 * job->itol1) { dim += nd34;  continue; }
+
+    //double kinetic_cart[nd12]; 
+    double elecnuc_cart[nd12]; 
+    //double momentum_cart[3 * nd12]; 
+    //double overlap_cart[nd12]; 
+    //double dipole_cart[3 * nd12]; 
+    //double coulomb_cart[nd12]; 
+    // order matters for these loops to set im and jm
+    //im = 0;
+    //jm = 0;
+    //if (Function[0] || Function[2]) {
+    for (i = 0; i < nd12; i++) elecnuc_cart[i] = k_zero;
+
+    //fprintf(file.out,"ip jp gj numb %3d %3d %3d %3d %3d\n",p,ip,jp,gj,pair_p->numb[p]) ;
+    shelposi = atoms->shelposn_sh[ip];
+    gausposi = atoms->gausposn_sh[ip];
+    bfposi  = 0;
+    bfposi1 = 0;
+    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
+      sheli  = shells->type_sh[index_i];
+      sheli1 = shells->type1_sh[index_i];
+      imax   = shells->imax_sh[index_i];
+      shelposj = atoms->shelposn_sh[jp];
+      gausposj = atoms->gausposn_sh[jp];
+      bfposj  = 0;
+      bfposj1 = 0;
+      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
+        R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
+        R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
+        R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
+        R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
+        shelj  = shells->type_sh[index_j];
+        shelj1 = shells->type1_sh[index_j];
+        jmax   = shells->imax_sh[index_j];
+        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+        double E1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+im+jm+1) * (imax+im+1) * (jmax+jm+1)];
+        double E1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+im+jmax+jm+1) * (imax+im+1) * (jmax+jm+1)];
+        double E1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+im+jmax+jm+1) * (imax+im+1) * (jmax+jm+1)];
+        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+        E_coefficients1(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,im,jm,E1x,E1y,E1z,&E1_max,sab,pab_inv,&R_AB_1esqrd,\
+        R_AB,R,atoms,shells,gaussians,job,file);
+        ElecNuc(elecnuc_cart, index_i, index_j, bfposi1, bfposj1, nd2,  im, jm, E1x, E1y, E1z, R_AB, pab_inv, sab, R, G, \
+        crystal, atoms,shells,job,file);
+        two_center_cartesian_to_sh_shell(elecnuc_cart,&elecnuc_shar[dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        bfposj   += shelj;
+        bfposj1  += shelj1;
+        gausposj += shells->ng_sh[index_j];
+       } // close loop over index_j
+      bfposi   += sheli;
+      bfposi1  += sheli1;
+      gausposi += shells->ng_sh[index_i];
+     } // close loop over index_i
+
+ if (job->verbosity > 1) {
+  count = 0;
+   fprintf(file.out,"elecnuc\n");
+      fprintf(file.out,"pair %3d ip %3d jp %3d gj %3d\n",p,ip,jp,gj);
+      for(i=0;i<atoms->bfnnumb_sh[ip];i++) {
+        for(j=0;j<atoms->bfnnumb_sh[jp];j++) {
+          fprintf(file.out,"%6.2lf",elecnuc_shar[dim + count]);
+           count++;
+          }
+         fprintf(file.out,"\n");
+        }
+        fprintf(file.out,"\n");
+       }
+
+    dim += nd34;
+
+  } // close loop on p
+
+
+   time2 = MPI_Wtime();
+
+}
+*/
 
 /*
 void two_centre_coulomb1(INT_1E *one_ints, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
@@ -2972,105 +2915,8 @@ double C2x_max, C2y_max, C2z_max;
 
 }
 
-void mcmurchie_davidson_2c(double *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
-
-{
-
-int i, j;
-int i4, j4;
-int n1, n2, n3, n4, n5, n6;
-int off1, off2, off3, off4;
-int mm, mm1, mm2, mm3, mm4;
-int imax, jmax;
-int t, u, v, tmax, umax, vmax;
-int tp, up, vp, tpmax, upmax, vpmax;
-int tpupvpsign, tpupvp2;
-int sheli, shelj, sheli1, shelj1;
-int nsheli, nshelj;
-int count;
-double c1fac[15][15][15];
-double *p_fgtuv;
-
-//fprintf(file.out,"%3d %3d\n",index_i,index_j);
-
-  imax   = shells->imax_sh[index_i];
-  jmax   = shells->imax_sh[index_j];
-  off2 = shells->ng_sh[index_i];
-  off1 = (imax + 1) * off2;
-  off4 = shells->ng_sh[index_j];
-  off3 = (jmax + 1) * off4;
-  sheli = shells->cart[index_i];
-  shelj = shells->cart[index_j];
-  mm  = imax + jmax;
-  mm4 = shells->ng_sh[index_j];
-  mm3 = shells->ng_sh[index_i] * mm4;
-  mm2 = (mm + 1) * mm3;
-  mm1 = (mm + 1) * mm2;
-  for (i = 0; i < sheli; i++) {
-    for (j = 0; j < shelj; j++) {
-      tmax =  shells->tuv[imax][i][0];
-      umax =  shells->tuv[imax][i][1];
-      vmax =  shells->tuv[imax][i][2];
-      tpmax = shells->tuv[jmax][j][0];
-      upmax = shells->tuv[jmax][j][1];
-      vpmax = shells->tuv[jmax][j][2];
-//printf("%3d %3d %3d %3d    %3d %3d %3d\n",index_i,index_j,i,j,tmax,umax,vmax);
-      n1 = shells->tuv[imax][i][0];
-      n2 = shells->tuv[imax][i][1];
-      n3 = shells->tuv[imax][i][2];
-      n4 = shells->tuv[jmax][j][0];
-      n5 = shells->tuv[jmax][j][1];
-      n6 = shells->tuv[jmax][j][2];
-      count = (bfposi + i) * nd2 + bfposj + j;
-      for (i4 = 0; i4 < shells->ng_sh[index_i]; i4++) {
-        for (t = 0; t <= tmax; t++) {
-          for (u = 0; u <= umax; u++) {
-            for (v = 0; v <= vmax; v++) {
-              c1fac[t][u][v] = k_zero ;
-             }
-            }
-           }
-            for (t = 0; t <= tmax; t++) {
-              for (u = 0; u <= umax; u++) {
-                for (v = 0; v <= vmax; v++) {
-                  for (tp = 0; tp <= tpmax; tp++) {
-                    for (up = 0; up <= upmax; up++) {
-                      for (vp = 0; vp <= vpmax; vp++) {
-                        tpupvpsign = -k_one;
-                        tpupvp2 = tp + up + vp + 2;
-                        if ((tpupvp2 / 2) * 2 == tpupvp2)
-                          tpupvpsign = k_one;
-                          for (j4 = 0; j4 < shells->ng_sh[index_j]; j4++) {
-                            p_fgtuv = fgtuv + (t + tp) * mm1 + (u + up) * mm2 + (v + vp) * mm3 + i4 * mm4 + j4;
-                            c1fac[t][u][v] += C2x[n4 * off3 + tp * off4 + j4] * C2y[n5 * off3 + up * off4 + j4] * C2z[n6 * off3 + vp * off4 + j4] * \
-                           *p_fgtuv * tpupvpsign;
-                           } // end j4 loop
-                          }
-                         }
-                        } // end tp up vp loop
-                       }
-                      }
-                     } // end t u v loop
-                      for (t = 0; t <= tmax; t++) {
-                        for (u = 0; u <= umax; u++) {
-                          for (v = 0; v <= vmax; v++) {
-                            F_cart[count] += c1fac[t][u][v] * C1x[n1 * off1 + t * off2 + i4] * C1y[n2 * off1 + u * off2 + i4] * \
-                            C1z[n3 * off1 + v * off2 + i4];
-//printf("c1fac %3d %3d %3d %10.4lf %10.4lf\n",t,u,v,c1fac[t][u][v],F_cart[i * shelj + j])
-//j4 = 0;
-//printf("%3d %3d %3d %10.4lf %10.4lf %10.4lf      %10.4lf\n",t,u,v,\
-C1x[n1 * off1 + t * off2 + i4], C1y[n2 * off1 + u * off2 + i4],C1z[n3 * off1 + v * off2 + i4], c1fac[t][u][v]);
-                           }
-                          }
-                         } // end t u v loop
-                        } // end i4 loop
-//fprintf(file.out,"%10.4lf ",F_cart[count]);
-//printf("c2 %3d %3d %3d %10.4lf\n",bfposi,bfposj,count,F_cart[count]);
-                       }
-//fprintf(file.out,"\n");
-                      }
-
-}
+*/
+/*
 
 void mcmurchie_davidson_2c_complex(Complex *F_cart, Complex *fgtuv, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, SHELL *shells, JOB_PARAM *job, FILES file)
 

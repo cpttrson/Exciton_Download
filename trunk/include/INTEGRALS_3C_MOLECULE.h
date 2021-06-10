@@ -1,0 +1,5 @@
+
+//void three_centre_coulomb1_reversed2(int, TRIPLE_TRAN*, double*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
+
+void integrals_molecule_ija(int, TRIPLE_TRAN*, double*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
+
