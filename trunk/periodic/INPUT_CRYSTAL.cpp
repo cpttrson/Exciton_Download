@@ -13,7 +13,6 @@
 #include "BETHE_SALPETER1.h"
 #include "GW.h"
 #include "GW_CRYSTAL.h"
-#include "TDHF_CRYSTAL.h"
 #include "GW_BSE_SCALAPACK.h"
 #include "GW_3D.h"
 #include "ANALYSIS.h"
@@ -37,8 +36,9 @@
 #include "SCF_CRYSTAL.h"
 #include "OPTICAL_SPECTRUM_MOLECULE.h"
 #include "GW_BSE_MOLECULE.h"
+#include "TDHF_CRYSTAL.h"
 #include "ERRORS.h"
-#include "INPUT_MOLECULE.h"
+#include "INPUT_ALL.h"
 
 using namespace std;
 
@@ -1749,7 +1749,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
         switch (crystal->type[0]) {
         case 'C':
-        ////bse_crystal1(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
+        bse_crystal1(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
         symmetry,R,R_tables,G,job,file);
         ////optical_spectrum_crystal2(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
         crystal,symmetry,R,R_tables,G,job,file);

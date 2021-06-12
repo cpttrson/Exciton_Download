@@ -17,14 +17,12 @@
 
 using namespace std;
 
-//void integrals_crystal_coulomb_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, int*, int*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
-//void integrals_crystal_coulomb_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, int *start_index, int *count_index, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 void integrals_crystal_coulomb_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, int *start_index, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
   // ******************************************************************************************
-  // * Compute four centre integrals over one quad                                            *
+  // * Compute four centre coulomb integrals (i|O)(j|gj)(k|O)(l|gl) over one quad             *
   // ******************************************************************************************
   
 int index_i, index_j, index_k, index_l, index_G, index_R, index_S, i4, j4, k4, l4;
@@ -418,258 +416,207 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e, r_12, s_12, t_12, Rvec_tmp;
 
 }
 
-//void integrals_crystal_exchange_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, int*, int*, REAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 void integrals_crystal_exchange_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, int *start_index, int *count_index, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
-  // compute 4-centre integrals for a quad of atoms using quad as indices
-  // starting point is 0
-
-  int index_i, index_j, index_k, index_l, i4, j4, k4, l4;
-  int bfposi, bfposj, bfposk, bfposl;
-  int bfposi1, bfposj1, bfposk1, bfposl1;
-  int gausposi, gausposj, gausposk, gausposl;
-  int count;
-  int i, j, k, l, m, n, p, pm, q;
-  int mm, mm0, mm1, mm2, mm3, mm4;
-  int ip, jp, kp, lp, gi, gj, gk, gl;
-  int imax, jmax, kmax, lmax;
-  int shelposi, shelposj, shelposk, shelposl;
-  int sheli, shelj, shelk, shell;
-  int sheli1, shelj1, shelk1, shell1;
-  int offset1, offset2;
-  int dim1 = atoms->number_of_atoms_in_unit_cell;
-  int dim2 = dim1 * dim1;
-  double p_inv_ex, fac1;
-  double R_AB_1esqrd, R_CD_1esqrd, Rsqrd;
-  double C1_max, C2_max, C_max;
-  double fgtuv_max, fgtuv_temp;
-  double time1, time2;
-  double em[1][55];
-  double f[13][13][13][13];
-  //double f[9][9][9][9];
-  double *F_cart, *p_F_cart, *F_sh, *p_F_sh, *fgtuv, *p_fgtuv;
-  VECTOR_DOUBLE R_AB_1e, R_CD_1e, s_12;
-
+  // ******************************************************************************************
+  // * Compute four centre exchange integrals (i|O)(j|gj)(k|gk)(l|gl) over one quad           *
+  // ******************************************************************************************
+  
+int index_i, index_j, index_k, index_l, i4, j4, k4, l4;
+int bfposi, bfposj, bfposk, bfposl;
+int bfposi1, bfposj1, bfposk1, bfposl1;
+int gausposi, gausposj, gausposk, gausposl;
+int int_count;
+int i, j, k, l, m, n, p, pm, q;
+int mm, mm0, mm1, mm2, mm3, mm4;
+int ip, jp, kp, lp, gi, gj, gk, gl;
+int imax, jmax, kmax, lmax;
+int shelposi, shelposj, shelposk, shelposl;
+int sheli, shelj, shelk, shell;
+int sheli1, shelj1, shelk1, shell1;
 int shell_index;
+int offset1, offset2;
+int dim1 = atoms->number_of_atoms_in_unit_cell;
+int dim2 = dim1 * dim1;
+int dimFsh;
+double p_inv_ex, fac1;
+double R_AB_1esqrd, R_CD_1esqrd, Rsqrd;
+double C1_max, C2_max, C_max;
+double fgtuv_max, fgtuv_temp;
+double time1, time2;
+double em[1][55];
+double *F_cart, *p_F_cart, *F_sh, *p_F_sh, *fgtuv, *p_fgtuv;
+VECTOR_DOUBLE R_AB_1e, R_CD_1e, s_12;
 
   time1 = MPI_Wtime();
 
-    count = 0;
+  ip = quad->cell1[0];
+  gi = 0;
+  jp = quad->cell2[0];
+  gj = quad->latt2[0];
 
-    ip = quad->cell1[0];
-    gi = 0;
-    jp = quad->cell2[0];
-    gj = quad->latt2[0];
+  kp = quad->cell3[0];
+  gk = quad->latt3[0];
+  lp = quad->cell4[0];
+  gl = quad->latt4[0];
 
-    kp = quad->cell3[0];
-    gk = quad->latt3[0];
-    lp = quad->cell4[0];
-    gl = quad->latt4[0];
+  R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
+  R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
+  R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
+  R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
 
-    F_cart = (double *) malloc(50625 * sizeof(double)); // 50625 = 15^4 for g functions
-    //CHANGES2015F_cart = (double *) malloc(10000 * sizeof(double)); // 10000 = 10^4 for f functions
-    if (F_cart == NULL) {
-    fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
-    exit(1);
-   }
+  R_CD_1e.comp1 = atoms->cell_vector[kp].comp1 + R->vec_ai[gk].comp1 - atoms->cell_vector[lp].comp1 - R->vec_ai[gl].comp1;
+  R_CD_1e.comp2 = atoms->cell_vector[kp].comp2 + R->vec_ai[gk].comp2 - atoms->cell_vector[lp].comp2 - R->vec_ai[gl].comp2;
+  R_CD_1e.comp3 = atoms->cell_vector[kp].comp3 + R->vec_ai[gk].comp3 - atoms->cell_vector[lp].comp3 - R->vec_ai[gl].comp3;
+  R_CD_1esqrd = double_vec_dot(&R_CD_1e, &R_CD_1e);
 
-    F_sh = (double *) malloc(6561 * sizeof(double));    // 6561 = 9^4 for g functions
-    //CHANGES2015F_sh = (double *) malloc(2401 * sizeof(double));    // 2401 = 7^4 for f functions
-    if (F_sh == NULL) {
-    fprintf(stderr, "ERROR: not enough memory for double F_sh! \n");
-    exit(1);
-   }
+  int_count = 0;
+  shell_index = 0;
 
-    //fprintf(file.out,"p q   ip jp kp lp               %3d %3d    %3d %3d %3d %3d\n",*p1,*q1,ip,jp,kp,lp); fflush(file.out) ;
-    //fprintf(file.out,"count_index %3d %3d\n",*count_index,start_index[*count_index]);
-    //printf("task %2d ip jp kp lp  gj gk gl             %3d %3d %3d %3d   %3d %3d %3d\n",job->taskid,ip,jp,kp,lp,gj,gk,gl) ;
-    //fprintf(file.out,"ip jp kp lp               %3d %3d %3d %3d    %3d %3d %3d\n",ip,jp,kp,lp,gj,gk,gl) ;
-
-//return;
-
-    R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
-    R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
-    R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-    R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
-
-    R_CD_1e.comp1 = atoms->cell_vector[kp].comp1 + R->vec_ai[gk].comp1 - atoms->cell_vector[lp].comp1 - R->vec_ai[gl].comp1;
-    R_CD_1e.comp2 = atoms->cell_vector[kp].comp2 + R->vec_ai[gk].comp2 - atoms->cell_vector[lp].comp2 - R->vec_ai[gl].comp2;
-    R_CD_1e.comp3 = atoms->cell_vector[kp].comp3 + R->vec_ai[gk].comp3 - atoms->cell_vector[lp].comp3 - R->vec_ai[gl].comp3;
-    R_CD_1esqrd = double_vec_dot(&R_CD_1e, &R_CD_1e);
-
-    shell_index = 0;
-
-    bfposi   = 0;
-    bfposi1  = 0;
-    shelposi = atoms->shelposn_sh[ip];
-    gausposi = atoms->gausposn_sh[ip];
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
-      sheli  = shells->type1_sh[index_i];
-      sheli1 = shells->type_sh[index_i];
-      imax   = shells->imax_sh[index_i];
-      bfposj   = 0;
-      bfposj1  = 0;
-      shelposj = atoms->shelposn_sh[jp];
-      gausposj = atoms->gausposn_sh[jp];
-      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
-        shelj  = shells->type1_sh[index_j];
-        shelj1 = shells->type_sh[index_j];
-        jmax   = shells->imax_sh[index_j];
-        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        //time1 = MPI_Wtime();
-        E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
-        shells,gaussians,job,file);
-        //time2 = MPI_Wtime();
-        bfposk   = 0;
-        bfposk1  = 0;
-        shelposk = atoms->shelposn_sh[kp];
-        gausposk = atoms->gausposn_sh[kp];
-        for (index_k = shelposk; index_k < shelposk + atoms->nshel_sh[kp]; index_k++) {
-          shelk  = shells->type1_sh[index_k];
-          shelk1 = shells->type_sh[index_k];
-          kmax   = shells->imax_sh[index_k];
-          bfposl   = 0;
-          bfposl1  = 0;
-          shelposl = atoms->shelposn_sh[lp];
-          gausposl = atoms->gausposn_sh[lp];
-          for (index_l = shelposl; index_l < shelposl + atoms->nshel_sh[lp]; index_l++) {
-            shell  = shells->type1_sh[index_l];
-            shell1 = shells->type_sh[index_l];
-            lmax   = shells->imax_sh[index_l];
-            //if (start_index[*count_index] == 0) {
-            //fprintf(file.out,"START_index %3d %3d  %3d %3d %3d %3d\n",shell_index,start_index[shell_index],index_i,index_j,index_k,index_l);
-            //fprintf(file.out,"start_index %3d %3d\n",shell_index,start_index[shell_index]);
-            if (start_index[shell_index] == 0) {
-              bfposl   += shells->type1_sh[index_l];
-              bfposl1  += shells->type_sh[index_l];
-              gausposl += shells->ng_sh[index_l];
-                shell_index++;
-              //(*count_index)++;
-              continue;
-             }
-                shell_index++;
-              //(*count_index)++;
-                double scd[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
-                double C2x[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
-                double C2y[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
-                double C2z[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
-                double pcd_inv[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
-                VECTOR_DOUBLE R_CD[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
-                E_coefficients(kp,lp,gk,gl,index_k,index_l,gausposk,gausposl,C2x,C2y,C2z,&C2_max,scd,pcd_inv,&R_CD_1esqrd,R_CD,R,atoms,\
-                shells,gaussians,job,file);
-                C_max = C1_max * C2_max;
-
-                //if (C_max < 1.0e-16) {
-                  //bfposl   += shells->type1_sh[index_l];
-                  //bfposl1  += shells->type_sh[index_l];
-                  //gausposl += shells->ng_sh[index_l];
-                  //continue;
-                 //}
-
-  mm  = imax + jmax + kmax + lmax;
-  mm4 = shells->ng_sh[index_k] * shells->ng_sh[index_l];
-  mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
-  mm2 = (mm + 1) * mm3;
-  mm1 = (mm + 1) * mm2;
-  mm0 = (mm + 1) * mm1;
-
-  fgtuv = (double *) calloc(mm0, sizeof(double));
-  if (fgtuv == NULL) {
-  fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
-  exit(1);
- }
-
-  fgtuv_max = k_zero;
-  for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
-    for (j4 = 0; j4 < shells->ng_sh[index_k] * shells->ng_sh[index_l]; j4++) {
-      s_12.comp1 = R_AB[i4].comp1 - R_CD[j4].comp1;
-      s_12.comp2 = R_AB[i4].comp2 - R_CD[j4].comp2;
-      s_12.comp3 = R_AB[i4].comp3 - R_CD[j4].comp3;
-      fac1 = sab[i4] * scd[j4];
-      p_inv_ex = pab_inv[i4] + pcd_inv[j4];
-      Rsqrd = double_vec_dot(&s_12, &s_12);
-      f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
-      //non_recursive_ftuvn(mm, 0, f, em, &s_12);
-      for (m = 0; m <= mm; m++) {
-        for (n = 0; n <= mm; n++) {
-          for (pm = 0; pm <= mm; pm++) {
-            if (m + n + pm > mm) break;
-              fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&em[0][0],s_12);
-              //fgtuv_temp = fac1 * f[m][n][pm][0];
-              p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
-             *p_fgtuv += fgtuv_temp;
-              fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
-              fgtuv_max = k_one;
-             }
-            }
+  bfposi   = 0;
+  bfposi1  = 0;
+  shelposi = atoms->shelposn_sh[ip];
+  gausposi = atoms->gausposn_sh[ip];
+  for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
+    sheli  = shells->type1_sh[index_i];
+    sheli1 = shells->type_sh[index_i];
+    imax   = shells->imax_sh[index_i];
+    bfposj   = 0;
+    bfposj1  = 0;
+    shelposj = atoms->shelposn_sh[jp];
+    gausposj = atoms->gausposn_sh[jp];
+    for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
+      shelj  = shells->type1_sh[index_j];
+      shelj1 = shells->type_sh[index_j];
+      jmax   = shells->imax_sh[index_j];
+      double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
+      shells,gaussians,job,file);
+      bfposk   = 0;
+      bfposk1  = 0;
+      shelposk = atoms->shelposn_sh[kp];
+      gausposk = atoms->gausposn_sh[kp];
+      for (index_k = shelposk; index_k < shelposk + atoms->nshel_sh[kp]; index_k++) {
+        shelk  = shells->type1_sh[index_k];
+        shelk1 = shells->type_sh[index_k];
+        kmax   = shells->imax_sh[index_k];
+        bfposl   = 0;
+        bfposl1  = 0;
+        shelposl = atoms->shelposn_sh[lp];
+        gausposl = atoms->gausposn_sh[lp];
+        for (index_l = shelposl; index_l < shelposl + atoms->nshel_sh[lp]; index_l++) {
+          shell  = shells->type1_sh[index_l];
+          shell1 = shells->type_sh[index_l];
+          lmax   = shells->imax_sh[index_l];
+          if (start_index[shell_index] == 0) {
+            bfposl   += shells->type1_sh[index_l];
+            bfposl1  += shells->type_sh[index_l];
+            gausposl += shells->ng_sh[index_l];
+            shell_index++;
+            continue;
            }
+            shell_index++;
+            double scd[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
+            double C2x[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
+            double C2y[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
+            double C2z[shells->ng_sh[index_k] * shells->ng_sh[index_l] * (kmax+lmax+1) * (kmax+1) * (lmax+1)];
+            double pcd_inv[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
+            VECTOR_DOUBLE R_CD[shells->ng_sh[index_k] * shells->ng_sh[index_l]];
+            E_coefficients(kp,lp,gk,gl,index_k,index_l,gausposk,gausposl,C2x,C2y,C2z,&C2_max,scd,pcd_inv,&R_CD_1esqrd,R_CD,R,atoms,\
+            shells,gaussians,job,file);
+            C_max = C1_max * C2_max;
+
+            mm  = imax + jmax + kmax + lmax;
+            mm4 = shells->ng_sh[index_k] * shells->ng_sh[index_l];
+            mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
+            mm2 = (mm + 1) * mm3;
+            mm1 = (mm + 1) * mm2;
+            mm0 = (mm + 1) * mm1;
+   
+            fgtuv = (double *) calloc(mm0, sizeof(double));
+            if (fgtuv == NULL) {
+            fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
+            exit(1);
+           }
+
+            F_cart = (double *) malloc(sheli * shelj * shelk * shell * sizeof(double));
+            if (F_cart == NULL) {
+            fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
+            exit(1);
+           }
+         
+           F_sh = (double *) malloc(sheli1 * shelj1 * shelk1 * shell1 * sizeof(double));
+           if (F_sh == NULL) {
+           fprintf(stderr, "ERROR: not enough memory for double F_sh! \n");
+           exit(1);
           }
-         }
+         
+  // ******************************************************************************************
+  // * Real space part for any periodicity                                                    *
+  // ******************************************************************************************
+  
+           fgtuv_max = k_zero;
+           for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
+             for (j4 = 0; j4 < shells->ng_sh[index_k] * shells->ng_sh[index_l]; j4++) {
+               s_12.comp1 = R_AB[i4].comp1 - R_CD[j4].comp1;
+               s_12.comp2 = R_AB[i4].comp2 - R_CD[j4].comp2;
+               s_12.comp3 = R_AB[i4].comp3 - R_CD[j4].comp3;
+               fac1 = sab[i4] * scd[j4];
+               p_inv_ex = pab_inv[i4] + pcd_inv[j4];
+               Rsqrd = double_vec_dot(&s_12, &s_12);
+               f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
+               for (m = 0; m <= mm; m++) {
+                 for (n = 0; n <= mm; n++) {
+                   for (pm = 0; pm <= mm; pm++) {
+                     if (m + n + pm > mm) break;
+                       fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&em[0][0],s_12);
+                       p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
+                      *p_fgtuv += fgtuv_temp;
+                       fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
+                       fgtuv_max = k_one;
+                      }
+                     }
+                    }
+                   }
+                  }
 
-              //if (fgtuv_max * C_max < 1.0e-11) {
-              //bfposl   += shells->type1_sh[index_l];
-              //bfposl1  += shells->type_sh[index_l];
-              //gausposl += shells->ng_sh[index_l];
-              //continue;
-             //}
+  // ******************************************************************************************
+  // * McMurchie-Davidson loop and transform to SH                                            *
+  // ******************************************************************************************
+  
+         mcmurchie_davidson_ijkl(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
+         free(fgtuv);
+         dimFsh = sheli1 * shelj1 * shelk1 * shell1;
+         ResetDoubleArray(F_sh,&dimFsh);
+         four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
 
-  mcmurchie_davidson_ijkl(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
-  //mcmurchie_davidson(F_cart, index_i, index_j, index_k, index_l, C1x, C1y, C1z, C2x, C2y, C2z, fgtuv, shells, job, file);
-  free(fgtuv);
-  //four_centre_cartesian_to_sh(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
-  int dimFsh = sheli1 * shelj1 * shelk1 * shell1;
-  ResetDoubleArray(F_sh,&dimFsh);
-  four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
-  //four_centre_cartesian_to_sh_atom_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
-
-//fprintf(file.out,"INDEX %3d %3d %3d %3d    %3d %3d %3d %3d\n",index_i,index_j,index_k,index_l,bfposi1,bfposj1,bfposk1,bfposl1);
-
-  //if (pair_t->lattd[r + *qt] < pair_p->latt_max) {
-  //if (pair_p->ptr[pair_t->lattd[r + *qt] * dim2 + pair_t->cell1[q] * dim1 + pair_t->cell2[r + *qt]] > -1) {
-  //offset1 = pair_p->Off[*p1];
-  //offset2 = pair_p->off[pair_p->ptr[pair_t->lattd[r + *qt] * dim2 + pair_t->cell1[q] * dim1 + pair_t->cell2[r + *qt]]];
-  p_F_sh = F_sh;
-  for (i = 0; i < sheli1; i++) {
-    for (j = 0; j < shelj1; j++) {
-      for (k = 0; k < shelk1; k++) {
-        for (l = 0; l < shell1; l++) {
-          if (fabs(*p_F_sh) > integral_rejection_threshold) {
-//ADDED
-//*count_index = 0;
-          integral_list->value[*count_index + count] = *p_F_sh ;
-          integral_list->i[*count_index + count] = bfposi1 + i;
-          integral_list->j[*count_index + count] = bfposj1 + j;
-          integral_list->k[*count_index + count] = bfposk1 + k;
-          integral_list->l[*count_index + count] = bfposl1 + l;
-//fprintf(file.out,"%d %d %d %d %12.6lf\n",i,j,k,l,*p_F_sh);
-//ADDED
-          ////integral_list->value[count] = *p_F_sh ;
-          ////integral_list->i[count] = bfposi1 + i;
-          ////integral_list->j[count] = bfposj1 + j;
-          ////integral_list->k[count] = bfposk1 + k;
-          ////integral_list->l[count] = bfposl1 + l;
-          //integral_list->gj[count] = pair_p->latt2[p];
-          //integral_list->gk[count] = pair_t->latt1[q];
-          //integral_list->gl[count] = pair_t->latt2[r + *qt];
-          //integral_list->offset1[count] = offset1;
-          //integral_list->offset2[count] = offset2;
-          count++;
-          }
-          p_F_sh++;
-         }
-        }
-       }
-      }
-     //}
-   // }
-
+         p_F_sh = F_sh;
+         for (i = 0; i < sheli1; i++) {
+           for (j = 0; j < shelj1; j++) {
+             for (k = 0; k < shelk1; k++) {
+               for (l = 0; l < shell1; l++) {
+                 if (fabs(*p_F_sh) > integral_rejection_threshold) {
+                 integral_list->value[int_count] = *p_F_sh ;
+                 integral_list->i[int_count] = bfposi1 + i;
+                 integral_list->j[int_count] = bfposj1 + j;
+                 integral_list->k[int_count] = bfposk1 + k;
+                 integral_list->l[int_count] = bfposl1 + l;
+                 int_count++;
+                 }
+                 p_F_sh++;
+                }
+               }
+              }
+             }
+         free(F_cart);
+         free(F_sh);
          bfposl   += shell;
          bfposl1  += shell1;
          gausposl += shells->ng_sh[index_l];
@@ -687,16 +634,11 @@ int shell_index;
    gausposi += shells->ng_sh[index_i];
   } // close loop over index_i
 
-  integral_list->num = count;
-
-  free(F_cart);
-  free(F_sh);
+  integral_list->num = int_count;
 
   time2 = MPI_Wtime();
 
-  if (job->taskid == 0 && job->verbosity > 1)
-  fprintf(file.out, "Time for %d integrals no sym %10.4e\n", count,time2-time1);
-  //printf("Time for %d integrals no sym %10.4e\n", count,time2-time1);
+  if (job->taskid == 0 && job->verbosity > 1) fprintf(file.out, "Time for %d integrals no sym %10.4e\n", int_count,time2-time1);
 
 }
 
@@ -704,126 +646,119 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
 
 {
 
-  // compute 4-centre integrals for a quad of atoms (ij|ij) using pair_p as indices
-  // starting point is pair_p->posn[*p1]
+  // ******************************************************************************************
+  // * Compute four centre coulomb screening integrals (i|O)(j|gj)(i|O)(j|gj) over one quad   *
+  // ******************************************************************************************
 
-  int index_i, index_j, index_G, index_R, index_S, i4, j4;
-  int bfposi, bfposj;
-  int bfposi1, bfposj1;
-  int gausposi, gausposj;
-  int count;
-  int i, j, k, l, m, n, p, pm, q;
-  int mm, mm0, mm1, mm2, mm3, mm4;
-  int i1, ijk;
-  int gi;
-  //int gi, gj;
-  int imax, jmax;
-  int shelposi, shelposj;
-  int sheli, shelj;
-  int sheli1, shelj1;
-  int offset1, offset2;
-  int dim1 = atoms->number_of_atoms_in_unit_cell;
-  int dim2 = dim1 * dim1;
-  int nd1 = atoms->bfnnumb[ip];
-  int nd2 = atoms->bfnnumb[jp];
-  int nd3 = atoms->bfnnumb_sh[ip];
-  int nd4 = atoms->bfnnumb_sh[jp];
-  double p_inv_ex, fac1, fac2, dot_product, shell_sum;
-  double gamma_1;
-  double R_AB_1esqrd, Rsqrd;
-  double C1_max, C_max;
-  double fgtuv_max, fgtuv_temp;
-  double time1, time2;
-  double em[R->last_ewald_vector][55];
-  double en[R->last_ewald_vector][55];
-  double pi_vol = pi / crystal->primitive_cell_volume;
-  double gamma_1_inv = G->gamma_0_inv;
-  //double f[13][13][13][13];
-  double *F_cart, *p_F_cart, *p_F_sh, *fgtuv, *p_fgtuv;
-  VECTOR_DOUBLE R_AB_1e, r_12, s_12, t_12, Rvec_tmp;
-
-  gamma_1 = k_one / G->gamma_0_inv;
+int index_i, index_j, index_G, index_R, index_S, i4, j4;
+int bfposi, bfposj;
+int bfposi1, bfposj1;
+int gausposi, gausposj;
+int count;
+int i, j, k, l, m, n, p, pm, q;
+int mm, mm0, mm1, mm2, mm3, mm4;
+int i1, ijk;
+int gi;
+int imax, jmax;
+int shelposi, shelposj;
+int sheli, shelj;
+int sheli1, shelj1;
+int offset1, offset2;
+int dim1 = atoms->number_of_atoms_in_unit_cell;
+int dim2 = dim1 * dim1;
+int nd1 = atoms->bfnnumb[ip];
+int nd2 = atoms->bfnnumb[jp];
+int nd3 = atoms->bfnnumb_sh[ip];
+int nd4 = atoms->bfnnumb_sh[jp];
+double p_inv_ex, fac1, fac2, dot_product, shell_sum;
+double gamma_1;
+double R_AB_1esqrd, Rsqrd;
+double C1_max, C_max;
+double fgtuv_max, fgtuv_temp;
+double time1, time2;
+double em[R->last_ewald_vector][55];
+double en[R->last_ewald_vector][55];
+double pi_vol = pi / crystal->primitive_cell_volume;
+double gamma_1_inv = G->gamma_0_inv;
+double *F_cart, *fgtuv, *p_fgtuv;
+VECTOR_DOUBLE R_AB_1e, r_12, s_12, t_12, Rvec_tmp;
 
   time1 = MPI_Wtime();
 
-    gi = 0;
-    //gj = 0;
+  gamma_1 = k_one / G->gamma_0_inv;
 
-    F_cart = (double *) calloc(nd1 * nd2 * nd1 * nd2, sizeof(double));
-    if (F_cart == NULL) {
-    fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
-    exit(1);
-   }
-    
-    R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
-    R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
-    R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-    R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
+  gi = 0;
+  
+  R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
+  R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
+  R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
+  R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
 
-    //fprintf(file.out,"screen %3d %3d  %3d %10.4lf\n",ip,jp,gj,sqrt(R_AB_1esqrd));
+  bfposi   = 0;
+  bfposi1  = 0;
+  shelposi = atoms->shelposn_sh[ip];
+  gausposi = atoms->gausposn_sh[ip];
+  for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
+    sheli  = shells->type1_sh[index_i];
+    sheli1 = shells->type_sh[index_i];
+    imax   = shells->imax_sh[index_i];
+    bfposj   = 0;
+    bfposj1  = 0;
+    shelposj = atoms->shelposn_sh[jp];
+    gausposj = atoms->gausposn_sh[jp];
+    for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
+      shelj  = shells->type1_sh[index_j];
+      shelj1 = shells->type_sh[index_j];
+      jmax   = shells->imax_sh[index_j];
+      double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
+      shells,gaussians,job,file);
 
-    bfposi   = 0;
-    bfposi1  = 0;
-    shelposi = atoms->shelposn_sh[ip];
-    gausposi = atoms->gausposn_sh[ip];
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
-      sheli  = shells->type1_sh[index_i];
-      sheli1 = shells->type_sh[index_i];
-      imax   = shells->imax_sh[index_i];
-      bfposj   = 0;
-      bfposj1  = 0;
-      shelposj = atoms->shelposn_sh[jp];
-      gausposj = atoms->gausposn_sh[jp];
-      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
-        shelj  = shells->type1_sh[index_j];
-        shelj1 = shells->type_sh[index_j];
-        jmax   = shells->imax_sh[index_j];
-        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
-        shells,gaussians,job,file);
+      mm  = imax + jmax + imax + jmax;
+      mm4 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
+      mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
+      mm2 = (mm + 1) * mm3;
+      mm1 = (mm + 1) * mm2;
+      mm0 = (mm + 1) * mm1;
 
-        mm  = imax + jmax + imax + jmax;
-        mm4 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-        mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
-        mm2 = (mm + 1) * mm3;
-        mm1 = (mm + 1) * mm2;
-        mm0 = (mm + 1) * mm1;
+      fgtuv = (double *) calloc(mm0, sizeof(double));
+      if (fgtuv == NULL) {
+      fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
+      exit(1);
+     }
 
-        fgtuv = (double *) calloc(mm0, sizeof(double));
-        if (fgtuv == NULL) {
-        fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
-        exit(1);
-       }
+      F_cart = (double *) malloc(sheli * shelj * sheli * shelj * sizeof(double));
+      if (F_cart == NULL) {
+      fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
+      exit(1);
+     }
+       
+  // ******************************************************************************************
+  // * Reciprocal space part for C or S periodicity                                           *
+  // ******************************************************************************************
+  
+      switch (crystal->type[0]) {
+
+        case 'C':
 
         fgtuv_max = k_zero;
-
-         switch (crystal->type[0]) {
-
-           case 'C':
-
-            fgtuv_max = k_zero;
         for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
           for (j4 = 0; j4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; j4++) {
             s_12.comp1 = R_AB[i4].comp1 - R_AB[j4].comp1;
             s_12.comp2 = R_AB[i4].comp2 - R_AB[j4].comp2;
             s_12.comp3 = R_AB[i4].comp3 - R_AB[j4].comp3;
             fac1 = sab[i4] * sab[j4];
-            //fprintf(file.out,"i4 %3d j4 %3d  %10.2e %10.2e %10.2e\n",i4,j4,sab[i4],sab[j4],fac1);
             p_inv_ex = pab_inv[i4] + pab_inv[j4];
             p_fgtuv = fgtuv + i4 * mm4 + j4;
            *p_fgtuv -= pi_vol * fac1 * (gamma_1_inv - pab_inv[i4] - pab_inv[j4]);
             count = 1;
             for (index_S = 1; index_S < G->number_of_shells; index_S++) {
               fac2 = fac1 * G->EXPFAC[index_S];
-              //double test = G->EXPFAC[index_S] * fac1 * \
-              (k_one > G->shell_mag[index_S * 9 + mm] ? k_one : G->shell_mag[index_S * 9 + mm]);
-              //if (fabs(test) * C_max < 1.0e-18) break;
-              //fac2 = fac1 * expfac * exp(-G->sqr[index_S] / four * p_inv_ex) / G->sqr[index_S];
               for (index_G = 0; index_G < G->num[index_S]; index_G++) {
                 dot_product = G->vec_b2[count].comp1 * s_12.comp1 + G->vec_b2[count].comp2 * s_12.comp2 + \
                 G->vec_b2[count].comp3 * s_12.comp3;
@@ -847,24 +782,28 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
                }
               }
 
-       break;
-
-       case 'S':
-       case 'P':
-
-       break;
-
-       case 'M':
-
-       if (job->taskid == 0)
-       fprintf(file.out,"integrals_crystal_screen routine is for periodic systems only\n");
-       MPI_Finalize();
-       exit(1);
-
-       break;
-
+        break;
+     
+        case 'S':
+        case 'P':
+     
+        break;
+     
+        case 'M':
+     
+        if (job->taskid == 0)
+        fprintf(file.out,"integrals_crystal_coulomb_screen_ijij routine is for periodic systems only\n");
+        MPI_Finalize();
+        exit(1);
+     
+        break;
+     
       } // close switch
 
+  // ******************************************************************************************
+  // * Real space part for any periodicity                                                    *
+  // ******************************************************************************************
+  
   for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
     for (j4 = 0; j4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; j4++) {
       s_12.comp1 = R_AB[i4].comp1 - R_AB[j4].comp1;
@@ -872,7 +811,6 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
       s_12.comp3 = R_AB[i4].comp3 - R_AB[j4].comp3;
       map_to_wigner(crystal,&s_12, &t_12, &Rvec_tmp); // map s_12 back to primitive cell to accelerate convergence
       fac1 = sab[i4] * sab[j4];
-      //fprintf(file.out,"i4 %3d j4 %3d  %10.2e %10.2e %10.2e\n",i4,j4,sab[i4],sab[j4],fac1);
       p_inv_ex = pab_inv[i4] + pab_inv[j4];
       count = 0;
       for (index_S = 0; index_S < R->number_of_ewald_shells; index_S++) {
@@ -890,32 +828,36 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
             shell_sum += fabs(en[count][0]);
             count++;
            } // end loop on index_R
-             } // end loop on index_S
-              for (index_R = 0; index_R < count; index_R++) {
-                r_12.comp1 = t_12.comp1 + R->vec_ai[index_R].comp1;
-                r_12.comp2 = t_12.comp2 + R->vec_ai[index_R].comp2;
-                r_12.comp3 = t_12.comp3 + R->vec_ai[index_R].comp3;
-            for (m = 0; m <= mm; m++) {
-              for (n = 0; n <= mm; n++) {
-                for (pm = 0; pm <= mm; pm++) {
-                  if (m + n + pm > mm) break;
-                  fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&en[index_R][0],r_12);
-                  p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
-                 *p_fgtuv += fgtuv_temp;
-                  fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
-                  fgtuv_max = k_one;
+          } // end loop on index_S
+
+            for (index_R = 0; index_R < count; index_R++) {
+              r_12.comp1 = t_12.comp1 + R->vec_ai[index_R].comp1;
+              r_12.comp2 = t_12.comp2 + R->vec_ai[index_R].comp2;
+              r_12.comp3 = t_12.comp3 + R->vec_ai[index_R].comp3;
+              for (m = 0; m <= mm; m++) {
+                for (n = 0; n <= mm; n++) {
+                  for (pm = 0; pm <= mm; pm++) {
+                    if (m + n + pm > mm) break;
+                    fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&en[index_R][0],r_12);
+                    p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
+                   *p_fgtuv += fgtuv_temp;
+                    fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
+                    fgtuv_max = k_one;
+                   }
+                  }
                  }
                 }
                }
               }
-             }
-            }
+
+  // ******************************************************************************************
+  // * McMurchie-Davidson loop and transform to SH                                            *
+  // ******************************************************************************************
+  
         mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
-        //mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
         free(fgtuv);
-        //two_center_cartesian_to_sh_shell1(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        //four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        free(F_cart);
         bfposj   += shelj;
         bfposj1  += shelj1;
         gausposj += shells->ng_sh[index_j];
@@ -924,12 +866,6 @@ void integrals_crystal_coulomb_screen_ijij(double *F_sh, int ip, int jp, int gj,
       bfposi1  += sheli1;
       gausposi += shells->ng_sh[index_i];
      } // close loop over index_i
-//for(i=0;i<nd1;i++) { for(j=0;j<nd2;j++) { for(k=0;k<nd1;k++) { for(l=0;l<nd2;l++) { fprintf(file.out,"%3d %3d %3d %3d %10.4lf\n",\
-i,j,k,l,F_cart[i*nd2*nd1*nd2+j*nd1*nd2+k*nd2+l]);}}}}
-//for(i=0;i<nd3;i++) { for(j=0;j<nd4;j++) { for(k=0;k<nd3;k++) { for(l=0;l<nd4;l++) { fprintf(file.out,"%3d %3d %3d %3d %10.4lf\n",\
-i,j,k,l,F_sh[i*nd4*nd3*nd4+j*nd3*nd4+k*nd4+l]);}}}}
-
-      free(F_cart);
 
 }
 
@@ -937,8 +873,9 @@ void integrals_crystal_exchange_screen_ijij(double *F_sh, int ip, int jp, int gj
 
 {
 
-  // compute 4-centre integrals for a quad of atoms (ij|ij) using pair_p as indices
-  // starting point is pair_p->posn[*p1]
+  // ******************************************************************************************
+  // * Compute four centre coulomb screening integrals (i|O)(j|gj)(i|O)(j|gj) over one quad   *
+  // ******************************************************************************************
 
   int index_i, index_j, i4, j4;
   int bfposi, bfposj;
@@ -948,7 +885,6 @@ void integrals_crystal_exchange_screen_ijij(double *F_sh, int ip, int jp, int gj
   int i, j, k, l, m, n, p, pm, q;
   int mm, mm0, mm1, mm2, mm3, mm4;
   int gi;
-  //int gi, gj;
   int imax, jmax;
   int shelposi, shelposj;
   int sheli, shelj;
@@ -966,116 +902,117 @@ void integrals_crystal_exchange_screen_ijij(double *F_sh, int ip, int jp, int gj
   double fgtuv_max, fgtuv_temp;
   double time1, time2;
   double em[1][55];
-  double f[13][13][13][13];
-  double *F_cart, *p_F_cart, *p_F_sh, *fgtuv, *p_fgtuv;
+  double *F_cart, *fgtuv, *p_fgtuv;
   VECTOR_DOUBLE R_AB_1e, s_12;
 
   time1 = MPI_Wtime();
 
-    gi = 0;
-    //gj = 0;
+  gi = 0;
 
-    F_cart = (double *) calloc(nd1 * nd2 * nd1 * nd2, sizeof(double));
-    if (F_cart == NULL) {
-    fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
-    exit(1);
-   }
-    
-    R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
-    R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
-    R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-    R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
+  R_AB_1e.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
+  R_AB_1e.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
+  R_AB_1e.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
+  R_AB_1esqrd = double_vec_dot(&R_AB_1e, &R_AB_1e);
 
-    bfposi   = 0;
-    bfposi1  = 0;
-    shelposi = atoms->shelposn_sh[ip];
-    gausposi = atoms->gausposn_sh[ip];
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
-      sheli  = shells->type1_sh[index_i];
-      sheli1 = shells->type_sh[index_i];
-      imax   = shells->imax_sh[index_i];
-      bfposj   = 0;
-      bfposj1  = 0;
-      shelposj = atoms->shelposn_sh[jp];
-      gausposj = atoms->gausposn_sh[jp];
-      for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
-        shelj  = shells->type1_sh[index_j];
-        shelj1 = shells->type_sh[index_j];
-        jmax   = shells->imax_sh[index_j];
-        double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
-        double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
-        E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
-        shells,gaussians,job,file);
+  bfposi   = 0;
+  bfposi1  = 0;
+  shelposi = atoms->shelposn_sh[ip];
+  gausposi = atoms->gausposn_sh[ip];
+  for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
+    sheli  = shells->type1_sh[index_i];
+    sheli1 = shells->type_sh[index_i];
+    imax   = shells->imax_sh[index_i];
+    bfposj   = 0;
+    bfposj1  = 0;
+    shelposj = atoms->shelposn_sh[jp];
+    gausposj = atoms->gausposn_sh[jp];
+    for (index_j = shelposj; index_j < shelposj + atoms->nshel_sh[jp]; index_j++) {
+      shelj  = shells->type1_sh[index_j];
+      shelj1 = shells->type_sh[index_j];
+      jmax   = shells->imax_sh[index_j];
+      double sab[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      double C1x[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1y[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double C1z[shells->ng_sh[index_i] * shells->ng_sh[index_j] * (imax+jmax+1) * (imax+1) * (jmax+1)];
+      double pab_inv[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      VECTOR_DOUBLE R_AB[shells->ng_sh[index_i] * shells->ng_sh[index_j]];
+      E_coefficients(ip,jp,gi,gj,index_i,index_j,gausposi,gausposj,C1x,C1y,C1z,&C1_max,sab,pab_inv,&R_AB_1esqrd,R_AB,R,atoms,\
+      shells,gaussians,job,file);
 
-        mm  = imax + jmax + imax + jmax;
-        mm4 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-        mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
-        mm2 = (mm + 1) * mm3;
-        mm1 = (mm + 1) * mm2;
-        mm0 = (mm + 1) * mm1;
+      mm  = imax + jmax + imax + jmax;
+      mm4 = shells->ng_sh[index_i] * shells->ng_sh[index_j];
+      mm3 = shells->ng_sh[index_i] * shells->ng_sh[index_j] * mm4;
+      mm2 = (mm + 1) * mm3;
+      mm1 = (mm + 1) * mm2;
+      mm0 = (mm + 1) * mm1;
 
-        fgtuv = (double *) calloc(mm0, sizeof(double));
-        if (fgtuv == NULL) {
-        fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
-        exit(1);
-       }
-        fgtuv_max = k_zero;
-        for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
-          for (j4 = 0; j4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; j4++) {
-            s_12.comp1 = R_AB[i4].comp1 - R_AB[j4].comp1;
-            s_12.comp2 = R_AB[i4].comp2 - R_AB[j4].comp2;
-            s_12.comp3 = R_AB[i4].comp3 - R_AB[j4].comp3;
-            fac1 = sab[i4] * sab[j4];
-            p_inv_ex = pab_inv[i4] + pab_inv[j4];
-            Rsqrd = double_vec_dot(&s_12, &s_12);
-            f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
-            //non_recursive_ftuvn(mm, 0, f, em, &s_12);
-            for (m = 0; m <= mm; m++) {
-              for (n = 0; n <= mm; n++) {
-                for (pm = 0; pm <= mm; pm++) {
-                  if (m + n + pm > mm) break;
-                  //CHANGES2015 CHANGEMEBACK
-                  fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&em[0][0],s_12);
-                  //fgtuv_temp = fac1 * f[m][n][pm][0];
-                  p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
-                 *p_fgtuv += fgtuv_temp;
-                  fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
-                  fgtuv_max = k_one;
-                 }
-                }
+      fgtuv = (double *) calloc(mm0, sizeof(double));
+      if (fgtuv == NULL) {
+      fprintf(stderr, "ERROR: not enough memory for double fgtuv! \n");
+      exit(1);
+     }
+
+      F_cart = (double *) malloc(sheli * shelj * sheli * shelj * sizeof(double));
+      if (F_cart == NULL) {
+      fprintf(stderr, "ERROR: not enough memory for double F_cart! \n");
+      exit(1);
+     }
+
+  // ******************************************************************************************
+  // * Real space part for any periodicity                                                    *
+  // ******************************************************************************************
+  
+      fgtuv_max = k_zero;
+      for (i4 = 0; i4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; i4++) {
+        for (j4 = 0; j4 < shells->ng_sh[index_i] * shells->ng_sh[index_j]; j4++) {
+          s_12.comp1 = R_AB[i4].comp1 - R_AB[j4].comp1;
+          s_12.comp2 = R_AB[i4].comp2 - R_AB[j4].comp2;
+          s_12.comp3 = R_AB[i4].comp3 - R_AB[j4].comp3;
+          fac1 = sab[i4] * sab[j4];
+          p_inv_ex = pab_inv[i4] + pab_inv[j4];
+          Rsqrd = double_vec_dot(&s_12, &s_12);
+          f000m(&em[0][0], Rsqrd / p_inv_ex, k_one / p_inv_ex, mm);
+          for (m = 0; m <= mm; m++) {
+            for (n = 0; n <= mm; n++) {
+              for (pm = 0; pm <= mm; pm++) {
+                if (m + n + pm > mm) break;
+                fgtuv_temp = fac1 * ftuvn(m,n,pm,0,&em[0][0],s_12);
+                p_fgtuv = fgtuv + m * mm1 + n * mm2 + pm * mm3  + i4 * mm4 + j4;
+               *p_fgtuv += fgtuv_temp;
+                fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
+                fgtuv_max = k_one;
                }
               }
              }
-        mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
-        //mcmurchie_davidson_screen(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
-        free(fgtuv);
-        //two_center_cartesian_to_sh_shell1(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        //four_centre_cartesian_to_sh_atom_ijkl_screen(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
-        bfposj   += shelj;
-        bfposj1  += shelj1;
-        gausposj += shells->ng_sh[index_j];
-       } // close loop over index_j
-      bfposi   += sheli;
-      bfposi1  += sheli1;
-      gausposi += shells->ng_sh[index_i];
-     } // close loop over index_i
-//for(i=0;i<nd1;i++) { for(j=0;j<nd2;j++) { for(k=0;k<nd1;k++) { for(l=0;l<nd2;l++) { fprintf(file.out,"%3d %3d %3d %3d %10.4lf\n",\
-i,j,k,l,F_cart[i*nd2*nd1*nd2+j*nd1*nd2+k*nd2+l]);}}}}
-//for(i=0;i<nd3;i++) { for(j=0;j<nd4;j++) { for(k=0;k<nd3;k++) { for(l=0;l<nd4;l++) { fprintf(file.out,"%3d %3d %3d %3d %10.4lf\n",\
-i,j,k,l,F_sh[i*nd4*nd3*nd4+j*nd3*nd4+k*nd4+l]);}}}}
+            }
+           }
 
+  // ******************************************************************************************
+  // * McMurchie-Davidson loop and transform to SH                                            *
+  // ******************************************************************************************
+  
+      mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
+      free(fgtuv);
+      four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
       free(F_cart);
+      bfposj   += shelj;
+      bfposj1  += shelj1;
+      gausposj += shells->ng_sh[index_j];
+     } // close loop over index_j
+    bfposi   += sheli;
+    bfposi1  += sheli1;
+    gausposi += shells->ng_sh[index_i];
+   } // close loop over index_i
 
 }
 
 void integrals_crystal_screen_complex(Complex *F_sh, int ip, int jp, int gj, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, Q_LATTICE *q_G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
+
+  // ******************************************************************************************
+  // * Compute four centre coulomb screening integrals (i|O)(j|gj)(i|O)(j|gj) over one quad   *
+  // ******************************************************************************************
 
   // compute 4-centre integrals for a quad of atoms (ij|ij) using pair_p as indices
   // starting point is pair_p->posn[*p1]
@@ -1484,126 +1421,121 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
-//void pack_write_integrals_crystal_coulomb_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, FILE*, JOB_PARAM*, FILES);
 void pack_write_integrals_crystal_coulomb_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, FILE *integrals, JOB_PARAM *job, FILES file)
 
 {
 
 int i, *packed_integral_indices, packed_quads[8 * quad->tot + 2];
 
-          packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
-          if (packed_integral_indices == NULL) { if (job->taskid == 0)
-          fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_coulomb_2e_integrals\n");
-          MPI_Finalize(); exit(1); }
+  packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
+  if (packed_integral_indices == NULL) { if (job->taskid == 0)
+  fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_coulomb_2e_integrals\n");
+  MPI_Finalize(); exit(1); }
 
-          packed_quads[0] = quad->tot;
-          packed_quads[1] = integral_list->num;
-        for (i = 0; i < quad->tot; i++) {
-          packed_quads[8 * i + 2] = quad->cell1[i];
-          packed_quads[8 * i + 3] = quad->cell2[i];
-          packed_quads[8 * i + 4] = quad->cell3[i];
-          packed_quads[8 * i + 5] = quad->cell4[i];
-          packed_quads[8 * i + 6] = quad->latt2[i];
-          packed_quads[8 * i + 7] = quad->latt4[i];
-          packed_quads[8 * i + 8] = quad->p[i];
-          packed_quads[8 * i + 9] = quad->k[i];
-         }
+  packed_quads[0] = quad->tot;
+  packed_quads[1] = integral_list->num;
+  for (i = 0; i < quad->tot; i++) {
+  packed_quads[8 * i + 2] = quad->cell1[i];
+  packed_quads[8 * i + 3] = quad->cell2[i];
+  packed_quads[8 * i + 4] = quad->cell3[i];
+  packed_quads[8 * i + 5] = quad->cell4[i];
+  packed_quads[8 * i + 6] = quad->latt2[i];
+  packed_quads[8 * i + 7] = quad->latt4[i];
+  packed_quads[8 * i + 8] = quad->p[i];
+  packed_quads[8 * i + 9] = quad->k[i];
+ }
 
-        for (i = 0; i < integral_list->num; i++) {
-          packed_integral_indices[2 * i]     = integral_list->i[i] * 256 + integral_list->j[i];
-          packed_integral_indices[2 * i + 1] = integral_list->k[i] * 256 + integral_list->l[i];
-         }
+  for (i = 0; i < integral_list->num; i++) {
+  packed_integral_indices[2 * i]     = integral_list->i[i] * 256 + integral_list->j[i];
+  packed_integral_indices[2 * i + 1] = integral_list->k[i] * 256 + integral_list->l[i];
+ }
 
-          fwrite(packed_quads,sizeof(int), 8 * quad->tot + 2, integrals);
-          fwrite(packed_integral_indices,sizeof(int), 2 * integral_list->num,integrals);
-          fwrite(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
+  fwrite(packed_quads,sizeof(int), 8 * quad->tot + 2, integrals);
+  fwrite(packed_integral_indices,sizeof(int), 2 * integral_list->num,integrals);
+  fwrite(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
 
-          free(packed_integral_indices);
+  free(packed_integral_indices);
 
 }
 
-//void read_unpack_integrals_crystal_coulomb_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, FILE*, JOB_PARAM*, FILES);
 void read_unpack_integrals_crystal_coulomb_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, FILE *integrals, JOB_PARAM *job, FILES file)
 
 {
 
 int i, *packed_integral_indices;
+int packed_quads[8 * quad->tot];
 size_t result;
 
-          int packed_quads[8 * quad->tot];
+  result = fread(packed_quads,sizeof(int),8 * quad->tot,integrals);
+   
+  for (i = 0; i < quad->tot; i++) {
+  quad->cell1[i] = packed_quads[8 * i];
+  quad->cell2[i] = packed_quads[8 * i + 1];
+  quad->cell3[i] = packed_quads[8 * i + 2];
+  quad->cell4[i] = packed_quads[8 * i + 3];
+  quad->latt2[i] = packed_quads[8 * i + 4];
+  quad->latt4[i] = packed_quads[8 * i + 5];
+  quad->p[i] = packed_quads[8 * i + 6];
+  quad->k[i] = packed_quads[8 * i + 7];
+ }
 
-          result = fread(packed_quads,sizeof(int),8 * quad->tot,integrals);
-          
-        for (i = 0; i < quad->tot; i++) {
-          quad->cell1[i] = packed_quads[8 * i];
-          quad->cell2[i] = packed_quads[8 * i + 1];
-          quad->cell3[i] = packed_quads[8 * i + 2];
-          quad->cell4[i] = packed_quads[8 * i + 3];
-          quad->latt2[i] = packed_quads[8 * i + 4];
-          quad->latt4[i] = packed_quads[8 * i + 5];
-          quad->p[i] = packed_quads[8 * i + 6];
-          quad->k[i] = packed_quads[8 * i + 7];
-        }
+  packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
+  if (packed_integral_indices == NULL) { if (job->taskid == 0)
+  fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_coulomb_2e_integrals\n");
+  MPI_Finalize(); exit(1); }
 
-          packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
-          if (packed_integral_indices == NULL) { if (job->taskid == 0)
-          fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_coulomb_2e_integrals\n");
-          MPI_Finalize(); exit(1); }
+  result = fread(packed_integral_indices,sizeof(int),2 * integral_list->num,integrals);
+  result = fread(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
 
-          result = fread(packed_integral_indices,sizeof(int),2 * integral_list->num,integrals);
-          result = fread(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
+  for (i = 0; i < integral_list->num; i++) {
+  integral_list->i[i] = packed_integral_indices[2 * i] / 256;
+  integral_list->j[i] = packed_integral_indices[2 * i]  - integral_list->i[i] * 256;
+  integral_list->k[i] = packed_integral_indices[2 * i + 1] / 256;
+  integral_list->l[i] = packed_integral_indices[2 * i + 1]  - integral_list->k[i] * 256;
+ }
 
-          for (i = 0; i < integral_list->num; i++) {
-          integral_list->i[i] = packed_integral_indices[2 * i] / 256;
-          integral_list->j[i] = packed_integral_indices[2 * i]  - integral_list->i[i] * 256;
-          integral_list->k[i] = packed_integral_indices[2 * i + 1] / 256;
-          integral_list->l[i] = packed_integral_indices[2 * i + 1]  - integral_list->k[i] * 256;
-         }
-
-          free(packed_integral_indices);
+  free(packed_integral_indices);
 
 }
 
-//void pack_write_integrals_crystal_exchange_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, FILE*, JOB_PARAM*, FILES);
 void pack_write_integrals_crystal_exchange_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, FILE *integrals, JOB_PARAM *job, FILES file)
 
 {
 
 int i, *packed_integral_indices, packed_quads[9 * quad->tot + 2];
 
-          packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
-          if (packed_integral_indices == NULL) { if (job->taskid == 0)
-          fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_exchange_2e_integrals\n");
-          MPI_Finalize(); exit(1); }
+  packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
+  if (packed_integral_indices == NULL) { if (job->taskid == 0)
+  fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_exchange_2e_integrals\n");
+  MPI_Finalize(); exit(1); }
 
-          packed_quads[0] = quad->tot;
-          packed_quads[1] = integral_list->num;
-        for (i = 0; i < quad->tot; i++) {
-          packed_quads[9 * i + 2] = quad->cell1[i];
-          packed_quads[9 * i + 3] = quad->cell2[i];
-          packed_quads[9 * i + 4] = quad->cell3[i];
-          packed_quads[9 * i + 5] = quad->cell4[i];
-          packed_quads[9 * i + 6] = quad->latt2[i];
-          packed_quads[9 * i + 7] = quad->latt3[i];
-          packed_quads[9 * i + 8] = quad->latt4[i];
-          packed_quads[9 * i + 9] = quad->p[i];
-          packed_quads[9 * i + 10] = quad->k[i];
-         }
+  packed_quads[0] = quad->tot;
+  packed_quads[1] = integral_list->num;
+  for (i = 0; i < quad->tot; i++) {
+  packed_quads[9 * i + 2] = quad->cell1[i];
+  packed_quads[9 * i + 3] = quad->cell2[i];
+  packed_quads[9 * i + 4] = quad->cell3[i];
+  packed_quads[9 * i + 5] = quad->cell4[i];
+  packed_quads[9 * i + 6] = quad->latt2[i];
+  packed_quads[9 * i + 7] = quad->latt3[i];
+  packed_quads[9 * i + 8] = quad->latt4[i];
+  packed_quads[9 * i + 9] = quad->p[i];
+  packed_quads[9 * i + 10] = quad->k[i];
+ }
 
-        for (i = 0; i < integral_list->num; i++) {
-          packed_integral_indices[2 * i]     = integral_list->i[i] * 256 + integral_list->j[i];
-          packed_integral_indices[2 * i + 1] = integral_list->k[i] * 256 + integral_list->l[i];
-         }
+  for (i = 0; i < integral_list->num; i++) {
+  packed_integral_indices[2 * i]     = integral_list->i[i] * 256 + integral_list->j[i];
+  packed_integral_indices[2 * i + 1] = integral_list->k[i] * 256 + integral_list->l[i];
+ }
 
-          fwrite(packed_quads,sizeof(int), 9 * quad->tot + 2, integrals);
-          fwrite(packed_integral_indices,sizeof(int), 2 * integral_list->num,integrals);
-          fwrite(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
+  fwrite(packed_quads,sizeof(int), 9 * quad->tot + 2, integrals);
+  fwrite(packed_integral_indices,sizeof(int), 2 * integral_list->num,integrals);
+  fwrite(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
 
-          free(packed_integral_indices);
+  free(packed_integral_indices);
 
 }
 
-//void read_unpack_integrals_crystal_exchange_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, FILE*, JOB_PARAM*, FILES);
 void read_unpack_integrals_crystal_exchange_ijkl(INTEGRAL_LIST *integral_list, QUAD_TRAN *quad, FILE *integrals, JOB_PARAM *job, FILES file)
 
 {
@@ -1611,36 +1543,36 @@ void read_unpack_integrals_crystal_exchange_ijkl(INTEGRAL_LIST *integral_list, Q
 int i, *packed_integral_indices, packed_quads[9 * quad->tot];
 size_t result;
 
-          result = fread(packed_quads,sizeof(int),9 * quad->tot,integrals);
-          
-        for (i = 0; i < quad->tot; i++) {
-          quad->cell1[i] = packed_quads[9 * i];
-          quad->cell2[i] = packed_quads[9 * i + 1];
-          quad->cell3[i] = packed_quads[9 * i + 2];
-          quad->cell4[i] = packed_quads[9 * i + 3];
-          quad->latt2[i] = packed_quads[9 * i + 4];
-          quad->latt3[i] = packed_quads[9 * i + 5];
-          quad->latt4[i] = packed_quads[9 * i + 6];
-          quad->p[i] = packed_quads[9 * i + 7];
-          quad->k[i] = packed_quads[9 * i + 8];
-        }
+  result = fread(packed_quads,sizeof(int),9 * quad->tot,integrals);
+  
+  for (i = 0; i < quad->tot; i++) {
+  quad->cell1[i] = packed_quads[9 * i];
+  quad->cell2[i] = packed_quads[9 * i + 1];
+  quad->cell3[i] = packed_quads[9 * i + 2];
+  quad->cell4[i] = packed_quads[9 * i + 3];
+  quad->latt2[i] = packed_quads[9 * i + 4];
+  quad->latt3[i] = packed_quads[9 * i + 5];
+  quad->latt4[i] = packed_quads[9 * i + 6];
+  quad->p[i] = packed_quads[9 * i + 7];
+  quad->k[i] = packed_quads[9 * i + 8];
+ }
 
-          packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
-          if (packed_integral_indices == NULL) { if (job->taskid == 0)
-          fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_exchange_2e_integrals\n");
-          MPI_Finalize(); exit(1); }
+  packed_integral_indices = (int *) malloc(2 * integral_list->num * sizeof(int));
+  if (packed_integral_indices == NULL) { if (job->taskid == 0)
+  fprintf(stderr, "ERROR: not enough memory for packed_integral_indices in pack_write_exchange_2e_integrals\n");
+  MPI_Finalize(); exit(1); }
 
-          result = fread(packed_integral_indices,sizeof(int),2 * integral_list->num,integrals);
-          result = fread(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
+  result = fread(packed_integral_indices,sizeof(int),2 * integral_list->num,integrals);
+  result = fread(&integral_list->value[0],sizeof(double),integral_list->num,integrals);
 
-          for (i = 0; i < integral_list->num; i++) {
-          integral_list->i[i] = packed_integral_indices[2 * i] / 256;
-          integral_list->j[i] = packed_integral_indices[2 * i]  - integral_list->i[i] * 256;
-          integral_list->k[i] = packed_integral_indices[2 * i + 1] / 256;
-          integral_list->l[i] = packed_integral_indices[2 * i + 1]  - integral_list->k[i] * 256;
-         }
+  for (i = 0; i < integral_list->num; i++) {
+  integral_list->i[i] = packed_integral_indices[2 * i] / 256;
+  integral_list->j[i] = packed_integral_indices[2 * i]  - integral_list->i[i] * 256;
+  integral_list->k[i] = packed_integral_indices[2 * i + 1] / 256;
+  integral_list->l[i] = packed_integral_indices[2 * i + 1]  - integral_list->k[i] * 256;
+ }
 
-          free(packed_integral_indices);
+  free(packed_integral_indices);
 
 }
 

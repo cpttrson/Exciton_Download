@@ -3870,7 +3870,7 @@ double *S0;
       for (k = 0; k < pair_p->numb[p]; k++) {
         for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
           for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-            fprintf(file.out,"%10.2e ",S1[count]);
+            fprintf(file.out,"%10.2e ",S2[count]);
             count++;
            }
           fprintf(file.out,"\n");
