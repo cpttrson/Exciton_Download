@@ -22,10 +22,9 @@
 //#include "ROTATION_OPERATORS.h"
 #include "MATRIX_UTIL.h"
 #include "PRINT_UTIL.h"
-#include "INTEGRALS_TWO_CENTRE.h"
+//#include "INTEGRALS_TWO_CENTRE.h"
 #include "DFT.h"
-#include "DENSITY_MATRIX.h"
-//#include "SCF.h"
+#include "DENSITY_MATRIX_MOLECULE.h"
 #include "INTEGRALS_4C_MOLECULE.h"
 #include "BUILD_FOCK_MATRIX_MOLECULE.h"
 
@@ -721,8 +720,7 @@ MPI_Win win;
 
       time8 = MPI_Wtime();
       count = 0; 
-      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
-      symmetry,crystal,job,file);
+      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,R,atoms,shells,gaussians,symmetry,job,file);
       total_integrals += integral_list.num;
       time7 += MPI_Wtime() - time8;
       time10 = MPI_Wtime();
@@ -919,8 +917,7 @@ MPI_Win win;
 
       time6 = MPI_Wtime();
       count = 0; 
-      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,&count,R,atoms,shells,gaussians,\
-      symmetry,crystal,job,file);
+      integrals_molecule_ijkl(&integral_list,atm_n1,atm_n2,atm_n3,atm_n4,start_index,R,atoms,shells,gaussians,symmetry,job,file);
       total_integrals += integral_list.num;
       time5 += MPI_Wtime() - time6;
 
@@ -1246,8 +1243,6 @@ double *Fock_2c_temp, *Fock_2e_temp;
           nd3 = atoms->bfnnumb_sh[kp];
           nd4 = atoms->bfnnumb_sh[lp0];
 
-//fprintf(file.out,"%3d %3d   %3d %3d %3d %3d   %3d %3d %3d %3d\n",pm,op,ip0,jp0,kp0,lp0,ip,jp,kp0,lp0);
-
           dimc = nd1 * nd2;
           dime = nd1 * nd3;
 
@@ -1270,8 +1265,6 @@ double *Fock_2c_temp, *Fock_2e_temp;
           Fock_temp_offset      =         nd2 * *p_coulomb_ints_i + *p_coulomb_ints_j;
           Density_matrix_offset = D_ptr + nd4 * *p_coulomb_ints_k + *p_coulomb_ints_l;
           Fock_2c_temp[Fock_temp_offset] += *p_coulomb_ints_value * F[Density_matrix_offset];
-//fprintf(file.out,"INT %3d %3d %3d %3d  %9.2e %9.2e %9.2e\n",*p_coulomb_ints_i,*p_coulomb_ints_j,*p_coulomb_ints_k,*p_coulomb_ints_l,\
-*p_coulomb_ints_value,F[Density_matrix_offset],*p_coulomb_ints_value * F[Density_matrix_offset]);
           p_coulomb_ints_value++;
           p_coulomb_ints_i++;
           p_coulomb_ints_j++;
@@ -1297,8 +1290,6 @@ double *Fock_2c_temp, *Fock_2e_temp;
           Fock_temp_offset      =         nd3 * *p_exchange_ints_i + *p_exchange_ints_k;
           Density_matrix_offset = D_ptr + nd4 * *p_exchange_ints_j + *p_exchange_ints_l;
           Fock_2e_temp[Fock_temp_offset] -= *p_exchange_ints_value * F[Density_matrix_offset] / two;
-//fprintf(file.out,"INT %3d %3d %3d %3d  %9.2e %9.2e %9.2e\n",*p_exchange_ints_i,*p_exchange_ints_j,*p_exchange_ints_k,*p_exchange_ints_l,\
-*p_exchange_ints_value,F[Density_matrix_offset],*p_exchange_ints_value * F[Density_matrix_offset]);
           p_exchange_ints_value++;
           p_exchange_ints_i++;
           p_exchange_ints_j++;
@@ -1372,9 +1363,52 @@ double *S0;
 
 }
 
+void expand_screening_integral_matrix(double *P, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
+
+int dim1, dim2, count, i, j, p, q, r, s;
+  
+  dim1 = 0;
+  dim2 = 0;
+  for (p = 0; p < pair_p->nump; p++) {
+    q = pair_p->posn[p];
+    rotate_permute_expand_pair(p, pair_p, &P[dim1], &F[dim2], atoms, shells, symmetry, job, file);
+    dim1 += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
+    dim2 += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]] * pair_p->numb[p];
+   }
+
+  if (job->taskid == 0 && job->verbosity > 1) {
+    fprintf(file.out,"full screening integral matrix\n");
+    count = 0;
+    for (p = 0; p < pair_p->nump; p++) {
+      q = pair_p->posn[p];
+      for (r = 0; r < pair_p->numb[p]; r++) {
+        fprintf(file.out,"pair %d [%3d %3d] gj %d \n",p,pair_p->cell1[q + r],pair_p->cell2[q + r],pair_p->latt2[q + r]);
+        for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+          for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+          fprintf(file.out,"%10.2e ",F[count]);
+          count++;
+         }
+        fprintf(file.out,"\n");
+       }
+      fprintf(file.out,"\n");
+     }
+    }
+   fprintf(file.out,"\n");
+  }
+
+}
+
 void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
+
+
+  // *************************************************************************************************
+  // * Schwarz inequality screening: compute shell if any integral sqrt[(ij|ij)*(kl|kl)] > threshold *
+  // *************************************************************************************************
+
 
 int index_i, index_j, index_k, index_l;
 int shelposi, shelposj, shelposk, shelposl;

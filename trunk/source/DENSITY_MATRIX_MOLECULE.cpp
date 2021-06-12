@@ -1,34 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-#include <xc.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include "mylogical.h"
-#include "conversion_factors.h"
-#include "PAIRS_QUADS.h"
-#include "MATRIX_UTIL.h"
-#include "ATOM_SCF.h"
-#include "SCF.h"
-#include "SYMMETRY.h"
-#include "TOOLS.h"
-#include "KPOINTS1.h"
-#include "PARALLEL.h"
-#include "MEMORY.h"
-#include "PAIRS_QUADS1.h"
-#include "PAIRS_QUADS3.h"
-#include "INTEGRALS.h"
-#include "INTEGRALS1.h"
-#include "INTEGRALS_TWO_CENTRE.h"
-#include "INTEGRALS_THREE_CENTRE.h"
-#include "DFT.h"
-#include "LIMITS.h"
-*/
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
@@ -608,6 +577,165 @@ int i;
 
 }
 
+void density_matrix_molecule2(FERMI *fermi, double *P0, double *F0, KPOINT_TRAN *knet, int *nkunique, REAL_LATTICE *R, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+  {
+
+    int i, j, k, p, q, s;
+    int dimp_spin, dimf_spin;
+    int dim1, dim2, count;
+
+    dimp_spin = job->dimp * job->spin_dim;
+    dimf_spin = job->dimf * job->spin_dim;
+
+    if (job->guess_type == 0 && job->density == 2)   // only zero P0 if beginning from atomic wave functions
+      for (i=0;i<dimp_spin;i++) { P0[i] = k_zero;}
+      for (i=0;i<dimf_spin;i++) { F0[i] = k_zero;}
+
+    if (job->guess_type == 0 && job->density == 2) { 
+    reduced_density_matrix_molecule2(fermi,P0,knet,nkunique,R,pair_p,atom_p,atoms,shells,symmetry,job,file);
+   }
+
+    expand_density_matrix(P0,F0,pair_p,atoms,shells,symmetry,job,file);
+
+    if (job->taskid == 0 && job->verbosity > 1) {
+      fprintf(file.out,"density matrix %d\n",pair_p->nump);
+      count = 0;
+      for (s = 0; s < job->spin_dim; s++) {
+        for (p = 0; p < pair_p->nump; p++) {
+          q = pair_p->posn[p];
+            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p->cell1[q],pair_p->cell2[q],s);
+              for (k = 0; k < pair_p->numb[p]; k++) {
+          for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+            for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+              //fprintf(file.out,"%16.12f ",F0[count]);
+              fprintf(file.out,"%6.2f ",F0[count]);
+              count++;
+              }
+            fprintf(file.out,"\n");
+           }
+            fprintf(file.out,"\n");
+           }
+          fprintf(file.out,"\n\n");
+         }
+        fprintf(file.out,"\n\n");
+       }
+      }
+
+}
+
+void reduced_density_matrix_molecule2(FERMI *fermi, double *P, KPOINT_TRAN *knet, int *nkunique, REAL_LATTICE *R, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shell, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
+
+int i, j, l, n, p, q, s;
+int dim, dim1, dimk;
+int dimp_spin = job->dimp * job->spin_dim;
+int bfposi, bfposj;
+int vector_size;
+int count;
+size_t result;
+double *P_buffer, *eigenvalues;
+char zz[24] = "scf_evectors";
+FILE *scf_evectors; 
+ComplexMatrix *eigenvectors;
+//char buf2[110];
+//char yy[10] = "/scf_evec";;
+//MPI_File fh;
+
+    dim1 = atoms->number_of_sh_bfns_in_unit_cell;
+    dimk = job->spin_dim * atoms->number_of_sh_bfns_in_unit_cell;
+    //printf("dimp %3d %3d %3d\n",dimk,dim1,dimp_spin);
+    vector_size = dimk * dim1;
+    AllocateComplexMatrix(&eigenvectors,&dimk,&dim1,job);
+    AllocateDoubleArray(&eigenvalues,&dimk,job);
+    AllocateDoubleArray(&P_buffer,&dimp_spin,job); // check between these last two alternatives : second, seems correct but dumps
+    ResetDoubleArray(P_buffer,&dimp_spin);
+
+    //strcpy(buf2,file.scf_eigvec);
+    //strcat(buf2,yy);
+    //MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDONLY,MPI_INFO_NULL,&fh) ;
+    //MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+    //MPI_File_read(fh, &eigenvectors->a[0][0], 2 * vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE) ;
+    //MPI_File_close(&fh);
+    //fprintf(file.out,"eigenvectors from disk\n");
+    //PrintComplexMatrix(eigenvectors, file);
+    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
+
+    if (job->taskid == 0) {
+
+    scf_evectors = fopen(zz, "rb");
+    result = fread(&eigenvectors->a[0][0], sizeof(double), 2 * vector_size, scf_evectors);
+    fclose(scf_evectors);
+    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
+
+    //printf("fermi->occupied density matrix2 %3d %3d\n",fermi->occupied[0],fermi->occupied[1]);
+
+    dim = 0;
+    for (s = 0; s < job->spin_dim; s++) {
+      for (p = 0; p < pair_p->nump; p++) {
+        q = pair_p->posn[p];
+        bfposi = 0;
+        bfposj = 0;
+        for (l = 0; l < pair_p->cell1[q]; l++)
+          bfposi += atoms->bfnnumb_sh[l];
+          for (l = 0; l < pair_p->cell2[q]; l++)
+            bfposj += atoms->bfnnumb_sh[l];
+              for (n = 0; n < fermi->occupied[s]; n++) {
+                count = 0;
+                for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+                  for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+                    //fprintf(file.out,"s %3d p %3d %3d oc %3d i %3d j %3d dim %3d c %3d i %3d j %3d %16.11lf %16.11lf %16.11lf\n", \
+                    s,p,l,n,i,j,dim,count,bfposi+i,bfposj+j,eigenvectors->a[s * dim1 + n][bfposi + i].real(),\
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real(),job->spin_fac*eigenvectors->a[s * dim1 + n][bfposi + i].real()*\
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real());
+                    P_buffer[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
+                    //P[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
+                    count++;
+                   }
+                  }
+                 }
+               dim += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
+              }
+             //printf("%3d %3d\n",dim,count);
+             }
+            } // close if (job->taskid
+
+            //MPI_Allreduce(P_buffer,P,vector_size,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+            MPI_Allreduce(P_buffer,P,dimp_spin,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+            DestroyComplexMatrix(&eigenvectors,job);
+            DestroyDoubleArray(&eigenvalues,&dimk,job);
+            DestroyDoubleArray(&P_buffer,&dimp_spin,job);
+            //free(eigenvalues);
+
+   if (job->taskid == 0 && job->verbosity > 1) {
+     fprintf(file.out,"reduced density matrix\n");
+     count = 0;
+     for (s = 0; s < job->spin_dim; s++) {
+       for (p = 0; p < pair_p->nump; p++) {
+          q = pair_p->posn[p];
+            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p->cell1[q],pair_p->cell2[q],s);
+         //fprintf(file.out,"pair %d spin %d \n",p,s);
+         for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+           for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+             //fprintf(file.out,"%16.12lf ",P[count]);
+             fprintf(file.out,"%6.2f ",P[count]);
+             //fprintf(file.out,"%9.2e ",P[count]);
+             //fprintf(file.out,"%10.3e ",P[count]);
+             count++;
+            }
+           fprintf(file.out,"\n");
+          }
+         fprintf(file.out,"\n");
+        }
+       fprintf(file.out,"\n");
+      }
+     }
+
+}
+
 void expand_density_matrix(double *P, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -903,6 +1031,115 @@ double total_pop = k_zero, total_spin = k_zero;
        }
 
       }
+
+}
+
+void init_mix(DoubleMatrix *C_i, DoubleMatrix *C_o, DoubleMatrix *D, double *P0, double *P1)
+
+{
+
+  int i, j;
+
+  for (i = C_i->iRows - 1; i > 0 ; i--) {
+   for (j = 0; j < C_i->iCols; j++) {
+     C_i->a[i][j] = C_i->a[i - 1][j];
+     C_o->a[i][j] = C_o->a[i - 1][j];
+     D->a[i][j]   =   D->a[i - 1][j];
+    }
+   }
+
+   for (j = 0; j < C_i->iCols; j++) {
+     C_i->a[0][j] = P0[j];
+     C_o->a[0][j] = P1[j];
+     D->a[0][j]   =     C_o->a[0][j] - C_i->a[0][j];
+    }
+
+}
+
+void mix_density(DoubleMatrix *C_i, DoubleMatrix *C_o, DoubleMatrix *D, double *P, JOB_PARAM *job, FILES file)
+
+{
+
+  int i, j, k, nmix, nmix1, ione = 1;
+  int *work;
+  int info;
+  double *beta, *d_i, *d_o;
+  DoubleMatrix *C;
+
+  nmix = (job->mixing_order < job->iter) ? job->mixing_order : job->iter;
+  //nmix = (*s < job->iter) ? *s : job->iter;
+  nmix--;
+  nmix1 = nmix + 1;
+  //printf("nmix %d job->iter %d mixing_order %d\n",nmix,job->iter,job->mixing_order);
+
+  if (nmix == 0) {
+    for (i = 0; i < C_i->iCols; i++) {
+     P[i] = job->fock_mixing * C_i->a[0][i] + (k_one - job->fock_mixing) * C_o->a[0][i];
+     }
+    }
+
+ else {
+  AllocateDoubleMatrix(&C, &nmix1, &nmix1,job);
+  AllocateDoubleArray(&beta, &nmix1, job);
+  AllocateDoubleArray(&d_i, &(C_i->iCols), job);
+  AllocateDoubleArray(&d_o, &(C_i->iCols), job);
+  work = (int *) malloc(nmix1 * sizeof(int));
+  ResetDoubleArray(d_i, &(C_i->iCols));
+  ResetDoubleArray(d_o, &(C_i->iCols));
+  ResetDoubleArray(beta, &nmix);
+
+    for (i = 0; i < nmix; i++) {
+     for (j = 0; j < nmix; j++) {
+       DoubleDotProd(&C->a[i][j], &(C_i->iCols), &D->a[i], &ione, &D->a[j], &ione);
+      }
+     }
+
+     beta[nmix] = -k_one;
+      for (i = 0; i < nmix; i++) {
+        C->a[i][nmix] = -k_one;
+        C->a[nmix][i] = -k_one;
+        work[i] = 0;
+       }
+        C->a[nmix][nmix] = k_zero;
+        work[nmix] = 0;
+
+    //fprintf(file.out,"C\n");
+    //print_double_matrix(C, file);
+
+    //for (i=0;i<=nmix;i++) {
+    //fprintf(file.out,"beta[i] %e nmix %d\n",beta[i],nmix); }
+    //fprintf(file.out,"\n");
+
+    dgesv_(&nmix1,&ione,C->a[0],&nmix1,work,beta,&nmix1,&info);
+
+    //for (i=0;i<=nmix;i++) {
+    //fprintf(file.out,"beta[i] %e\n",beta[i]); }
+    //fprintf(file.out,"\n");
+
+    if (info == 0) {
+      for (i = 0;i < nmix; i++) {
+        for (j = 0;j < C_i->iCols; j++) {
+          d_i[j] += beta[i] * C_i->a[i][j];
+          d_o[j] += beta[i] * C_o->a[i][j];
+         }
+        }
+         for (i = 0; i < C_i->iCols; i++) {
+           P[i] = job->fock_mixing * d_i[i] + (k_one - job->fock_mixing) * d_o[i];
+         }
+        } // close if (info == 0)
+
+    //for (i=0;i<C_i->iCols;i++) {
+    //fprintf(file.out,"d_o[i]d_i[j] %8.3lf %8.3lf C_o %8.3lf %8.3lf C_i %8.3lf %8.3lf\n",d_o[i],d_i[i],C_o->a[1][i],\
+    C_o->a[0][i],C_i->a[1][i],C_i->a[0][i]);}
+    //fprintf(file.out,"\n");
+
+
+        DestroyDoubleMatrix(&C, job);
+        DestroyDoubleArray(&beta, &nmix1, job);
+        DestroyDoubleArray(&d_i, &(C_i->iCols), job);
+        DestroyDoubleArray(&d_o, &(C_i->iCols), job);
+
+       } // close else
 
 }
 
@@ -1423,165 +1660,6 @@ sign = k_one;
 }
 */
 
-void density_matrix_molecule2(FERMI *fermi, double *P0, double *F0, KPOINT_TRAN *knet, int *nkunique, REAL_LATTICE *R, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-
-  {
-
-    int i, j, k, p, q, s;
-    int dimp_spin, dimf_spin;
-    int dim1, dim2, count;
-
-    dimp_spin = job->dimp * job->spin_dim;
-    dimf_spin = job->dimf * job->spin_dim;
-
-    if (job->guess_type == 0 && job->density == 2)   // only zero P0 if beginning from atomic wave functions
-      for (i=0;i<dimp_spin;i++) { P0[i] = k_zero;}
-      for (i=0;i<dimf_spin;i++) { F0[i] = k_zero;}
-
-    if (job->guess_type == 0 && job->density == 2) { 
-    reduced_density_matrix_molecule2(fermi,P0,knet,nkunique,R,pair_p,atom_p,atoms,shells,symmetry,job,file);
-   }
-
-    expand_density_matrix(P0,F0,pair_p,atoms,shells,symmetry,job,file);
-
-    if (job->taskid == 0 && job->verbosity > 1) {
-      fprintf(file.out,"density matrix %d\n",pair_p->nump);
-      count = 0;
-      for (s = 0; s < job->spin_dim; s++) {
-        for (p = 0; p < pair_p->nump; p++) {
-          q = pair_p->posn[p];
-            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p->cell1[q],pair_p->cell2[q],s);
-              for (k = 0; k < pair_p->numb[p]; k++) {
-          for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
-            for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-              //fprintf(file.out,"%16.12f ",F0[count]);
-              fprintf(file.out,"%6.2f ",F0[count]);
-              count++;
-              }
-            fprintf(file.out,"\n");
-           }
-            fprintf(file.out,"\n");
-           }
-          fprintf(file.out,"\n\n");
-         }
-        fprintf(file.out,"\n\n");
-       }
-      }
-
-}
-
-void reduced_density_matrix_molecule2(FERMI *fermi, double *P, KPOINT_TRAN *knet, int *nkunique, REAL_LATTICE *R, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shell, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-
-{
-
-int i, j, l, n, p, q, s;
-int dim, dim1, dimk;
-int dimp_spin = job->dimp * job->spin_dim;
-int bfposi, bfposj;
-int vector_size;
-int count;
-size_t result;
-double *P_buffer, *eigenvalues;
-char zz[24] = "scf_evectors";
-FILE *scf_evectors; 
-ComplexMatrix *eigenvectors;
-//char buf2[110];
-//char yy[10] = "/scf_evec";;
-//MPI_File fh;
-
-    dim1 = atoms->number_of_sh_bfns_in_unit_cell;
-    dimk = job->spin_dim * atoms->number_of_sh_bfns_in_unit_cell;
-    //printf("dimp %3d %3d %3d\n",dimk,dim1,dimp_spin);
-    vector_size = dimk * dim1;
-    AllocateComplexMatrix(&eigenvectors,&dimk,&dim1,job);
-    AllocateDoubleArray(&eigenvalues,&dimk,job);
-    AllocateDoubleArray(&P_buffer,&dimp_spin,job); // check between these last two alternatives : second, seems correct but dumps
-    ResetDoubleArray(P_buffer,&dimp_spin);
-
-    //strcpy(buf2,file.scf_eigvec);
-    //strcat(buf2,yy);
-    //MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDONLY,MPI_INFO_NULL,&fh) ;
-    //MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
-    //MPI_File_read(fh, &eigenvectors->a[0][0], 2 * vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE) ;
-    //MPI_File_close(&fh);
-    //fprintf(file.out,"eigenvectors from disk\n");
-    //PrintComplexMatrix(eigenvectors, file);
-    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
-
-    if (job->taskid == 0) {
-
-    scf_evectors = fopen(zz, "rb");
-    result = fread(&eigenvectors->a[0][0], sizeof(double), 2 * vector_size, scf_evectors);
-    fclose(scf_evectors);
-    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
-
-    //printf("fermi->occupied density matrix2 %3d %3d\n",fermi->occupied[0],fermi->occupied[1]);
-
-    dim = 0;
-    for (s = 0; s < job->spin_dim; s++) {
-      for (p = 0; p < pair_p->nump; p++) {
-        q = pair_p->posn[p];
-        bfposi = 0;
-        bfposj = 0;
-        for (l = 0; l < pair_p->cell1[q]; l++)
-          bfposi += atoms->bfnnumb_sh[l];
-          for (l = 0; l < pair_p->cell2[q]; l++)
-            bfposj += atoms->bfnnumb_sh[l];
-              for (n = 0; n < fermi->occupied[s]; n++) {
-                count = 0;
-                for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
-                  for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-                    //fprintf(file.out,"s %3d p %3d %3d oc %3d i %3d j %3d dim %3d c %3d i %3d j %3d %16.11lf %16.11lf %16.11lf\n", \
-                    s,p,l,n,i,j,dim,count,bfposi+i,bfposj+j,eigenvectors->a[s * dim1 + n][bfposi + i].real(),\
-                    eigenvectors->a[s * dim1 + n][bfposj + j].real(),job->spin_fac*eigenvectors->a[s * dim1 + n][bfposi + i].real()*\
-                    eigenvectors->a[s * dim1 + n][bfposj + j].real());
-                    P_buffer[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
-                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
-                    //P[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
-                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
-                    count++;
-                   }
-                  }
-                 }
-               dim += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
-              }
-             //printf("%3d %3d\n",dim,count);
-             }
-            } // close if (job->taskid
-
-            //MPI_Allreduce(P_buffer,P,vector_size,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-            MPI_Allreduce(P_buffer,P,dimp_spin,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-            DestroyComplexMatrix(&eigenvectors,job);
-            DestroyDoubleArray(&eigenvalues,&dimk,job);
-            DestroyDoubleArray(&P_buffer,&dimp_spin,job);
-            //free(eigenvalues);
-
-   if (job->taskid == 0 && job->verbosity > 1) {
-     fprintf(file.out,"reduced density matrix\n");
-     count = 0;
-     for (s = 0; s < job->spin_dim; s++) {
-       for (p = 0; p < pair_p->nump; p++) {
-          q = pair_p->posn[p];
-            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p->cell1[q],pair_p->cell2[q],s);
-         //fprintf(file.out,"pair %d spin %d \n",p,s);
-         for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
-           for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-             //fprintf(file.out,"%16.12lf ",P[count]);
-             fprintf(file.out,"%6.2f ",P[count]);
-             //fprintf(file.out,"%9.2e ",P[count]);
-             //fprintf(file.out,"%10.3e ",P[count]);
-             count++;
-            }
-           fprintf(file.out,"\n");
-          }
-         fprintf(file.out,"\n");
-        }
-       fprintf(file.out,"\n");
-      }
-     }
-
-}
-
 /*
 void expand_density_matrix_complex(Complex *P, Complex *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -1623,42 +1701,6 @@ int count, dim1, dim2, i, j, p, q, r, s;
       }
 }
 */
-void expand_screening_integral_matrix(double *P, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-
-{
-
-int dim1, dim2, count, i, j, p, q, r, s;
-  
-  dim1 = 0;
-  dim2 = 0;
-  for (p = 0; p < pair_p->nump; p++) {
-    q = pair_p->posn[p];
-    rotate_permute_expand_pair(p, pair_p, &P[dim1], &F[dim2], atoms, shells, symmetry, job, file);
-    dim1 += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
-    dim2 += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]] * pair_p->numb[p];
-   }
-
-  if (job->taskid == 0 && job->verbosity > 1) {
-    fprintf(file.out,"full screening integral matrix\n");
-    count = 0;
-    for (p = 0; p < pair_p->nump; p++) {
-      q = pair_p->posn[p];
-      for (r = 0; r < pair_p->numb[p]; r++) {
-        fprintf(file.out,"pair %d [%3d %3d] gj %d \n",p,pair_p->cell1[q + r],pair_p->cell2[q + r],pair_p->latt2[q + r]);
-        for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
-          for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-          fprintf(file.out,"%10.2e ",F[count]);
-          count++;
-         }
-        fprintf(file.out,"\n");
-       }
-      fprintf(file.out,"\n");
-     }
-    }
-   fprintf(file.out,"\n");
-  }
-
-}
 /*
 void expand_screening_integral_matrix_complex(Complex *P, Complex *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -1718,115 +1760,6 @@ double fac;
 
 }
 */
-void init_mix(DoubleMatrix *C_i, DoubleMatrix *C_o, DoubleMatrix *D, double *P0, double *P1)
-
-{
-
-  int i, j;
-
-  for (i = C_i->iRows - 1; i > 0 ; i--) {
-   for (j = 0; j < C_i->iCols; j++) {
-     C_i->a[i][j] = C_i->a[i - 1][j];
-     C_o->a[i][j] = C_o->a[i - 1][j];
-     D->a[i][j]   =   D->a[i - 1][j];
-    }
-   }
-
-   for (j = 0; j < C_i->iCols; j++) {
-     C_i->a[0][j] = P0[j];
-     C_o->a[0][j] = P1[j];
-     D->a[0][j]   =     C_o->a[0][j] - C_i->a[0][j];
-    }
-
-}
-
-void mix_density(DoubleMatrix *C_i, DoubleMatrix *C_o, DoubleMatrix *D, double *P, JOB_PARAM *job, FILES file)
-
-{
-
-  int i, j, k, nmix, nmix1, ione = 1;
-  int *work;
-  int info;
-  double *beta, *d_i, *d_o;
-  DoubleMatrix *C;
-
-  nmix = (job->mixing_order < job->iter) ? job->mixing_order : job->iter;
-  //nmix = (*s < job->iter) ? *s : job->iter;
-  nmix--;
-  nmix1 = nmix + 1;
-  //printf("nmix %d job->iter %d mixing_order %d\n",nmix,job->iter,job->mixing_order);
-
-  if (nmix == 0) {
-    for (i = 0; i < C_i->iCols; i++) {
-     P[i] = job->fock_mixing * C_i->a[0][i] + (k_one - job->fock_mixing) * C_o->a[0][i];
-     }
-    }
-
- else {
-  AllocateDoubleMatrix(&C, &nmix1, &nmix1,job);
-  AllocateDoubleArray(&beta, &nmix1, job);
-  AllocateDoubleArray(&d_i, &(C_i->iCols), job);
-  AllocateDoubleArray(&d_o, &(C_i->iCols), job);
-  work = (int *) malloc(nmix1 * sizeof(int));
-  ResetDoubleArray(d_i, &(C_i->iCols));
-  ResetDoubleArray(d_o, &(C_i->iCols));
-  ResetDoubleArray(beta, &nmix);
-
-    for (i = 0; i < nmix; i++) {
-     for (j = 0; j < nmix; j++) {
-       DoubleDotProd(&C->a[i][j], &(C_i->iCols), &D->a[i], &ione, &D->a[j], &ione);
-      }
-     }
-
-     beta[nmix] = -k_one;
-      for (i = 0; i < nmix; i++) {
-        C->a[i][nmix] = -k_one;
-        C->a[nmix][i] = -k_one;
-        work[i] = 0;
-       }
-        C->a[nmix][nmix] = k_zero;
-        work[nmix] = 0;
-
-    //fprintf(file.out,"C\n");
-    //print_double_matrix(C, file);
-
-    //for (i=0;i<=nmix;i++) {
-    //fprintf(file.out,"beta[i] %e nmix %d\n",beta[i],nmix); }
-    //fprintf(file.out,"\n");
-
-    dgesv_(&nmix1,&ione,C->a[0],&nmix1,work,beta,&nmix1,&info);
-
-    //for (i=0;i<=nmix;i++) {
-    //fprintf(file.out,"beta[i] %e\n",beta[i]); }
-    //fprintf(file.out,"\n");
-
-    if (info == 0) {
-      for (i = 0;i < nmix; i++) {
-        for (j = 0;j < C_i->iCols; j++) {
-          d_i[j] += beta[i] * C_i->a[i][j];
-          d_o[j] += beta[i] * C_o->a[i][j];
-         }
-        }
-         for (i = 0; i < C_i->iCols; i++) {
-           P[i] = job->fock_mixing * d_i[i] + (k_one - job->fock_mixing) * d_o[i];
-         }
-        } // close if (info == 0)
-
-    //for (i=0;i<C_i->iCols;i++) {
-    //fprintf(file.out,"d_o[i]d_i[j] %8.3lf %8.3lf C_o %8.3lf %8.3lf C_i %8.3lf %8.3lf\n",d_o[i],d_i[i],C_o->a[1][i],\
-    C_o->a[0][i],C_i->a[1][i],C_i->a[0][i]);}
-    //fprintf(file.out,"\n");
-
-
-        DestroyDoubleMatrix(&C, job);
-        DestroyDoubleArray(&beta, &nmix1, job);
-        DestroyDoubleArray(&d_i, &(C_i->iCols), job);
-        DestroyDoubleArray(&d_o, &(C_i->iCols), job);
-
-       } // close else
-
-}
-
 /*
 
 void count_density_matrix_shells2(int *nshells, PAIR_TRAN *pair_c, ATOM *atoms, JOB_PARAM *job, FILES file)
