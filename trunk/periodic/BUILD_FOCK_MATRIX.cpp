@@ -813,7 +813,7 @@ void fock_matrix_crystal_compute_coulomb_integrals(double *Fock_2c, double *S1, 
 int i1;
 int dimp, dimf, dimp_spin, dimf_spin;
 int dim1 = atoms->number_of_atoms_in_unit_cell, dim2 = dim1 * dim1;
-int count, dimi, nshells;
+int dimi, nshells;
 int atm_n1, atm_n2, atm_n3, atm_n4;
 int lat_n1, lat_n2, lat_n3, lat_n4;
 int nd1, nd2, nd3, nd4;
@@ -926,8 +926,9 @@ MPI_Win win;
       time5 += MPI_Wtime() - time6;
 
       time8 = MPI_Wtime();
-      count = 0; 
-      integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,&count,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
+      //count = 0; 
+      integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
+      //integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,&count,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
       total_integrals += integral_list.num;
       time7 += MPI_Wtime() - time8;
       time10 = MPI_Wtime();
@@ -1573,7 +1574,7 @@ void fock_matrix_crystal_compute_coulomb_integrals_no_sym(double *Fock_2c, doubl
 
 int i1, m;
 int dimp, dimf, dimp_spin, dimf_spin;
-int count, dimi, nshells;
+int dimi, nshells;
 int atm_n1, atm_n2, atm_n3, atm_n4;
 int lat_n1, lat_n2, lat_n3, lat_n4;
 int nd1, nd2, nd3, nd4;
@@ -1683,8 +1684,9 @@ MPI_Win win;
       time5 += MPI_Wtime() - time6;
 
       time8 = MPI_Wtime();
-      count = 0; 
-      integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,&count,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
+      //count = 0; 
+      integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
+      //integrals_crystal_coulomb_ijkl(&integral_list,&Quad,start_index,&count,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
       total_integrals += integral_list.num;
       time7 += MPI_Wtime() - time8;
 

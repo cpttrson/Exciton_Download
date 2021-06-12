@@ -1,13 +1,3 @@
-/*
-#include "PARALLEL.h"
-#include "PAIRS_QUADS.h"
-#include "LINEAR_ALGEBRA_UTIL.h"
-#include "ROTATION_OPERATORS.h"
-#include "ROTATIONS_MOLECULE.h"
-#include "FOURIER_TRANSFORM.h"
-#include "INTEGRALS_3C_MOLECULE.h"
-#include "DENSITY_FITTING_MOLECULE.h"
-*/
 #include <cstring>
 #include "myconstants.h"
 #include "USER_DATA.h"
@@ -26,40 +16,38 @@ void two_centre_coulomb1_crystal(ComplexMatrix *V_q, REAL_LATTICE *R, Q_LATTICE 
 
 {
 
-  int i, j, k, m, n, p, t, u, v;
-  int ip, jp, gi, gj;
-  int i1, i4, j4;
-  int index_i, index_j, index_G, index_R, index_S;
-  int bfposi, bfposj, bfposi1, bfposj1;
-  int bfposip, bfposjp;
-  int imax, jmax, im, jm;
-  int gausposi, gausposj, shelposi, shelposj;
-  int sheli, shelj, sheli1, shelj1;
-  int nd1, nd2, nd3, nd4;
-  int count, size;
-  int mm, mm0, mm1, mm2, mm3, mm4, ijk;
-  double Rsqrd, fn[55];
-  double expfac, fac2, gamma_1, dot_product;
-  double en[R->last_ewald_vector][55], em[R->last_ewald_vector][55];
-  double f[13][13][13][13];
-  double R_AB_1esqrd, C1_max, C2_max;
-  double shell_sum, pi_vol = pi / crystal->primitive_cell_volume;
-  Complex fgtuv_max, fgtuv_temp, temp;
-  Complex *fgtuv, *p_fgtuv;
-  VECTOR_DOUBLE R_AB_1e, r_12, s_12;
+int i, j, k, m, n, p, t, u, v;
+int ip, jp, gi, gj;
+int i1, i4, j4;
+int index_i, index_j, index_G, index_R, index_S;
+int bfposi, bfposj, bfposi1, bfposj1;
+int bfposip, bfposjp;
+int imax, jmax, im, jm;
+int gausposi, gausposj, shelposi, shelposj;
+int sheli, shelj, sheli1, shelj1;
+int nd1, nd2, nd3, nd4;
+int count, size, start;
+int mm, mm0, mm1, mm2, mm3, mm4, ijk;
+double Rsqrd, fn[55];
+double expfac, fac2, gamma_1, dot_product;
+double en[R->last_ewald_vector][55], em[R->last_ewald_vector][55];
+double f[13][13][13][13];
+double R_AB_1esqrd, C1_max, C2_max;
+double shell_sum, pi_vol = pi / crystal->primitive_cell_volume;
+Complex fgtuv_max, fgtuv_temp, temp;
+Complex *fgtuv, *p_fgtuv;
+VECTOR_DOUBLE R_AB_1e, r_12, s_12;
 
   ResetComplexMatrix(V_q);
   
   size = 4 * job->l_max + 1;
   gamma_1 = k_one / q_G->gamma_0_inv;
-  //fprintf(file.out,"gamma_1 %10.4f pi_vol %10.4f\n",gamma_1,pi_vol);
 
   switch (crystal->type[0]) {
 
   case 'C':
 
   for (ip = 0; ip < atoms->number_of_atoms_in_unit_cell; ip++) {
-  //for (jp = 0; jp < atoms->number_of_atoms_in_unit_cell; jp++) {
     for (jp = 0; jp <= ip; jp++) {
 
     nd1 = atoms->bfnnumb[ip];
@@ -78,7 +66,6 @@ void two_centre_coulomb1_crystal(ComplexMatrix *V_q, REAL_LATTICE *R, Q_LATTICE 
       sheli  = shells->shar[index_i];
       sheli1 = shells->cart[index_i];
       imax   = shells->imax_sh[index_i];
-      //E_coefficients_1c(index_i,gausposi,C1x,C1y,C1z,&C1_max,shells,gaussians,job,file);
       shelposj = atoms->shelposn_sh[jp];
       gausposj = atoms->gausposn_sh[jp];
       bfposj  = 0;
@@ -118,7 +105,6 @@ void two_centre_coulomb1_crystal(ComplexMatrix *V_q, REAL_LATTICE *R, Q_LATTICE 
         mm1 = (mm + 1) * mm2;
         mm0 = (mm + 1) * mm1;
         fgtuv = (Complex *) calloc(mm0, sizeof(Complex));
-        //fgtuv = (double *) calloc(mm0, sizeof(double));
         if (fgtuv == NULL) {
         if (job->taskid == 0)
         fprintf(stderr, "ERROR: not enough memory for Complex fgtuv! \n");
@@ -132,17 +118,10 @@ void two_centre_coulomb1_crystal(ComplexMatrix *V_q, REAL_LATTICE *R, Q_LATTICE 
              s_12.comp1 = atoms->cell_vector[ip].comp1 - atoms->cell_vector[jp].comp1;
              s_12.comp2 = atoms->cell_vector[ip].comp2 - atoms->cell_vector[jp].comp2;
              s_12.comp3 = atoms->cell_vector[ip].comp3 - atoms->cell_vector[jp].comp3;
-             //p_inv_ex = ab_inv[i4] + pc_inv[j4];
-             //fac1 = sab[i4] * sc[j4];
-             // *p_fgtuv -= pi_vol * fac1 * (gamma_1_inv - pab_inv[i4] - pc_inv[j4]);
-             //p_fgtuv = fgtuv + i4 * mm4 + j4;
              if (fabs(q_G->sqr[0]) < 0.00001)
              fgtuv[i4] -= pi_vol * sab_fac[i4] * (q_G->gamma_0_inv - ab_inv[i4]);
-   //fprintf(file.out,"pi vol fac %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f\n",pi_vol, sab_fac[i4], q_G->gamma_0_inv, - ab_inv[i4],\
-             - pi_vol * sab_fac[i4] * (q_G->gamma_0_inv - ab_inv[i4]),fgtuv[i4]);
-int start = 0;
-if (fabs(q_G->sqr[0]) < 0.00001) start = 1;
-
+             start = 0;
+             if (fabs(q_G->sqr[0]) < 0.00001) start = 1;
              //for (index_G = 1; index_G < q_G->last_vector; index_G++) {
              for (index_G = start; index_G < q_G->last_vector; index_G++) {
                fac2 = sab_fac[i4] * expfac * exp(-q_G->sqr[index_G] / four * q_G->gamma_0_inv) / q_G->sqr[index_G];

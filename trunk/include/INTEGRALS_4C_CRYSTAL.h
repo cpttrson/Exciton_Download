@@ -1,5 +1,5 @@
 
-void integrals_crystal_coulomb_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, int*, int*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
+void integrals_crystal_coulomb_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, int*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void integrals_crystal_exchange_ijkl(INTEGRAL_LIST*, QUAD_TRAN*, int*, int*, REAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 

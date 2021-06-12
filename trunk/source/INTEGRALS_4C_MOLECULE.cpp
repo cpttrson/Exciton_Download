@@ -17,7 +17,6 @@
 using namespace std;
 
 void integrals_molecule_ijkl(INTEGRAL_LIST *integral_list, int ip, int jp, int kp, int lp, int *start_index, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-//void integrals_molecule_ijkl(INTEGRAL_LIST *integral_list, int ip, int jp, int kp, int lp, int *start_index, int *count_index, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
@@ -167,9 +166,6 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e, s_12;
                       if (m + n + p > mm) break;
                         fgtuv_temp = fac1 * ftuvn(m,n,p,0,&em[0][0],s_12);
                         fgtuv[m * mm1 + n * mm2 + p * mm3  + i4 * mm4 + j4] += fgtuv_temp;
-                        //fgtuv_temp = fac1 * f[m][n][p][0];
-                        // p_fgtuv = fgtuv + m * mm1 + n * mm2 + p * mm3  + i4 * mm4 + j4;
-                        //*p_fgtuv += fgtuv_temp;
                         fgtuv_max = (fgtuv_max > fabs(fgtuv_temp)) ? fgtuv_max : fabs(fgtuv_temp);
                         fgtuv_max = k_one;
                        }

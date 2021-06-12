@@ -1,15 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-//#include <xc.h>
-#include <unistd.h>
-#include <stdlib.h>
-*/
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
@@ -30,7 +18,6 @@
 #include "DENSITY_MATRIX_MOLECULE.h"
 #include "DENSITY_MATRIX_CRYSTAL.h"
 #include "BUILD_FOCK_MATRIX.h"
-//#include "SCF_MOLECULE.h"
 #include "SCF_CRYSTAL.h"
 
 using namespace std;
@@ -315,6 +302,10 @@ ResetDoubleArray(delta_F0,&dimf_spin);
   Function[6] = 0 ;
   Function[7] = 0 ;
 
+  allocate_INT_1E(&one_ints, dimp, Function, job, file);
+  fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms, shells, gaussians, crystal, job, file);
+
+  /*
   //2021array_dimensions(&dim, &dimg, &pair_p, atoms, job, file); // don't change
   //2021allocate_INT_1E(&one_ints, dim, Function, job, file);
   //2021allocate_INT_1E(&one_ints_buffer, dim, Function, job, file);
@@ -344,6 +335,7 @@ ResetDoubleArray(delta_F0,&dimf_spin);
   MPI_Allgatherv(&one_ints_buffer1.ElecNuc[offset_p[job->taskid]],receive_p[job->taskid],MPI_DOUBLE,&one_ints.ElecNuc[0],receive_p,\
   offset_p,MPI_DOUBLE,MPI_COMM_WORLD);
   free_INT_1E(&one_ints_buffer1, Function, job, file);
+  */
 
   // ******************************************************************************************
   // * Check for small eigenvalues of S_k                                                     *
