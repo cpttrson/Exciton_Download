@@ -83,10 +83,6 @@ void bse_crystal1(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, int *numfrag, in
   // * Routine calculates BSE and BSE-TDA excitations                                         *
   // ******************************************************************************************
   
-  // ******************************************************************************************
-  // * Count and generate k points for SCF calculation                                        *
-  // ******************************************************************************************
-  
   KPOINT_TRAN knet;
   count_k_points(&knet,fermi->is,crystal,symmetry,job,file);
   if (job->kss == 0)      fermi->nkunique = knet.nktot;
@@ -867,7 +863,7 @@ count++;
 
   DestroyComplexMatrix(&V_q,job);
   free_INT_1E(&one_ints, Function, job, file);
-  free_INT_1E(&one_ints_buffer, Function, job, file);
+  //free_INT_1E(&one_ints_buffer, Function, job, file);
   free_Q_LATTICE(&q_G,job);
   free_PAIR_TRAN(&pair_p,job);
   DestroyIntArray(&dim_ham,&job->numtasks,job);
