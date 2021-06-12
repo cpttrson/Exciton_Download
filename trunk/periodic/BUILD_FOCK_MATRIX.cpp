@@ -35,7 +35,7 @@ using namespace std;
   // ******************************************************************************************
   // * This routine builds the Fock Matrix                                                    *
   // ******************************************************************************************
-
+/*
 void build_fock_matrix_molecule(double *Fock, INT_1E *one_ints, FERMI *fermi, double *total_electrons, double *S1, double *P, double *F, double *delta_P, double *delta_F, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry,REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
 {
@@ -67,6 +67,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
   allocate_PAIR_TRAN(&pair_q,atoms,symmetry,R_tables,job,file);
   generate_range_selected_pairs(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
   if (job->iter == 1) print_pairs(&pair_q,atoms,R,job,file);
+  */
 
   /*
   switch (crystal->type[0]) {
@@ -152,7 +153,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
 
   case 'M':
   */
-
+/*
   if (job->scf_coulomb == 1 || job->scf_exchange == 1) {
 
   if (job->scf_direct == 0) {
@@ -176,6 +177,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
   }
 
  } // close if (job->scf_coulomb == 1 || job->scf_exchange == 1)
+ */
 
   /*
   break;
@@ -192,7 +194,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
 
   //for (i = 0; i < dimp; i++) { //fprintf(file.out,"EN %3d %10.4f %10.4f\n",i,Fock_EN[i],one_ints->ElecNuc[i]);
   //if (fabs(Fock_EN[i]-one_ints->ElecNuc[i]) > k_zero) fprintf(file.out,"diff "); }
-    
+  /*  
   if (job->scf_direct == 0) {
   ResetDoubleArray(Fock, &dimp_spin);
   count = 0;
@@ -234,6 +236,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
   DestroyDoubleArray(&Kohn_2e,&dimp_spin,job);
 
 }
+*/
 
 void build_fock_matrix(double *Fock, INT_1E *one_ints, FERMI *fermi, double *total_electrons, double *S1, double *S2, double *P, double *F, double *delta_P, double *delta_F, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax, CRYSTAL *crystal, SYMMETRY *symmetry,REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
@@ -531,6 +534,7 @@ double *Fock_2c, *Fock_2e, *Kohn_2e;
 
 }
 
+/*
 void total_energy(INT_1E *one_ints, double *Fock, double *P, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 
 {
@@ -800,6 +804,7 @@ double elecnuc_energy  = k_zero;
    }
 
 }
+*/
 
 void fock_matrix_crystal_compute_coulomb_integrals(double *Fock_2c, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
@@ -1238,6 +1243,7 @@ MPI_Win win;
 
 }
 
+/*
 void fock_matrix_molecule_compute_integrals(double *Fock_2c, double *Fock_2e, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
 
 {
@@ -1388,6 +1394,7 @@ MPI_Win win;
       job->taskid,unique_quads,total_quads,total_integrals,time3,time5,time7,time9,time11,time1);
 
 }
+*/
 
 void fock_matrix_crystal_read_coulomb_integrals(double *Fock_2c, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
 
@@ -1499,6 +1506,7 @@ char xx[4], yy[24] = "scf_integrals_2E.";
 
 }
 
+/*
 void fock_matrix_molecule_read_integrals(double *Fock_2c, double *Fock_2e, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -1557,6 +1565,7 @@ char xx[4], yy[24] = "scf_integrals_2M.";
   DestroyDoubleArray(&Fock_2e_buffer,&dimp_spin,job);
 
 }
+*/
 
 void fock_matrix_crystal_compute_coulomb_integrals_no_sym(double *Fock_2c, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
@@ -1908,6 +1917,7 @@ MPI_Win win;
    if (job->taskid == 0 && job->iter == 1) printf("total e_quads no sym = %6d\n",total_quads_sum);
 }
 
+/*
 void fock_matrix_molecule_compute_integrals_no_sym(double *Fock_2c, double *Fock_2e, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, JOB_PARAM *job, FILES file)
 
 {
@@ -2065,6 +2075,7 @@ MPI_Win win;
       job->taskid,total_quads,total_integrals,time3,time5,time7,time9,time1);
 
 }
+*/
 
 void fock_matrix_crystal_read_coulomb_integrals_no_sym(double *Fock_2c, double *F, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 
@@ -2223,6 +2234,7 @@ char xx[4], yy[24] = "scf_integrals_2E.";
 
 }
 
+/*
 void fock_matrix_molecule_read_integrals_no_sym(double *Fock_2c, double *Fock_2e, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -2311,6 +2323,7 @@ char xx[4], yy[30] = "scf_integrals_2M_no_sym.";
   DestroyDoubleArray(&Fock_2e_buffer,&dimp_spin,job);
 
 }
+*/
 
 void contract_integrals_crystal_coulomb_ijkl(double *Fock_2c_buffer, INTEGRAL_LIST *integral_list_coulomb, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, REAL_LATTICE_TABLES *R_tables, JOB_PARAM *job, FILES file)
 
@@ -2719,6 +2732,7 @@ double *p_exchange_ints_value, *Fock_2e_temp;
 
 }
 
+/*
 void contract_integrals_molecule_ijkl(double *Fock_2c_buffer, double *Fock_2e_buffer, INTEGRAL_LIST *integral_list_molecule, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -3027,6 +3041,7 @@ double *S0;
     }
 
 }
+*/
 
 void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -3397,7 +3412,7 @@ INTEGRAL_LIST integral_list_molecule;
    }
 
 }
-/*
+
 void shell_screen_crystal_coulomb_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, REAL_LATTICE_TABLES *R_tables, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -3685,7 +3700,7 @@ INTEGRAL_LIST integral_list_coulomb;
               //DestroyDoubleArray(&Fock_2c,&dimc,job);
               //DestroyDoubleArray(&Fock_2c_temp,&dimc,job);
              }
-/ *
+/*
               if (job->scf_exchange == 1 && job->xc_hfx == 1 && pair_p->uniq[ip * dim1 + kp] == -1 && start_index[shell_count] == 0) {
               flag = 0;
               //AllocateDoubleArray(&Fock_2e,&dime,job);
@@ -3721,7 +3736,7 @@ INTEGRAL_LIST integral_list_coulomb;
               //DestroyDoubleArray(&Fock_2e,&dime,job);
               //DestroyDoubleArray(&Fock_2e_temp,&dime,job);
              }
-* /
+*/
 
             } // close loop on s
            } // close loop on p
@@ -3738,7 +3753,6 @@ INTEGRAL_LIST integral_list_coulomb;
    }
 
 }
-*/
 
 void shell_screen_compute_integrals(double *S1, double *S2, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
@@ -4247,7 +4261,6 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e;
         }
 
 }
-*/
 
 void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 
@@ -4277,4 +4290,5 @@ int count;
  fflush(file.out);
 
 }
+*/
 

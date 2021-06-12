@@ -1400,6 +1400,7 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
+/*
 void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
@@ -1854,6 +1855,7 @@ INTEGRAL_LIST integral_list_molecule;
    }
 
 }
+*/
 
 void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 
