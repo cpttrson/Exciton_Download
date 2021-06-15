@@ -117,7 +117,8 @@ find_package(MKL REQUIRED)
 ###message("Using this linkage for gsl: ${GSL_LIBRARIES} with flags  ${CMAKE_GSL_CXX_FLAGS}\n\n")
 ####INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR})
 ###set(LIBS ${CMAKE_GSL_CXX_FLAGS} ${GSL_LIBRARIES}
-set (LIBS ${PROJECT_SOURCE_DIR}/libxc/lib/libxc.a)
+set (LIBS ${PROJECT_SOURCE_DIR}/lib/libxc.a)
+###set (LIBS ${PROJECT_SOURCE_DIR}/libxc/lib/libxc.a)
 
 set(MKL_BLACS_MPI INTELMPI)
 
@@ -231,14 +232,14 @@ ${src_dir_per}/TDHF_CRYSTAL.cpp                  #
 ${src_dir_per}/SETUP_REAL_LATTICE.cpp            #                                                                          
 ${src_dir_per}/OPTICAL_SPECTRUM.cpp              #     
 ${src_dir_per}/INPUT_CRYSTAL.cpp                 #                            
-#${src_dir_per}/INPUT_ALL.cpp                    #                            
 ${src_dir_per}/SETUP_SYMMETRY.cpp                #
 ${src_dir_per}/SETUP_CRYSTAL.cpp                 #
 ${src_dir_per}/CRYSTAL09.cpp                     #
-#${src_dir_per}/PRINT_UTIL.cpp                   #
-#${src_dir}/PLOTTING.cpp                         #     
-#${src_dir}/DFT.cpp                              #     
-#${src_dir}/LEBEDEV_LAIKOV.cpp                   #     
+${src_dir_per}/PRINT_UTIL.cpp                    #
+${src_dir_per}/PLOTTING.cpp                      #     
+${src_dir_per}/DFT.cpp                           #     
+${src_dir_per}/DFT_ATOM.cpp                      #     
+${src_dir_per}/LEBEDEV_LAIKOV.cpp                #     
 #${src_dir}/DIELECTRIC_FUNCTION.cpp                    
 #${src_dir}/INTEGRALS_TEST.cpp                         
 )                                                      

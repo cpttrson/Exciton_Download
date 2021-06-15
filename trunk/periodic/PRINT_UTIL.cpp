@@ -28,6 +28,7 @@ void PrintDoubleMatrix(DoubleMatrix *a, FILES file){
     fprintf(file.out,"\n");
 }
 
+/*
 void print_double_matrix(DoubleMatrix *a, FILES file){
   int i, j, k, blocks, remndr;
   blocks = a->iCols / 12;
@@ -63,6 +64,7 @@ void print_double_matrix(DoubleMatrix *a, FILES file){
     }
 
 }
+*/
 
 void print_real_matrix2(DoubleMatrix *a, int transpose, int cols, double scale_factor, FILES file)
 
@@ -421,6 +423,7 @@ void print_real_eigenvector_matrix2(DoubleMatrix *a, double *e, int cols, int la
 
 }
 
+/*
 void print_complex_matrix(ComplexMatrix *a, FILES file)
 
 {
@@ -459,6 +462,7 @@ void print_complex_matrix(ComplexMatrix *a, FILES file)
     }
 
 }
+*/
 
 void print_complex_matrix1(ComplexMatrix *a, int transpose, FILES file)
 

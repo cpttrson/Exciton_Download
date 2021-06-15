@@ -1,31 +1,3 @@
-  /*! \mainpage Exciton08 Manual
- this is what appears on the main page of the Exciton08 manual
- you can create sections
- \section first text 1
- just another thing
- \section second text 2
- is quite simple to use inline mathematics with latex \f$ \alpha=0\f$
- or to write proper formulae
- \f[
- E=mc^2
- \f]
- more info here http://www.stack.nl/~dimitri/doxygen/manual.html
- */
-
-/*! \file MAIN.cpp
- \brief main file
- \details a proper description
- should be added later
- \remarks  here just remarks
-
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include "mycomplex.h"
-*/
 #include <mpi.h>
 #include <cstring>
 #include "conversion_factors.h"
@@ -51,33 +23,33 @@ int main(int argc, char *argv[]) {
   exit(1);
   }
 
-  int rank;
+int rank;
 
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Init(&argc, &argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  int i;
-  int print;
-  char jobname[17];
-  char title[100];
+int i;
+int print;
+char jobname[17];
+char title[100];
 
   // ******************************************************************************************
   // * BEGIN Initialisation Section                                                           *
   // ******************************************************************************************
  
-  FILES   file ;
-  JOB_PARAM job;
-  CRYSTAL crystal ;
-  REAL_LATTICE R;
-  REAL_LATTICE_TABLES R_tables;
-  RECIPROCAL_LATTICE G;
-  SYMMETRY symmtemp ;
-  SYMMETRY symmetry ;
-  ATOM atoms, atoms_ax;
-  ATOM_TRAN atom_p;
-  ATOM_TRAN atom_i;
-  SHELL shells, shells_ax;
-  GAUSSIAN gaussians, gaussians_ax;
+FILES   file ;
+JOB_PARAM job;
+CRYSTAL crystal ;
+REAL_LATTICE R;
+REAL_LATTICE_TABLES R_tables;
+RECIPROCAL_LATTICE G;
+SYMMETRY symmtemp ;
+SYMMETRY symmetry ;
+ATOM atoms, atoms_ax;
+ATOM_TRAN atom_p;
+ATOM_TRAN atom_i;
+SHELL shells, shells_ax;
+GAUSSIAN gaussians, gaussians_ax;
 
   // ******************************************************************************************
   // * JOB_PARAM structure contains switches to control job flow and monitors memory use      *
