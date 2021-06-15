@@ -2,6 +2,9 @@
 void two_centre_cartesian_to_sh_ij(double*, double*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
 //void two_centre_cartesian_to_sh_shell_ij(double*, double*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
 
+void two_centre_cartesian_to_sh_ij_complex(Complex*, Complex*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
+//void two_centre_cartesian_to_sh_shell_ij(double*, double*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
+
 void two_centre_cartesian_to_sh_ij_vector(double*, double*, int, int, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
 //void two_centre_vector_cartesian_to_sh_shell_ij(double*, double*, int, int, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*, FILES);
 

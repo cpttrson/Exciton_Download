@@ -1,6 +1,3 @@
-#ifndef TDHF
-#define TDHF
-
 
 void bse_crystal1(FERMI*, ATOM*, ATOM_TRAN*_p, int*, int*, int [][2], SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
 
@@ -36,10 +33,10 @@ void optical_spectrum_crystal2(FERMI*, ATOM*, ATOM_TRAN*_p, int*, int*, int [][2
 void density_fitting_crystal_contract_integrals(int*, int*, int*, int*, int*, PAIR_TRAN*, KPOINT_TRAN*, MPI_File, Complex**, FERMI*, ATOM_TRAN*, ATOM*, SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, SYMMETRY*, Q_LATTICE*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
 
 void density_fitting_crystal_rotate_integrals1(int*, int*, int, KQPOINT_TRAN*, ComplexMatrix*, ComplexMatrix*, Complex**, Complex*, int*, int*, int*, int*, int*, int*, INT_1E*, PAIR_TRAN, ATOM*, ATOM_TRAN*, SHELL*, ATOM*, SHELL*, REAL_LATTICE*, FERMI*, CRYSTAL*, SYMMETRY*, MPI_File*, FILES, JOB_PARAM*);
-*/
 
 void density_fitting_crystal_rotate_integrals(int*, int, KQPOINT_TRAN*, ComplexMatrix*, ComplexMatrix*, Complex**, Complex*, int*, int*, int*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, FILES, JOB_PARAM*);
 
+*/
 /*
 void overlap_matrices(int*, ComplexMatrix*, ComplexMatrix*, KQPOINT_TRAN*, int*, int*, int*, int*, int*, int*, INT_1E*, PAIR_TRAN, ATOM*, ATOM_TRAN*, SHELL*, ATOM*, REAL_LATTICE*, FERMI*, SYMMETRY*, CRYSTAL*, MPI_File*, FILES, JOB_PARAM*);
 
@@ -86,4 +83,3 @@ void contract_coulomb_integrals_complex(int*, int*, ComplexMatrix*, Complex*, Co
 
 void rpa_hamiltonian_in_core_crystal(int*, int*, int*, Complex*, Complex*, FERMI*, ATOM_TRAN*, ATOM*, SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
 */
-#endif

@@ -4,7 +4,6 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include <xc.h>
 #include "ALLOCATE_MEMORY.h"
 #include "MATRIX_UTIL.h"
 #include "SCF.h"
@@ -22,6 +21,7 @@
 #include "CRYSTAL09.h"
 #include "INTEGRALS_TEST.h"
 */
+#include <xc.h>
 #include <mpi.h>
 #include <cstring>
 #include "mycomplex.h"
@@ -347,7 +347,6 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
                  job->xc_hfx = 0;
 
-	      /*
               if (!strcmp(exch_type, "XC_LDA_X")) {
                  job->xc_typ[i]   = 1;      
                  sprintf(x_functional,"%s","LDA");
@@ -628,10 +627,9 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
                   }
                  xc_func_end(&func);
                 }
-	      */
                } // close loop on i
-	/*
 
+	/*
         else if (!strcmp(jobname1, "HYBRID")) {
           job->xc_grd = 0;           // Default DFT grid is STANDARD
           job->xc_lmx = 13;

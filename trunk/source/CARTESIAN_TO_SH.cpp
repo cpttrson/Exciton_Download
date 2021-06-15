@@ -42,6 +42,41 @@ double *p_Operator_cart;
 
 }
 
+void two_centre_cartesian_to_sh_ij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
+
+{
+
+int i, j;
+int nsheli, nshelj;
+int *p_i, *p_j, *p_i1, *p_j1;
+double *p_rot1, *p_rot2;
+Complex *p_Operator_cart;
+
+  nsheli = *(shells->num_ij + shells->ord_sh[index_i]);
+  nshelj = *(shells->num_ij + shells->ord_sh[index_j]);
+  p_i1 = shells->ind_i + shells->opp_sh[index_i];
+  p_i  = shells->ind_j + shells->opp_sh[index_i];
+  p_rot1 = shells->rot + shells->opp_sh[index_i];
+  for (i = 0; i < nsheli; i++) {
+    p_j1 = shells->ind_i + shells->opp_sh[index_j];
+    p_j  = shells->ind_j + shells->opp_sh[index_j];
+    p_rot2 = shells->rot + shells->opp_sh[index_j];
+    for (j = 0; j < nshelj; j++) {
+      p_Operator_cart = Operator_cart + (bfposi1 + *p_i1) * nd2 + bfposj1 + *p_j1;
+      Operator_sh[(bfposi + *p_i) * nd4 + bfposj + *p_j] += *p_rot1 * *p_rot2 * *p_Operator_cart;
+      //fprintf(file.out,"%3d %3d   %3d %3d   %3d %3d   %12.4e %12.4e \n",bfposj1, *p_j1, (bfposi1 + *p_i1) * nd2 , bfposj1 + *p_j1,\
+      (bfposi + *p_i) * nd4 , bfposj + *p_j, *p_rot1 * *p_rot2, *p_Operator_cart);
+      p_j++;
+      p_j1++;
+      p_rot2++;
+     }
+    p_i++;
+    p_i1++;
+    p_rot1++;
+   }
+
+}
+
 void two_centre_cartesian_to_sh_ij_vector(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd1, int nd2, int nd3, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 //void two_centre_vector_cartesian_to_sh_shell_ij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd1, int nd2, int nd3, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 

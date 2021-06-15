@@ -55,7 +55,8 @@ void shell_screen1(int*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, JOB_PAR
 
 void shell_screen2(int*, double*, PAIR_TRAN*, QUAD_TRAN*, REAL_LATTICE_TABLES*, ATOM*, SHELL*, JOB_PARAM*, FILES);
 
-void shell_screen3(int*, ComplexMatrix*, Complex*, PAIR_TRAN*, TRIPLE_TRAN*, ATOM*, SHELL*, ATOM*, SHELL*, JOB_PARAM*, FILES);
+void integral_screen_crystal_ija(int*, ComplexMatrix*, Complex*, PAIR_TRAN*, TRIPLE_TRAN*, ATOM*, SHELL*, ATOM*, SHELL*, JOB_PARAM*, FILES);
+//void shell_screen3(int*, ComplexMatrix*, Complex*, PAIR_TRAN*, TRIPLE_TRAN*, ATOM*, SHELL*, ATOM*, SHELL*, JOB_PARAM*, FILES);
 
 void shell_screen_direct(int*, double*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 

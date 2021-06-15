@@ -6,18 +6,18 @@
 #include <iostream>
 #include <fstream>
 #include <mpi.h>
-#include <xc.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include "INTEGRALS_TWO_CENTRE.h"
-#include "DFT.h"
 */
 
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
 #include "conversion_factors.h"
+#include <xc.h>
 #include "USER_DATA.h"
+#include "DFT.h"
 #include "LIMITS.h"
 #include "PAIRS_QUADS.h"
 #include "PRINT_UTIL.h"
@@ -4121,7 +4121,8 @@ double integral_rejection_threshold_sqrd;
      }
 }
 
-void shell_screen3(int *start_index, ComplexMatrix *V_screen, Complex *S1, PAIR_TRAN *pair_p, TRIPLE_TRAN *triple, ATOM *atoms, SHELL *shells, ATOM *atoms_ax, SHELL *shells_ax, JOB_PARAM *job, FILES file)
+void integral_screen_crystal_ija(int *start_index, ComplexMatrix *V_screen, Complex *S1, PAIR_TRAN *pair_p, TRIPLE_TRAN *triple, ATOM *atoms, SHELL *shells, ATOM *atoms_ax, SHELL *shells_ax, JOB_PARAM *job, FILES file)
+//void shell_screen3(int *start_index, ComplexMatrix *V_screen, Complex *S1, PAIR_TRAN *pair_p, TRIPLE_TRAN *triple, ATOM *atoms, SHELL *shells, ATOM *atoms_ax, SHELL *shells_ax, JOB_PARAM *job, FILES file)
 
 {
 
@@ -4137,7 +4138,6 @@ int dim2 = dim1 * dim1;
 int nd2;
 double mod_test;
 Complex test;
-
 
   ip = triple->cell1[0];
   jp = triple->cell2[0];

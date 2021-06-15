@@ -48,6 +48,7 @@
 #include "mkl_scalapack.h"
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"
+#include "PRINT_MOLECULE.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "SETUP_SYMMETRY.h"
 #include "FOURIER_TRANSFORM.h"
@@ -347,7 +348,6 @@ MPI_File fh;
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
 
   AllocateIntArray(&dim_ham,&job->numtasks,job);
-  //job->bse_exc = 1;
   setup_hamiltonian_parameters_finite_q(&ntransitions, band_range_k, band_range_kq, nband_k, nband_kq, fermi, job, file);
   setup_procs(begin_j,end_j,begin_q1,end_q1,MPA,NQA,dim_ham,&dim1,ictxt,&ntransitions,nbsize_row,nbsize_col,fermi,file,job);
   mpA = numroc_(&ntransitions, nbsize_row, &myrow, &izero, &nprow);
@@ -366,7 +366,6 @@ MPI_File fh;
   time19 = MPI_Wtime();
   PAIR_TRAN pair_p;
   pair_p.cutoff = 8.0;
-  //pair_p.cutoff = 24.0;
   //fprintf(file.out,"pair_cutoff = %10.4f\n",pair_p.cutoff);
   count_range_selected_pairs(&pair_p,atoms,atom_p,symmetry,R,R_tables,job,file);
   allocate_PAIR_TRAN(&pair_p,atoms,symmetry,R_tables,job,file);
@@ -392,10 +391,7 @@ MPI_File fh;
   mpi_begin_end(begin_p,end_p,pair_p.nump,job->numtasks,job,file);
   mpi_receive_offset_pairs(begin_p,end_p,receive_p,offset_p,&pair_p,atoms,job,file);
   allocate_INT_1E(&one_ints, dim, Function, job, file);
-  //allocate_INT_1E(&one_ints_buffer, dim, Function, job, file);
   fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms, shells, gaussians, crystal, job, file);
-  ////fock_element_1e1(&one_ints_buffer, dim, &pair_p, pair_p.nump, Function, R, G, atoms, shells, gaussians, crystal, job, file);
-  ////MPI_Allreduce(&one_ints_buffer.Overlap[0],&one_ints.Overlap[0],dim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   time20 += MPI_Wtime() - time19;
 
   // ******************************************************************************************
@@ -418,8 +414,6 @@ MPI_File fh;
 
   //time13 = MPI_Wtime();
 
-  //job->bse_cou = 1;
-  //job->bse_exc = 1;
   int little_q_group_unique, num_q1, nkunique, kq, q1_list[fermi->nkunique],begin_k[fermi->nkunique], end_k[fermi->nkunique];
   KQPOINT_TRAN kq_pair;
   KPOINT_TRAN knet_little_q_group;
@@ -543,6 +537,8 @@ MPI_File fh;
   time5 = MPI_Wtime();
   ResetComplexMatrix(V_q);
   generate_coulomb_matrix_inverse_complex(V_q,q,fermi,atom_p,atoms,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
+  //fprintf(file.out,"V_q\n");
+  //print_complex_matrix(V_q,file);
   time6 += MPI_Wtime() - time5;
 
   // ******************************************************************************************
@@ -559,11 +555,6 @@ MPI_File fh;
     ResetComplexArray(integral_buffers[s],&buffer_size[s]);
     //printf("Buffer_size %3d %3d %3d %3d %3d\n",job->taskid,s,buffer_size[s],nband_k[s],nband_kq[s]);
    } // close s loop
-
-//int flag;
-//int *tag_ub;
-//MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag);
-//printf("task %d i %d numq1 %d  %d %d    %d %d\n",job->taskid,i,num_q1,begin_k[i],end_k[i],*tag_ub,flag); fflush(stdout);
 
     density_fitting_crystal_contract_integrals(&q1,&begin_k[i],&end_k[i],band_range_k,band_range_kq,&pair_p,&knet_little_q_group,fh,\
     integral_buffers,fermi,atom_p,atoms,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,&symmetry_little_q_group,\
@@ -589,17 +580,13 @@ MPI_File fh;
          }
     time8 += MPI_Wtime() - time7;
 
-
-//for (int ii = 0; ii < buffer_size[0]; ii++) fprintf(file.out,"%3d %3d %3d %14.8f %14.8f  %14.8f %14.8f\n",\
-q1,q,ii,(integral_buffers[0][ii]).real(),(integral_buffers[1][ii]).real(),(integral_buffers[2][ii]).real(),(integral_buffers[3][ii]).real());
-
   // ******************************************************************************************
   // * Loop over unique k points for this q vector                                            *
   // ******************************************************************************************
 
-  time15 = MPI_Wtime();
-  array_count = 0;
-  array_count1 = 0;
+time15 = MPI_Wtime();
+array_count = 0;
+array_count1 = 0;
 count = 0;
   for (block = 0; block < 2 - job->bse_tda; block++) {
     for (s1 = 0; s1 < job->spin_dim; s1++) {
@@ -620,14 +607,13 @@ count = 0;
       kq_bz = kq_pair.bz2[count_bz];
       fbz1 = fermi->knet->fbz[k_bz];
       fbz2 = fermi->knet->fbz[kq_bz];
-
       //fprintf(file.out,"s1 k num %3d %3d %3d end %3d arr %3d range %3d %3d %3d %3d     %3d %3d %3d %3d %3d %3d \n",\
       s1,k,kq_pair.num[k],end_k[i],array_count,band_range_k[array_count1 + 0],band_range_kq[array_count1 + 0],\
       band_range_k[array_count1 + 2],band_range_kq[array_count1 + 2],fermi->homo[s1],fermi->bands[2 * s1],band_range_kq[4],\
       band_range_kq[5],band_range_kq[6],band_range_kq[7]);
 
         for (k1 = 0; k1 < kq_pair.num[k]; k1++) {
-  time17 = MPI_Wtime();
+          time17 = MPI_Wtime();
           ResetComplexArray(bra_integrals,&dim_bra);
           density_fitting_crystal_rotate_integrals(&bra_offset,1,&kq_pair,SS1[count],SS3[count],&integral_buffers[array_count],bra_integrals,\
           &nband_k[array_count],&nband_kq[array_count],&count_bz,atom_p,atoms_ax,shells_ax,symmetry,file,job);
@@ -635,7 +621,7 @@ count = 0;
           density_fitting_crystal_rotate_integrals(&ket_offset,0,&kq_pair,SS2[count],SS4[count],&integral_buffers[array_count + 1],\
           ket_integrals,&nband_k[array_count + 1],&nband_kq[array_count + 1],&count_bz,atom_p,atoms_ax,shells_ax,symmetry,file,job);
           ResetComplexArray(Hamiltonian_buffer,&dim_ham_buffer);
-  time18 += MPI_Wtime() - time17;
+          time18 += MPI_Wtime() - time17;
 
           if (block == 0 && q == 0) {  //A matrix
           p = 0;
@@ -696,16 +682,15 @@ count = 0;
            //fprintf(file.out,"%3d %3d %3d sending message %8d to core %3d %3d %14.8f\n", \
            job->taskid,k,k1, k_bz * fermi->nktot + kq_bz, cblacs_taskid,size,(Hamiltonian_buffer[0]).real());
            //fflush(file.out);
-  time9 = MPI_Wtime();
+           time9 = MPI_Wtime();
            MPI_Send(Hamiltonian_buffer, 2 * size, MPI_DOUBLE, cblacs_taskid, spin_offset_msg + k_bz * fermi->nktot + kq_bz, MPI_COMM_WORLD);
-//double tim= MPI_Wtime() - time9;
-  time10 += MPI_Wtime() - time9;
-//if(k1==kq_pair.num[k]-1) printf("%3d sent message    %8d to core %3d %9.2e\n", job->taskid, k_bz * fermi->nktot + kq_bz, cblacs_taskid,tim);
- //fprintf(file.out,"%3d %3d %3d sent message    %8d to core %3d %9.2e\n", job->taskid, k,k1,k_bz * fermi->nktot + kq_bz, cblacs_taskid,tim);
+           time10 += MPI_Wtime() - time9;
+           //if(k1==kq_pair.num[k]-1) printf("%3d sent message    %8d to core %3d %9.2e\n", job->taskid, k_bz * fermi->nktot + kq_bz, cblacs_taskid,tim);
+           //fprintf(file.out,"%3d %3d %3d sent message    %8d to core %3d %9.2e\n", job->taskid, k,k1,k_bz * fermi->nktot + kq_bz, cblacs_taskid,tim);
            //fflush(stdout);
            //fflush(file.out);
            count_bz++;
-count++;
+           count++;
            } // close loop on k1
            bra_offset += dim_bra;
            ket_offset += dim_ket;
@@ -863,7 +848,6 @@ count++;
 
   DestroyComplexMatrix(&V_q,job);
   free_INT_1E(&one_ints, Function, job, file);
-  //free_INT_1E(&one_ints_buffer, Function, job, file);
   free_Q_LATTICE(&q_G,job);
   free_PAIR_TRAN(&pair_p,job);
   DestroyIntArray(&dim_ham,&job->numtasks,job);
@@ -1797,80 +1781,6 @@ int i, j;
  
   //DestroyDoubleArray(&bse_eigenvalues,&nt,job);
   //DestroyComplexArray(&bse_eigvec,&buffer_size,job);
-
-}
-
-void density_fitting_crystal_rotate_integrals(int *offset_k, int conjugate, KQPOINT_TRAN *kq_pair, ComplexMatrix *S1, ComplexMatrix *S2, Complex **integral_buffers, Complex *rotated_integrals, int *nband_k, int *nband_kq, int *count_bz, ATOM_TRAN *atom_p, ATOM *atoms_ax, SHELL *shells_ax, SYMMETRY *symmetry, FILES file, JOB_PARAM *job)
-
-{
-
-int a1, j1, k1, k2, l1, l2 ;
-int dim1 = atoms_ax->number_of_atoms_in_unit_cell;
-int dim1ax = atoms_ax->number_of_sh_bfns_in_unit_cell;
-int dim_rot;
-int k_bz, kq_bz;
-int offset, offset_j1;
-int nd6, op;
-int j1_inv[dim1], j2;
-int offset_j1_inv[dim1];
-Complex *integral_buffer_rotated;
-
-  k_bz  = kq_pair->bz1[*count_bz];
-  kq_bz = kq_pair->bz2[*count_bz];
-  dim_rot = *nband_k * *nband_kq * dim1ax;
-  AllocateComplexArray(&integral_buffer_rotated,&dim_rot,job);
-  op  = symmetry->inverse[kq_pair->opr[*count_bz]];
-
-  for (j1 = 0; j1 < dim1;j1++) offset_j1_inv[j1] = 0;
-    for (j1 = 0; j1 < dim1; j1++ ) {
-      for (j2 = 0; j2 < dim1; j2++ ) {
-        if (atom_p->K[j2 * symmetry->number_of_operators + op] == j1) j1_inv[j1] = j2;
-       }
-      }
-  for (j1 = 0; j1 < dim1; j1++ ) {
-    for (j2 = 0; j2 < j1_inv[j1]; j2++ ) {
-      offset_j1_inv[j1] += atoms_ax->bfnnumb_sh[j2];
-     }
-    }
-
-  offset_j1 = 0;
-  for (k1 = 0; k1 < *nband_k; k1++) {
-    for (l1 = 0; l1 < *nband_kq; l1++) {
-      offset = 0;
-      for (j1 = 0; j1 < dim1; j1++) { 
-        rotate_single(op, j1, &integral_buffers[0][*offset_k + offset_j1_inv[j1] + k1 * *nband_kq * dim1ax + l1 * dim1ax],\
-        &integral_buffer_rotated[k1 * *nband_kq * dim1ax + l1 * dim1ax + offset], atoms_ax, shells_ax, symmetry, job, file);
-        offset += atoms_ax->bfnnumb_sh[j1];
-       } // close loop on j1
-      } // close loop on l1
-     } // close loop on k1
-
-  Complex overlap;
-  ResetComplexArray(rotated_integrals,&dim_rot);
-  for (k1 = 0; k1 < *nband_k; k1++) {
-    for (l1 = 0; l1 < *nband_kq; l1++) {
-      for (k2 = 0; k2 < *nband_k; k2++) {
-        for (l2 = 0; l2 < *nband_kq; l2++) {
-          if (conjugate == 0)      overlap =      S1->a[k1][k2] * S2->a[l2][l1];
-          else if (conjugate == 1) overlap = conj(S1->a[k1][k2] * S2->a[l2][l1]);
-          if (overlap.real() * overlap.real() + overlap.imag() * overlap.imag() < 1.0e-09) continue;
-          for (a1 = 0; a1 < dim1ax; a1++) {
-            rotated_integrals[k1 * *nband_kq * dim1ax + l1 * dim1ax + a1] += \
-            integral_buffer_rotated[k2 * *nband_kq * dim1ax + l2 * dim1ax + a1] * overlap;
-            //fprintf(file.out,"%3d %3d %3d %3d %3d %3d %3d %f %f\n",k1,l1,k2,l2,a1,*nband_k,*nband_kq,overlap.real(),overlap.imag());
-            //fflush(file.out);
-            //if (a1 == 22) fprintf(file.out,"%3d %3d %3d %3d %3d %3d  %14.8f %14.8f %14.8f %14.8f\n",conjugate,k1,l1,k2,l2,a1,\
-            (rotated_integrals[k1 * *nband_kq * dim1ax + l1 * dim1ax + a1]).real(),\
-            (rotated_integrals[k1 * *nband_kq * dim1ax + l1 * dim1ax + a1]).imag(),overlap.real(),overlap.imag());
-            //if (a1 == 22) fprintf(file.out,"%3d %3d %3d %3d %3d %3d  %14.8f %14.8f %14.8f %14.8f\n",conjugate,k1,l1,k2,l2,a1,\
-            (integral_buffer_rotated[k2 * *nband_kq * dim1ax + l2 * dim1ax + a1]).real(),\
-            (integral_buffer_rotated[k2 * *nband_kq * dim1ax + l2 * dim1ax + a1]).imag(),overlap.real(),overlap.imag());
-           } // close loop on a1
-          } // close loop on l2
-         } // close loop on k2
-        } // close loop on l1
-       } // close loop on k1
-    DestroyComplexArray(&integral_buffer_rotated,&dim_rot,job);
 
 }
 
