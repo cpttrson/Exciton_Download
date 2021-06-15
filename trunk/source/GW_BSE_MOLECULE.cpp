@@ -1202,6 +1202,7 @@ long long global_pointer;
 
  } // close else
 
+
   FILE *cas_evals;
   char zz6[24] = "cas_evalues";
   cas_evals = fopen(zz6, "wb");
@@ -1213,6 +1214,17 @@ long long global_pointer;
   } //if (job->taskid == 0) {
 
   MPI_File_close(&fh);
+
+  char buf1[110];
+  char xx[10] = "/cas_eval";
+  strcpy(buf1,file.scf_eigvec);
+  strcat(buf1,xx);
+  MPI_File eh;
+  MPI_File_open(MPI_COMM_WORLD,buf1,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&eh) ;
+  MPI_File_seek(eh, 0, MPI_SEEK_SET) ;
+  for (s = 0; s < job->spin_dim; s++) MPI_File_write(eh, &cas_eigenvalues[s * dim1], ntransitions, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  MPI_File_close(&eh);
+
 
   DestroyDoubleArray(&cas_eigenvalues,&ntransitions,job);
   ////CHPDestroyDoubleArray(&eigvec_buffer,&buffer_size,job);
@@ -1402,7 +1414,11 @@ char zz5[24] = "cas_evalues";
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
   read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
-  read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
+
+  char zz6[24] = "/cas_eval";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
+  for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1419 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
+  ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -1627,7 +1643,11 @@ char zz5[24] = "cas_evalues";
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
   read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
-  read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
+
+  char zz6[24] = "/cas_eval";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
+  for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1649 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
+  ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -1871,7 +1891,10 @@ char zz5[24] = "cas_evalues";
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
   read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
-  read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
+
+  char zz6[24] = "/cas_eval";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
+  ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -2091,6 +2114,34 @@ FILE *evals;
    }
 
 }
+
+void read_SCF_GW_eigenvalues(double *eigenvalues, int size, char *zz, JOB_PARAM *job, FILES file)
+
+{
+
+  // ******************************************************************************************
+  // * Read SCF, GW or CAS eigenvalues from disk                                              *
+  // ******************************************************************************************
+
+int i;
+char buf1[110];
+MPI_File eh;
+
+  strcpy(buf1, file.scf_eigvec);
+  strcat(buf1, zz);
+  MPI_File_open(MPI_COMM_WORLD, buf1, MPI_MODE_RDONLY, MPI_INFO_NULL, &eh) ;
+  MPI_File_seek(eh, 0, MPI_SEEK_SET) ;
+  MPI_File_read(eh, eigenvalues, size, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  MPI_File_close(&eh);
+
+  if (job->taskid == 0 && job->verbosity > 1) {
+  fprintf(file.out,"reading from %s\n",buf1);
+  for (i = 0; i < size; i++)
+  fprintf(file.out,"%5d %10.4lf\n",i,eigenvalues[i] * au_to_eV);
+ }
+
+}
+
 void generate_temp4_in_core(double *temp4, double *integral_buffer2, FERMI *fermi, ATOM *atoms_ax, JOB_PARAM *job, FILES file)
 
 {
