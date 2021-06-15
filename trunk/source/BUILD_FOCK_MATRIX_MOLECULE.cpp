@@ -707,15 +707,14 @@ MPI_Win win;
       integral_list.num = 0;
       total_quads += Quad.tot; 
       unique_quads++;
-      nshells = atoms->nshel_sh[Quad.cell1[0]] * atoms->nshel_sh[Quad.cell2[0]] * \
-                atoms->nshel_sh[Quad.cell3[0]] * atoms->nshel_sh[Quad.cell4[0]];
+      nshells = atoms->nshel_sh[Quad.cell1[0]] * atoms->nshel_sh[Quad.cell2[0]] * atoms->nshel_sh[Quad.cell3[0]] * atoms->nshel_sh[Quad.cell4[0]];
       int start_index[nshells];
-      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
-      ////for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
-      ////if (job->scf_direct == 0 || job->iter == 1) 
-      ////shell_screen1(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
-      ////else if (job->scf_direct == 1 && job->iter > 1) 
-      ////shell_screen_direct(start_index,S1,F,pair_p,&Quad,atoms,shells,symmetry,job,file);
+      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
+      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
+      if (job->scf_direct == 0 || job->iter == 1) 
+      integrals_molecule_screen_ijkl(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
+      else if (job->scf_direct == 1 && job->iter > 1) 
+      integrals_molecule_screen_direct_ijkl(start_index,S1,F,pair_p,&Quad,atoms,shells,symmetry,job,file);
       time5 += MPI_Wtime() - time6;
 
       time8 = MPI_Wtime();
@@ -910,9 +909,10 @@ MPI_Win win;
       total_quads++; 
       nshells = atoms->nshel_sh[atm_n1] * atoms->nshel_sh[atm_n2] * atoms->nshel_sh[atm_n3] * atoms->nshel_sh[atm_n4];
       int start_index[nshells];
-      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
-      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
+      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
+      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
       //shell_screen1(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
+      integrals_molecule_screen_ijkl(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
       time3 += MPI_Wtime() - time4;
 
       time6 = MPI_Wtime();
@@ -1307,7 +1307,8 @@ double *Fock_2c_temp, *Fock_2e_temp;
 
 }
 
-void shell_screen_molecule_compute_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+void fock_matrix_molecule_compute_screening_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+//void shell_screen_molecule_compute_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1400,7 +1401,8 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
-void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
+void integrals_molecule_screen_ijkl(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
+//void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1485,7 +1487,8 @@ double integral_rejection_threshold_sqrd;
 
 }
 
-void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+void integrals_molecule_screen_direct_ijkl(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+//void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
 

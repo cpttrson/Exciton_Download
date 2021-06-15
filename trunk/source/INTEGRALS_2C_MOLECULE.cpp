@@ -93,7 +93,9 @@ VECTOR_DOUBLE R_AB_1e;
         R_AB,R,atoms,shells,gaussians,job,file);
         two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,\
         atoms,shells,gaussians,job,file);
-        two_centre_cartesian_to_sh_ij(coulomb_cart,&Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        cartesian_to_sh_ij(coulomb_cart,&Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        nd2,nd4,shells,job,file);
+        //two_centre_cartesian_to_sh_ij(coulomb_cart,&Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
         nd2,nd4,shells,job,file);
         bfposj   += shelj;
         bfposj1  += shelj1;
@@ -439,7 +441,9 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         shells, gaussians, job, file);
         //two_centre_cartesian_to_sh_shell_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
-        two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(kinetic_cart,&one_ints->Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[0] || Function[2]) {
@@ -447,7 +451,9 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         crystal, atoms,shells,job,file);
         //two_centre_cartesian_to_sh_shell_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
-        two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(elecnuc_cart,&one_ints->ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[3]) {
@@ -455,14 +461,18 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         shells, gaussians, job,file);
         //two_centre_vector_cartesian_to_sh_shell(momentum_cart,&one_ints->Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
-        two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints->Momentum[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        //two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints->Momentum[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
+        cartesian_to_sh_ij_vector(momentum_cart,&one_ints->Momentum[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[4]) {
         Overlap(overlap_cart, index_i, index_j, bfposi1, bfposj1, nd2, im, jm, E1x, E1y, E1z, sab, shells, job, file);
         //two_centre_cartesian_to_sh_shell_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
-        two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(overlap_cart,&one_ints->Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[6]) {
@@ -471,13 +481,17 @@ void fock_element_1e1(INT_1E *one_ints, int dim, PAIR_TRAN *pair_p, int num_p, i
         //fix dim
         //two_centre_vector_cartesian_to_sh_shell_ij(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
-        two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        //two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
+        bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
+        cartesian_to_sh_ij_vector(dipole_cart,&one_ints->Dipole[3 * (dim3 + dim)],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[7]) {
         two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,\
         atoms,shells,gaussians,job,file);
-        two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        //two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(coulomb_cart,&one_ints->Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
         nd2,nd4,shells,job,file);
        }
         bfposj   += shelj;
@@ -646,36 +660,48 @@ INT_1E one_ints_buffer;
     if (Function[0] || Function[1]) {
         Kinetic(kinetic_cart, index_i, index_j, bfposi1, bfposj1, gausposi, gausposj, nd2, im, jm, E1x, E1y, E1z, sab, \
         shells, gaussians, job, file);
-        two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints_buffer.Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(kinetic_cart,&one_ints_buffer.Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(kinetic_cart,&one_ints_buffer.Kinetic[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[0] || Function[2]) {
         ElecNuc(elecnuc_cart, index_i, index_j, bfposi1, bfposj1, nd2,  im, jm, E1x, E1y, E1z, R_AB, pab_inv, sab, R, G, \
         crystal, atoms,shells,job,file);
-        two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints_buffer.ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(elecnuc_cart,&one_ints_buffer.ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(elecnuc_cart,&one_ints_buffer.ElecNuc[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[3]) {
         Momentum(momentum_cart, index_i, index_j, bfposi1, bfposj1, gausposi, gausposj, nd1, nd2, im, jm, E1x, E1y, E1z, sab, \
         shells, gaussians, job,file);
-        two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints_buffer.Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        //two_centre_cartesian_to_sh_ij_vector(momentum_cart,&one_ints_buffer.Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
+        cartesian_to_sh_ij_vector(momentum_cart,&one_ints_buffer.Momentum[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[4]) {
         Overlap(overlap_cart, index_i, index_j, bfposi1, bfposj1, nd2, im, jm, E1x, E1y, E1z, sab, shells, job, file);
-        two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints_buffer.Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        //two_centre_cartesian_to_sh_ij(overlap_cart,&one_ints_buffer.Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
+        bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(overlap_cart,&one_ints_buffer.Overlap[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,\
         bfposj1,nd2,nd4,shells,job,file);
        }
     if (Function[6]) {
         Dipole(dipole_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd1,nd2,ip,im,jm,E1x,E1y,E1z,sab,R_AB,atoms,shells,\
         gaussians,job,file);
-        two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints_buffer.Dipole[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        //two_centre_cartesian_to_sh_ij_vector(dipole_cart,&one_ints_buffer.Dipole[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
+        bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
+        cartesian_to_sh_ij_vector(dipole_cart,&one_ints_buffer.Dipole[3 * dim3 + dim4],index_i,index_j,bfposi,bfposj,\
         bfposi1,bfposj1,nd1,nd2,nd3,nd4,shells,job,file);
        }
     if (Function[7]) {
         two_centre_coulomb(coulomb_cart,index_i,index_j,bfposi1,bfposj1,gausposi,gausposj,nd2,im,jm,E1x,E1y,E1z,&R_AB_1e,\
         atoms,shells,gaussians,job,file);
-        two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints_buffer.Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        //two_centre_cartesian_to_sh_ij(coulomb_cart,&one_ints_buffer.Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
+        nd2,nd4,shells,job,file);
+        cartesian_to_sh_ij(coulomb_cart,&one_ints_buffer.Coulomb[dim3+dim],index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,\
         nd2,nd4,shells,job,file);
        }
         bfposj   += shelj;
