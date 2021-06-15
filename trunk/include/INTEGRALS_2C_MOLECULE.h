@@ -1,4 +1,6 @@
 
+void integrals_molecule_ij(double*, PAIR_TRAN*, ATOM*, SHELL*, GAUSSIAN*, REAL_LATTICE*, JOB_PARAM*, FILES);
+
 void nuclear_repulsion_energy(double*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void fock_element_1e1(INT_1E*, int, PAIR_TRAN*, int, int[], REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
@@ -17,7 +19,7 @@ void Overlap(double*, int, int, int, int, int, int, int, double*, double*, doubl
 
 void Dipole(double*,int,int,int,int,int,int,int,int,int,int,int,double*,double*,double*,double*,VECTOR_DOUBLE*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
 
-void two_centre_coulomb(double*,int,int,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,CRYSTAL*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
+void two_centre_coulomb(double*,int,int,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
 //void two_centre_coulomb(double*,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,double*,double*,RECIPROCAL_LATTICE*,CRYSTAL*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
 
 /*

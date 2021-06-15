@@ -229,7 +229,7 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e, s_12;
 
 }
 
-void integrals_molecule_screen(double *F_sh, int ip, int jp, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+void integrals_molecule_ijij(double *F_sh, int ip, int jp, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 

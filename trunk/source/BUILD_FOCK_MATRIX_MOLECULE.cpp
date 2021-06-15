@@ -1335,7 +1335,7 @@ double *S0;
     nd4 = atoms->bfnnumb_sh[jp];
     nd12 = nd1 * nd2;
     nd34 = nd3 * nd4;
-    integrals_molecule_screen(&S0[dim],ip,jp,R,atoms,shells,gaussians,symmetry,crystal,job,file);
+    integrals_molecule_ijij(&S0[dim],ip,jp,R,atoms,shells,gaussians,symmetry,crystal,job,file);
     dim += nd34;
    }
     expand_screening_integral_matrix(S0,S1,pair_p,atoms,shells,symmetry,job,file);
