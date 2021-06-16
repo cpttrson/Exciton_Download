@@ -381,13 +381,9 @@ VECTOR_DOUBLE r_12, t_12, Rvec_tmp;
 
        mcmurchie_davidson_ija(Coulomb_cart,index_i,index_j,index_k,bfposi,bfposj,bfposk,nd2,nd3,C1x,C1y,C1z,C2x,C2y,C2z, \
        fgtuv,shells,shells_ax,job,file);
-       three_centre_cartesian_to_sh_ija(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
+       cartesian_to_sh_ija(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
        bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
        free(fgtuv);
-       //three_centre_cartesian_to_sh_shell_ax_reversed(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
-       bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
-       //three_centre_cartesian_to_sh_shell_ij_alpha(Coulomb_cart,Coulomb,index_i,index_j,index_k,bfposi1,bfposj1,bfposk1,\
-       bfposi,bfposj,bfposk,nd2,nd3,nd5,nd6,shells,shells_ax,job,file);
        bfposk   += shelk;
        bfposk1  += shelk1;
        gausposk += shells_ax->ng_sh[index_k];

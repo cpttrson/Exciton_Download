@@ -1,16 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-#include "mycomplex.h"
-#include "mylogical.h"
-#include "myconstants.h"
-#include "conversion_factors.h"
-*/
 #include <mpi.h>
 #include "USER_DATA.h"
 #include "PARALLEL.h"

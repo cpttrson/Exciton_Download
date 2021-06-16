@@ -1,24 +1,3 @@
-  /*! \mainpage Exciton08 Manual
- this is what appears on the main page of the Exciton08 manual
- */
-
-/*! \file MAIN.cpp
- \brief main file
- \details a proper description
- should be added later
- \remarks  here just remarks
-
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-#include "mycomplex.h"
-#include "LIMITS.h"
-#include "CRYSTAL09.h"
- */
 #include <mpi.h>
 #include "mylogical.h"
 #include "conversion_factors.h"
@@ -27,37 +6,32 @@
 #include "MATRIX_UTIL.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "PRINT_UTIL.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "TOOLS.h"
 #include "SETUP_SYMMETRY.h"
 
 using namespace std;
 
-/*!
- \brief main function
- \details controls the flow of the programe and does the reading of the input files
- */
-
 void read_symmetry_group(CRYSTAL *crystal, SYMMETRY *symmetry, int print, JOB_PARAM *job, FILES file)
 
 {
 
-  int i, j, k, n;
-  int space_group, layer_group, rod_group, point_group;
-  int group;
-  int number_of_latt_vectors;
-  int number_of_generators;
-  int line_number;
-  char job_title[80];
-  char title[150];
-  char junk, t1, t2, t3, u1, u2, u3, v1, v2, v3;
-  char t[4], u[4], v[4], r[4], PQR[9];
-  const char *explicit_symbol, *Hermann_Mauguin_symbol, *Schoenflies_symbol;
-  char Schoenflies[9], Hermann_Mauguin[18];
-  double irr1[9], gen_irr[9 * 72], *p_gen_irr;
-  double angle;
-  VECTOR_DOUBLE tau[8];
-  VECTOR_DOUBLE f_tmp;
+int i, j, k, n;
+int space_group, layer_group, rod_group, point_group;
+int group;
+int number_of_latt_vectors;
+int number_of_generators;
+int line_number;
+char job_title[80];
+char title[150];
+char junk, t1, t2, t3, u1, u2, u3, v1, v2, v3;
+char t[4], u[4], v[4], r[4], PQR[9];
+const char *explicit_symbol, *Hermann_Mauguin_symbol, *Schoenflies_symbol;
+char Schoenflies[9], Hermann_Mauguin[18];
+double irr1[9], gen_irr[9 * 72], *p_gen_irr;
+double angle;
+VECTOR_DOUBLE tau[8];
+VECTOR_DOUBLE f_tmp;
 
   /******************************************************************************************
    *  Read data from input file 'INPUT'                                                     *
@@ -1488,9 +1462,6 @@ VECTOR_INT kvec[3];
         kvec[0].comp3 =  knet->ibz[k] - kvec[0].comp1 * fermi->is[2] * fermi->is[1] - kvec[0].comp2 * fermi->is[2];
         p_inr = symmetry->inr + symmetry->inverse[l] * 9;
         rotate_vector_int_latt(p_inr, fermi->is, t, &kvec[0], &kvec[1], crystal, job, file);
-        //March2019 rotate_vector_int(p_inr, &kvec[0], &kvec[1]);
-        //fprintf(file.out,"trs %3d op %3d kvec[0] %3d %3d %3d  kvec[1] %3d %3d %3d\n",t,l,kvec[0].comp1,kvec[0].comp2,kvec[0].comp3,\
-        kvec[1].comp1,kvec[1].comp2,kvec[1].comp3);
         if (kvec[1].comp1 == kvec[0].comp1 && kvec[1].comp2 == kvec[0].comp2 && kvec[1].comp3 == kvec[0].comp3) {
         symmetry_little_k_group->number_of_operators++;
        }
@@ -1531,7 +1502,6 @@ VECTOR_INT kvec[3];
     kvec[0].comp3 =  knet->ibz[k] - kvec[0].comp1 * fermi->is[2] * fermi->is[1] - kvec[0].comp2 * fermi->is[2];
     p_inr = symmetry->inr + symmetry->inverse[l] * 9;
     rotate_vector_int_latt(p_inr, fermi->is, t, &kvec[0], &kvec[1], crystal, job, file);
-    //rotate_vector_int(p_inr, &kvec[0], &kvec[1]);
     if (kvec[1].comp1 == kvec[0].comp1 && kvec[1].comp2 == kvec[0].comp2 && kvec[1].comp3 == kvec[0].comp3) {
     for (i = 0; i < 9; i++) {
     symmetry_little_k_group->inr[count_operators * 9 + i] = symmetry->inr[l * 9 + i]; 
@@ -1985,7 +1955,6 @@ double *p_irr, *q_irr;
       }
     }
   }
-   //fprintf(file.out,"\n\n");
 
 }
 
@@ -1996,7 +1965,6 @@ void generate_little_k_group(int k, SYMMETRY *symmetry_little_k_group, FERMI *fe
 int print = 0;
 
   generate_little_k_group_operators(k,symmetry_little_k_group,symmetry,crystal,knet,fermi,job,file);
-  //CHP March2019 generate_little_k_group_operators(k,symmetry_little_k_group,symmetry,knet,fermi,job,file);
   generate_operator_inverses(symmetry_little_k_group, job, file);
   generate_group_multiplication_table(symmetry_little_k_group, print, file);
   generate_group_conjugacy_classes(symmetry_little_k_group, print, file);

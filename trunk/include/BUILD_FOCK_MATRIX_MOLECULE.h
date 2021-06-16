@@ -1,5 +1,3 @@
-#ifndef BUILD_FOCK_MATRIXH
-#define BUILD_FOCK_MATRIXH
 
 void build_fock_matrix_molecule(double*, INT_1E*, FERMI*, double*, double*, double*, double*, double*, double*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, GAUSSIAN*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
 
@@ -61,4 +59,13 @@ void read_write_SCF_eigenvectors(FERMI*, ATOM*, JOB_PARAM*, FILES);
 
 //void shell_overlap(int*, QUAD_TRAN*, ATOM*, SHELL*, REAL_LATTICE*, JOB_PARAM*, FILES);
 
-#endif
+void fock_matrix_molecule_compute_screening_integrals(double*, PAIR_TRAN*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
+
+void expand_screening_integral_matrix(double*, double*, PAIR_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
+
+void integrals_molecule_screen_ijkl(int*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, JOB_PARAM*, FILES);
+
+void integrals_molecule_screen_direct_ijkl(int*, double*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
+
+void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file);
+

@@ -15,7 +15,7 @@
 #include "conversion_factors.h"
 #include "USER_DATA.h"
 #include "LIMITS.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "PARALLEL.h"
 #include "PAIRS_QUADS.h"
 #include "ROTATIONS_MOLECULE.h"
@@ -707,15 +707,14 @@ MPI_Win win;
       integral_list.num = 0;
       total_quads += Quad.tot; 
       unique_quads++;
-      nshells = atoms->nshel_sh[Quad.cell1[0]] * atoms->nshel_sh[Quad.cell2[0]] * \
-                atoms->nshel_sh[Quad.cell3[0]] * atoms->nshel_sh[Quad.cell4[0]];
+      nshells = atoms->nshel_sh[Quad.cell1[0]] * atoms->nshel_sh[Quad.cell2[0]] * atoms->nshel_sh[Quad.cell3[0]] * atoms->nshel_sh[Quad.cell4[0]];
       int start_index[nshells];
-      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
-      ////for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
-      ////if (job->scf_direct == 0 || job->iter == 1) 
-      ////shell_screen1(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
-      ////else if (job->scf_direct == 1 && job->iter > 1) 
-      ////shell_screen_direct(start_index,S1,F,pair_p,&Quad,atoms,shells,symmetry,job,file);
+      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
+      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
+      if (job->scf_direct == 0 || job->iter == 1) 
+      integrals_molecule_screen_ijkl(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
+      else if (job->scf_direct == 1 && job->iter > 1) 
+      integrals_molecule_screen_direct_ijkl(start_index,S1,F,pair_p,&Quad,atoms,shells,symmetry,job,file);
       time5 += MPI_Wtime() - time6;
 
       time8 = MPI_Wtime();
@@ -910,9 +909,10 @@ MPI_Win win;
       total_quads++; 
       nshells = atoms->nshel_sh[atm_n1] * atoms->nshel_sh[atm_n2] * atoms->nshel_sh[atm_n3] * atoms->nshel_sh[atm_n4];
       int start_index[nshells];
-      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
-      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
+      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
+      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
       //shell_screen1(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
+      integrals_molecule_screen_ijkl(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
       time3 += MPI_Wtime() - time4;
 
       time6 = MPI_Wtime();
@@ -1307,7 +1307,8 @@ double *Fock_2c_temp, *Fock_2e_temp;
 
 }
 
-void shell_screen_molecule_compute_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+void fock_matrix_molecule_compute_screening_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
+//void shell_screen_molecule_compute_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1335,7 +1336,7 @@ double *S0;
     nd4 = atoms->bfnnumb_sh[jp];
     nd12 = nd1 * nd2;
     nd34 = nd3 * nd4;
-    integrals_molecule_screen(&S0[dim],ip,jp,R,atoms,shells,gaussians,symmetry,crystal,job,file);
+    integrals_molecule_ijij(&S0[dim],ip,jp,R,atoms,shells,gaussians,symmetry,crystal,job,file);
     dim += nd34;
    }
     expand_screening_integral_matrix(S0,S1,pair_p,atoms,shells,symmetry,job,file);
@@ -1454,8 +1455,9 @@ FILE *scf_evectors;
 
 }
 
-/*
-void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
+//void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
+void integrals_molecule_screen_ijkl(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
+//void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1540,7 +1542,8 @@ double integral_rejection_threshold_sqrd;
 
 }
 
-void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+void integrals_molecule_screen_direct_ijkl(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+//void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1909,7 +1912,6 @@ INTEGRAL_LIST integral_list_molecule;
    }
 
 }
-*/
 
 void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 

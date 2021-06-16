@@ -1,28 +1,3 @@
-/*
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-#include <sys/types.h>
-#include "mylogical.h"
-#include "conversion_factors.h"
-#include "MATRIX_UTIL.h"
-#include "LIMITS.h"
-#include "SYMMETRY.h"
-//#include "ATOM_SCF.h" // for f000m
-#include "PARALLEL.h" // for f000m
-#include "INTEGRALS.h"
-#include "DFT.h"
-#include "ROTATION_OPERATORS.h"
-#include "INCOMPLETE_GAMMA.h"
-#include "ALLOCATE_MEMORY.h"
-#include "INTEGRALS_2C_MOLECULE.h"
-*/
 #include "mycomplex.h"
 #include "myconstants.h"
 #include "USER_DATA.h"
@@ -34,6 +9,10 @@ using namespace std;
 void E_coefficients(int ip, int jp, int gi, int gj, int index_i, int index_j, int gausposi, int gausposj, double *C1x, double *C1y, double *C1z, double *C1_max, double *sab, double *pab_inv, double *R_AB_1esqrd, VECTOR_DOUBLE *R_AB, REAL_LATTICE *R, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
 
 {
+
+  // **************************************************************************************************
+  // * Compute various coefficients for shells index_i and index_j                                    *
+  // **************************************************************************************************
 
 int i4, j4;
 int t, m, n;
@@ -51,8 +30,6 @@ double C1x_max, C1y_max, C1z_max;
   imax    = shells->imax_sh[index_i];
   jmax    = shells->imax_sh[index_j];
   off3    = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-  //off2    = (imax + jmax) * off3;
-  //off1    =  jmax * off2;
   off2    = (imax + jmax + 1) * off3;
   off1    = (jmax + 1) * off2;
   count = 0;
@@ -65,8 +42,6 @@ double C1x_max, C1y_max, C1z_max;
       SAB = pi32 * exp(-KAB) / p32 ;
       pab_inv[count] = k_one / pab;
       sab[count]     = gaussians->c_sh[gausposi + i4] * gaussians->c_sh[gausposj + j4] * SAB;
-      //fprintf(file.out,"ip %3d jp %3d index_i %3d index_j %3d i4 %3d j4 %3d %3d %3d sab %10.2e\n",\
-      ip,jp,index_i,index_j,i4,j4,gausposi,gausposj,sab[count]);
       expnta = gaussians->expo_sh[gausposi + i4];
       expntb = gaussians->expo_sh[gausposj + j4];
       R_AB[count].comp1 = (expnta * (atoms->cell_vector[ip].comp1 + R->vec_ai[gi].comp1) + \
@@ -117,6 +92,10 @@ double SAB, KAB;
 double PAx, PAy, PAz, PBx, PBy, PBz;
 double C1x_max, C1y_max, C1z_max;
 
+  // **************************************************************************************************
+  // * Compute various coefficients for shells index_i and index_j for 2C integrals                   *
+  // **************************************************************************************************
+
   C1x_max = k_zero;
   C1y_max = k_zero;
   C1z_max = k_zero;
@@ -124,8 +103,6 @@ double C1x_max, C1y_max, C1z_max;
   imax = shells->imax_sh[index_i];
   jmax = shells->imax_sh[index_j];
   off3    = shells->ng_sh[index_i] * shells->ng_sh[index_j];
-  //CHANGES2015off2    = (imax + jmax + 1) * off3;
-  //off1    = (jmax + 1) * off2;
   off2    = (imax + im + jmax + jm + 1) * off3;
   off1    = (jmax + jm + 1) * off2;
   count = 0;
@@ -152,9 +129,6 @@ double C1x_max, C1y_max, C1z_max;
       PBx = R_AB[count].comp1 - atoms->cell_vector[jp].comp1 - R->vec_ai[gj].comp1;
       PBy = R_AB[count].comp2 - atoms->cell_vector[jp].comp2 - R->vec_ai[gj].comp2;
       PBz = R_AB[count].comp3 - atoms->cell_vector[jp].comp3 - R->vec_ai[gj].comp3;
-      //CHANGES2015for (m = 0; m <= imax; m++) {
-        //for (n = 0; n <= jmax; n++) {
-          //for (t = 0; t <= imax + jmax; t++) {
       for (m = 0; m <= imax + im; m++) {
         for (n = 0; n <= jmax + jm; n++) {
           for (t = 0; t <= imax + im + jmax + jm; t++) {
@@ -241,21 +215,6 @@ double C2x_max, C2y_max, C2z_max;
   off2    = shells->ng_sh[index_i];
   off1    = (imax + 1) * off2;
 
-  //count = 0;
-  //for (i4 = 0; i4 < shells->ng_sh[index_i]; i4++) {
-    //for (j4 = 0; j4 < shells->ng_sh[index_j]; j4++) {
-      //pab = gaussians->expo_sh[gausposi + i4] + gaussians->expo_sh[gausposj + j4];
-      //ab  = gaussians->expo_sh[gausposi + i4] * gaussians->expo_sh[gausposj + j4];
-      //p32 = pab * sqrt(pab);
-      //KAB = ab * *R_AB_1esqrd / pab ;
-      //SAB = pi32 * exp(-KAB) / p32 ;
-      //ab_inv[count] = k_one / gaussians->expo_sh[gausposi + i4] + k_one / gaussians->expo_sh[gausposj + j4];
-      //sab_fac[count] =pi32*pi32/sqrt(gaussians->expo_sh[gausposi+i4]*gaussians->expo_sh[gausposj + j4]) / gaussians->expo_sh[gausposi + i4] / \
-      gaussians->expo_sh[gausposj + j4] * gaussians->c_sh[gausposi + i4] * gaussians->c_sh[gausposj + j4];
-      //count++;
-     //}
-    //}
-
   count = 0;
   for (i4 = 0; i4 < shells->ng_sh[index_i]; i4++) {
     pa = gaussians->expo_sh[gausposi + i4];
@@ -285,4 +244,3 @@ double C2x_max, C2y_max, C2z_max;
      }
 
 }
-

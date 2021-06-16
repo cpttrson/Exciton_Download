@@ -17,7 +17,7 @@
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"
 #include "PRINT_UTIL.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "SYMMETRY_ADAPTATION.h"
 #include "IVANIC_RUEDENBERG.h"
 

@@ -1,11 +1,9 @@
-
-void integrals_molecule_ij(double*, PAIR_TRAN*, ATOM*, SHELL*, GAUSSIAN*, REAL_LATTICE*, JOB_PARAM*, FILES);
+#ifndef INTEGRALS1C
+#define INTEGRALS1C
 
 void nuclear_repulsion_energy(double*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void fock_element_1e1(INT_1E*, int, PAIR_TRAN*, int, int[], REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
-
-void fock_element_1e2(INT_1E*, PAIR_TRAN*, int[], REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void fock_element_elecnuc(double*, PAIR_TRAN*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
 
@@ -19,13 +17,12 @@ void Overlap(double*, int, int, int, int, int, int, int, double*, double*, doubl
 
 void Dipole(double*,int,int,int,int,int,int,int,int,int,int,int,double*,double*,double*,double*,VECTOR_DOUBLE*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
 
-void two_centre_coulomb(double*,int,int,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
-//void two_centre_coulomb(double*,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,double*,double*,RECIPROCAL_LATTICE*,CRYSTAL*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
+void two_centre_coulomb(double*,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,double*,double*,RECIPROCAL_LATTICE*,CRYSTAL*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
+//CHANGES2015void Coulomb(double*,int,int,int,int,int,int,int,double*,double*,double*,VECTOR_DOUBLE*,double*,double*,RECIPROCAL_LATTICE*,CRYSTAL*,ATOM*,SHELL*,GAUSSIAN*,JOB_PARAM*,FILES);
 
-/*
-void two_centre_coulomb1(INT_1E*, PAIR_TRAN*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
+//void two_centre_coulomb1(INT_1E*, PAIR_TRAN*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
 
-void two_centre_coulomb1_crystal(ComplexMatrix*, REAL_LATTICE*, Q_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
+//void two_centre_coulomb1_crystal(ComplexMatrix*, REAL_LATTICE*, Q_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void two_centre_exchange_crystal(ComplexMatrix*, REAL_LATTICE*, Q_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, CRYSTAL*, JOB_PARAM*, FILES);
 
@@ -50,5 +47,5 @@ void integrals_crystal_exchange_screen(double*, int, int, int, REAL_LATTICE*, AT
 void integrals_crystal_screen(double*, int, int, int, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 
 void integrals_crystal_screen_complex(Complex*, int, int, int, REAL_LATTICE*, RECIPROCAL_LATTICE*, Q_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
-*/
 
+#endif

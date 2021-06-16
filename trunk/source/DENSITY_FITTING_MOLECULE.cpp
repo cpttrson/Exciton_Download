@@ -244,13 +244,23 @@ INT_1E one_ints;
   generate_density_pairs4(&pair_p, atoms, atom_p, symmetry, R, R_tables, job, file);
   print_pairs(&pair_p, atoms, R, job, file);
   array_dimensions(&dim, &dimg, &pair_p, atoms_ax, job, file); // don't change
-  allocate_INT_1E(&one_ints, dim, Function, job, file);
-  fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms_ax, shells_ax, gaussians_ax, crystal, job, file);
+
+  double *Coulomb, *Coulomb_buffer;
+  AllocateDoubleArray(&Coulomb,&dim,job);
+  AllocateDoubleArray(&Coulomb_buffer,&dim,job);
+  ResetDoubleArray(Coulomb,&dim);
+  ResetDoubleArray(Coulomb_buffer,&dim);
+  integrals_molecule_ij(Coulomb_buffer, &pair_p, atoms_ax, shells_ax, gaussians_ax, R, job, file);
+  MPI_Allreduce(Coulomb_buffer, Coulomb, dim, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   AllocateDoubleMatrix(&V,&dim1ax,&dim1ax,job);
-  fourier_transform_molecule(&one_ints.Coulomb[0], &V->a[0][0], &pair_p, R, atoms_ax, shells_ax, symmetry, job, file);
+  fourier_transform_molecule(Coulomb, &V->a[0][0], &pair_p, R, atoms_ax, shells_ax, symmetry, job, file);
+  //allocate_INT_1E(&one_ints, dim, Function, job, file);
+  //fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms_ax, shells_ax, gaussians_ax, crystal, job, file);
+  //AllocateDoubleMatrix(&V,&dim1ax,&dim1ax,job);
+  //fourier_transform_molecule(&one_ints.Coulomb[0], &V->a[0][0], &pair_p, R, atoms_ax, shells_ax, symmetry, job, file);
   //fprintf(file.out,"V\n");
   //print_double_matrix(V, file);
-  free_INT_1E(&one_ints, Function, job, file);
+  //free_INT_1E(&one_ints, Function, job, file);
   free_PAIR_TRAN(&pair_p,job);
   AllocateDoubleMatrix(&xtrn1,&dim1ax,&dim1ax,job);
   AllocateDoubleMatrix(&eigenvectors,&dim1ax,&dim1ax,job);

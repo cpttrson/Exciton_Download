@@ -1,5 +1,3 @@
-//#include <mpi.h>
-//#include "mylogical.h"
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "LINEAR_ALGEBRA_UTIL.h"

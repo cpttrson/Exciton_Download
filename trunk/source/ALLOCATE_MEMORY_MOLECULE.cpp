@@ -9,7 +9,7 @@
 
 #include "myconstants.h"
 #include "USER_DATA.h"
-#include "KPOINTS.h"
+//#include "KPOINTS.h"
 #include "ALLOCATE_MEMORY_MOLECULE.h"
 
 using namespace std;

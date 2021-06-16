@@ -8,4 +8,3 @@ int Lebedev_Laikov_Oh (int n, double a, double b, double v, double *x, double *y
 int Lebedev_Laikov_sphere (int N, double *X, double *Y, double *Z, double *W);
 
 int Lebedev_grid(double *, double *, double *, double *, double *, double *, int *, int, FILES);
-

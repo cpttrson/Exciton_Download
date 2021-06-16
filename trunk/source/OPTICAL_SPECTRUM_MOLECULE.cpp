@@ -1,4 +1,3 @@
-
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
@@ -10,7 +9,7 @@
 #include "FOURIER_TRANSFORM.h"
 #include "PARALLEL.h"
 #include "INTEGRALS_2C_MOLECULE.h"
-#include "INTEGRALS1.h"
+//#include "INTEGRALS1.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "ROTATIONS_MOLECULE.h"
 #include "GW_BSE_MOLECULE.h"

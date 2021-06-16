@@ -498,7 +498,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   AllocateDoubleArray(&S1,&job->dimf,job);
   if (job->scf_coulomb  == 1 || job->scf_exchange == 1)
   //shell_screen(S1,S1,&pair_p,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
-  shell_screen_molecule_compute_integrals(S1,&pair_p,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
+  fock_matrix_molecule_compute_screening_integrals(S1,&pair_p,R,G,atoms,shells,gaussians,symmetry,crystal,job,file);
 
   for (job->iter = 1; job->iter <= job->max_cycle; job->iter++) {
 

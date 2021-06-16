@@ -5,7 +5,7 @@
 #include "MATRIX_UTIL.h"
 #include "ROTATIONS_MOLECULE.h"
 #include "SYMMETRY_ADAPTATION.h"
-#include "ALLOCATE_MEMORY.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "FOURIER_TRANSFORM.h"
 
 using namespace std;
