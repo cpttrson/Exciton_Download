@@ -369,7 +369,8 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e, r_12, s_12, t_12, Rvec_tmp;
       free(fgtuv);
       dimFsh = sheli1 * shelj1 * shelk1 * shell1;
       ResetDoubleArray(F_sh,&dimFsh);
-      four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+      cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+      //four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
   
       p_F_sh = F_sh;
       for (i = 0; i < sheli1; i++) {
@@ -595,7 +596,8 @@ VECTOR_DOUBLE R_AB_1e, R_CD_1e, s_12;
          free(fgtuv);
          dimFsh = sheli1 * shelj1 * shelk1 * shell1;
          ResetDoubleArray(F_sh,&dimFsh);
-         four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+         //four_centre_cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
+         cartesian_to_sh_ijkl(F_cart, F_sh, index_i, index_j, index_k, index_l, shells, job, file);
 
          p_F_sh = F_sh;
          for (i = 0; i < sheli1; i++) {
@@ -856,7 +858,8 @@ VECTOR_DOUBLE R_AB_1e, r_12, s_12, t_12, Rvec_tmp;
   
         mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
         free(fgtuv);
-        four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        //four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+        cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         free(F_cart);
         bfposj   += shelj;
         bfposj1  += shelj1;
@@ -993,7 +996,8 @@ void integrals_crystal_exchange_screen_ijij(double *F_sh, int ip, int jp, int gj
   
       mcmurchie_davidson_ijij(F_cart, index_i, index_j, bfposi, bfposj, nd2, C1x, C1y, C1z, fgtuv, shells, job, file);
       free(fgtuv);
-      four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+      cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
+      //four_centre_cartesian_to_sh_ijij(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
       free(F_cart);
       bfposj   += shelj;
       bfposj1  += shelj1;
@@ -1364,6 +1368,7 @@ void integrals_crystal_screen_complex(Complex *F_sh, int ip, int jp, int gj, REA
    //for (int ggg = 0; ggg < num; ggg++) fprintf(file.out,"ggg %3d %16.10f %16.10f\n",ggg,(F_cart[ggg]).real(),(F_cart[ggg]).imag());
         free(fgtuv);
 //void four_centre_cartesian_to_sh_ijij_complex(Complex*, Complex*, int, int, int, int, int, int, int, int, SHELL*, JOB_PARAM*,FILES);
+        //cartesian_to_sh_ijij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         four_centre_cartesian_to_sh_ijij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         //two_centre_cartesian_to_sh_shell_ij_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);
         //two_center_cartesian_to_sh_shell1_complex(F_cart,F_sh,index_i,index_j,bfposi,bfposj,bfposi1,bfposj1,nd2,nd4,shells,job,file);

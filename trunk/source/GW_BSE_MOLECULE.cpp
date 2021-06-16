@@ -1664,7 +1664,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
 
-  char zz7[24] = "/cas_eval";
+  char zz7[24] = "/cas_evalues";
   read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
   //for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1649 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
   ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
