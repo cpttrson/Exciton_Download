@@ -1,3 +1,4 @@
+
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
@@ -9,7 +10,7 @@
 #include "FOURIER_TRANSFORM.h"
 #include "PARALLEL.h"
 #include "INTEGRALS_2C_MOLECULE.h"
-//#include "INTEGRALS1.h"
+#include "INTEGRALS1.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
 #include "ROTATIONS_MOLECULE.h"
 #include "GW_BSE_MOLECULE.h"
@@ -38,12 +39,14 @@ double increment = range / (double) (job->npoints + 1);
 double *scf_eigenvalues, *GW_eigenvalues, *bse_eigenvalues;
 //double del = 0.002;
 //double del = 0.00367; // 0.1 eV
+//char yy[20] = "bse_eigenvalues";
+//char zz4[24] = "scf_evalues";
+//char zz5[24] = "GW_evalues";
 char xx[20] = "/bse_eigenvectors";
-char yy[20] = "bse_eigenvalues";
-char zz4[24] = "scf_evalues";
-char zz5[24] = "GW_evalues";
+char zz6[24] = "/evalfile";
+char zz7[24] = "/bse_eigenvalues";
 char buf2[110];
-FILE *bse_evalues, *scf_evalues, *spect;
+FILE *bse_evalues, *spect;
 DoubleMatrix *bse_eigenvectors, *M_k, *M_x, *tmp;
 MPI_File fh;
 
@@ -54,10 +57,12 @@ MPI_File fh;
  
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+  //read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
   AllocateDoubleArray(&bse_eigenvalues,&ntransitions,job);
   ResetDoubleArray(bse_eigenvalues,&ntransitions);
-  read_scf_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, yy, job, file);
+  read_SCF_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, zz7, job, file);
+  //read_scf_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, yy, job, file);
   //AllocateDoubleArray(&GW_eigenvalues,&nbands,job);
   //ResetDoubleArray(GW_eigenvalues,&nbands);
   //read_scf_GW_eigenvalues(GW_eigenvalues, fermi->bands[0] - 1, nbands, zz5, job, file);
@@ -331,22 +336,46 @@ void dipole_matrix_elements_molecule(DoubleMatrix *M_x, FERMI*fermi, ATOM* atoms
 
 int i, j, i1, j1, i3, j3, s;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
-int neigenvalues, ntransitions;
 int nbfn = atoms->number_of_sh_bfns_in_unit_cell;
-int vector_size = nbands * atoms->number_of_sh_bfns_in_unit_cell;
-int block_size = vector_size * sizeof(Complex);
-int dim, dimf, dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell, dim3 = nbfn * 3, dim4 = nbands * 3, dim5;
+int dim, dimf, dimk, dim3 = nbfn * 3, dim5;
+int dim2 = nbands * nbfn;
+int ntransitions;
 int Function[8];
 double alpha = k_one, beta = k_zero;
 size_t result;
 char ConjTrans = 'C', Trans = 'T', NoTrans = 'N';
-char zz2[24] = "scf_evectors";
+char buf2[110], xy[14] = "/scf_evec_spk";
 PAIR_TRAN pair_p;
 DoubleMatrix *M_k, *tmp;
 DoubleMatrix *eigvec;
-ComplexMatrix *scf_eigenvectors;
-INT_1E one_ints, one_ints_buffer;
-FILE *scf_evectors;
+INT_1E one_ints;
+MPI_File fh;
+//ComplexMatrix *scf_eigenvectors;
+//char zz2[24] = "scf_evectors";
+//FILE *scf_evectors;
+
+//    if (job->taskid == 0) {
+//    scf_evectors = fopen(zz2, "rb");
+//    fseek(scf_evectors, nbfn * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
+//    result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
+//    fclose(scf_evectors);
+//   }
+
+//  for (i = 0; i < dimk; i++) {
+//  for (j = 0; j < nbfn; j++) {
+//  eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
+// }
+// }
+
+  strcpy(buf2,file.scf_eigvec);
+  strcat(buf2,xy);
+
+  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
+
+  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
+  MPI_File_seek(fh, (fermi->bands[0] - 1) * nbfn * sizeof(double), MPI_SEEK_SET) ; //read_write_eigenvectors writes from (fermi->bands[0] - 1)
+  MPI_File_read(fh, &eigvec->a[0][0], dim2, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  MPI_File_close(&fh);
 
   ntransitions = (nbands - fermi->occupied[0]) * fermi->occupied[0];
   if (ntransitions <= 0) {
@@ -389,26 +418,17 @@ FILE *scf_evectors;
   array_dimensions(&dim, &dimf, &pair_p, atoms, job, file);
   allocate_INT_1E(&one_ints, dim, Function, job, file);
   fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms, shells, gaussians, crystal, job, file);
-
-  //allocate_INT_1E(&one_ints_buffer, dim, Function, job, file);
+  ////allocate_INT_1E(&one_ints_buffer, dim, Function, job, file);
   //fock_element_1e(&one_ints_buffer, dim, &pair_p, Function, R, G, atoms, shells, gaussians, crystal, job, file);
-  //fock_element_1e1(&one_ints_buffer, dim, &pair_p, pair_p.nump, Function, R, G, atoms, shells, gaussians, crystal, job, file);
-  //MPI_Allreduce(&one_ints_buffer.Dipole[0],&one_ints.Dipole[0],3*dim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  //free_INT_1E(&one_ints_buffer, Function, job, file);
-
-  // ******************************************************************************************
-  // * Initialise parameters for parallel run                                                 *
-  // ******************************************************************************************
-  
+  ////fock_element_1e1(&one_ints_buffer, dim, &pair_p, pair_p.nump, Function, R, G, atoms, shells, gaussians, crystal, job, file);
+  ////MPI_Allreduce(&one_ints_buffer.Dipole[0],&one_ints.Dipole[0],3*dim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  ////free_INT_1E(&one_ints_buffer, Function, job, file);
   //strcpy(buf2,file.directory1);
   //strcat(buf2,yy);
   //MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDONLY,MPI_INFO_NULL,&fh) ;
-
-  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
-
-  dimk = job->spin_dim * nbands;
-  vector_size = dimk * dim1;
-  AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
+  //dimk = job->spin_dim * nbands;
+  //vector_size = dimk * nbfn;
+  //AllocateComplexMatrix(&scf_eigenvectors,&dimk,&nbfn,job);
 
   // ******************************************************************************************
   // * Generate optical matrix elements over Molecular Orbitals                               *
@@ -420,18 +440,6 @@ FILE *scf_evectors;
 
     rotate_permute_expand_tensor_3(&one_ints.Dipole[0], &M_k->a[0][0], &pair_p, R, atoms, shells, symmetry, job, file);
 
-    if (job->taskid == 0) {
-    scf_evectors = fopen(zz2, "rb");
-    fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
-    result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
-    fclose(scf_evectors);
-   }
-
-  for (i = 0; i < dimk; i++) {
-  for (j = 0; j < dim1; j++) {
-  eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
- }
- }
   for (i3 = 0; i3 < 3; i3++) {
   dim  = i3 * atoms->number_of_sh_bfns_in_unit_cell;
   dim5 = i3 * nbands;
