@@ -19,8 +19,10 @@ void print_formatted_complex_matrix(ComplexMatrix *, FILES);
 
 void print_complex_matrix1(ComplexMatrix *, int, FILES);
 
+*/
 void print_double_matrix2(DoubleMatrix *, int, int, double, FILES);
 
+/*
 void print_complex_matrix2(ComplexMatrix *, int, int, double, FILES);
 
 void print_complex_eigenvector_matrix(ComplexMatrix *, double *, FILES);

@@ -139,7 +139,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
     read_line(file.job, title, 99);
     sscanf(title, "%s", jobname);
-    printf("%s\n",jobname); fflush(stdout);
+    //printf("%s\n",jobname); fflush(stdout);
 
     // *****JOB: SPIN POLARISATION ***************************************************
 

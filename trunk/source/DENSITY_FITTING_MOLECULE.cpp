@@ -41,6 +41,7 @@ MPI_File fh;
 
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
+  //fprintf(file.out,"buf2 %s\n",buf2);
   
   // ******************************************************************************************
   // * Generate inverse of Coulomb matrix                                                     *
@@ -128,16 +129,20 @@ double *three_centre_integrals, *reduced_three_centre_integrals;
 double time1, time2, time3, time4;
 double *temp1_buffer;
 double *eigvec;
-char buf2[110], xy[14] = "/scf_evec_spk";
+//char buf2[110], xy[14] = "/scf_evec_spk";
 TRIPLE_TRAN triple;
 
   time1 = MPI_Wtime();
-  strcpy(buf2,file.scf_eigvec);
-  strcat(buf2,xy);
+  //strcpy(buf2,file.scf_eigvec);
+  //strcat(buf2,xy);
   dim2 = nbands * dim1;
   AllocateDoubleArray(&eigvec,&dim2,job);
-  MPI_File_seek(fh, 0, MPI_SEEK_SET) ; //read_write_eigenvectors writes from (fermi->bands[0] - 1)
+  //MPI_File_seek(fh, 0, MPI_SEEK_SET) ; //read_write_eigenvectors writes from (fermi->bands[0] - 1)
+  MPI_File_seek(fh, (fermi->bands[0] - 1) * dim1 * sizeof(double), MPI_SEEK_SET) ; //read_write_eigenvectors writes from (fermi->bands[0] - 1)
   MPI_File_read(fh, eigvec, dim2, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  //for (i = 0; i < nbands; i++) {
+  //for (j = 0; j < dim1; j++) {
+  //fprintf(file.out,"eigvecin %3d %3d %10.4f\n",i,j,eigvec[i * dim1 + j]); }}
   nd6 = atoms_ax->bfnnumb_sh[*j1];
   dim1a = nbands * dim1 * nd6; 
   AllocateDoubleArray(&temp1_buffer,&dim1a,job);

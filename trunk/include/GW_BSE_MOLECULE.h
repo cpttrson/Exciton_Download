@@ -125,7 +125,9 @@ void count_integral_buffer_sizes(int*, FERMI*, ATOM*, JOB_PARAM*, FILES);
 
 void read_scf_GW_eigenvalues(double*, int, int, char*, JOB_PARAM*, FILES);
 
-void read_SCF_GW_eigenvalues(double*, int, char*, JOB_PARAM*, FILES);
+void write_SCF_GW_eigenvalues(double*, int, int, char*, JOB_PARAM*, FILES);
+
+void read_SCF_GW_eigenvalues(double*, int, int, char*, JOB_PARAM*, FILES);
 
 void read_write_scf_eigenvectors(FERMI*, ATOM*, JOB_PARAM*, FILES);
 

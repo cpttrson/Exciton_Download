@@ -631,7 +631,7 @@ INT_1E one_ints_buffer;
   if (Function[2]) MPI_Allreduce(&one_ints_buffer.ElecNuc[0],  &one_ints->ElecNuc[0],  dimall,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if (Function[3]) MPI_Allreduce(&one_ints_buffer.Momentum[0], &one_ints->Momentum[0], dimall3, MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if (Function[4]) MPI_Allreduce(&one_ints_buffer.Overlap[0],  &one_ints->Overlap[0],  dimall,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  if (Function[6]) MPI_Allreduce(&one_ints_buffer.Dipole[0],   &one_ints->Dipole[0],   dimall,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  if (Function[6]) MPI_Allreduce(&one_ints_buffer.Dipole[0],   &one_ints->Dipole[0],   dimall3,  MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   if (Function[7]) MPI_Allreduce(&one_ints_buffer.Coulomb[0],  &one_ints->Coulomb[0],  dimall  ,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   free_INT_1E(&one_ints_buffer, Function, job, file);
 

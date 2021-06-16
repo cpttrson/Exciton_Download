@@ -68,13 +68,11 @@ int i, lmax;
   lmax = 26;
   for (i = 2; i <= job->l_max; i++) 
   lmax += (2 * i + 1) * (2 * i + 1);
-//printf("lmax line 71 allocate_memory %4d %4d\n",job->lmax,lmax);
 
   symmetry->memory = 0;
 
   symmetry->num_ij = (int *) malloc((job->l_max + 2) * symmetry->number_of_operators * sizeof(int)); // 6 is s + p + sp + d + f + g
   symmetry->memory += (job->l_max + 2) * symmetry->number_of_operators * sizeof(int);
-  //CHANGES2015symmetry->num_ij = (int *) malloc(5 * symmetry->number_of_operators * sizeof(int)); // 5 is s + p + sp + d + f
   if (symmetry->num_ij == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for num_ij array \n");
   MPI_Finalize(); 
@@ -83,7 +81,6 @@ int i, lmax;
 
   symmetry->op_shift = (int *) malloc((job->l_max + 2) * symmetry->number_of_operators * sizeof(int)); // 6 = s + sp + p + d + f + g
   symmetry->memory += (job->l_max + 2) * symmetry->number_of_operators * sizeof(int);
-  //CHANGES2015symmetry->op_shift = (int *) malloc(5 * symmetry->number_of_operators * sizeof(int)); // 5 = s + sp + p + d + f
   if (symmetry->op_shift == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for op_shift array \n");
   MPI_Finalize(); 
@@ -100,7 +97,6 @@ int i, lmax;
 
   symmetry->ind_i = (int *) malloc(lmax * symmetry->number_of_operators * sizeof(int)); // 100 = 1 + 9 + 16 + 25 + 49
   symmetry->memory += lmax * symmetry->number_of_operators * sizeof(int);
-  //CHANGES2015symmetry->ind_i = (int *) malloc(100 * symmetry->number_of_operators * sizeof(int)); // 100 = 1 + 9 + 16 + 25 + 49
   if (symmetry->ind_i == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for ind_i array \n");
   MPI_Finalize(); 
@@ -109,7 +105,6 @@ int i, lmax;
 
   symmetry->ind_j = (int *) malloc(lmax * symmetry->number_of_operators * sizeof(int));
   symmetry->memory += lmax * symmetry->number_of_operators * sizeof(int);
-  //CHANGES2015symmetry->ind_j = (int *) malloc(100 * symmetry->number_of_operators * sizeof(int));
   if (symmetry->ind_j == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for ind_j array \n");
   MPI_Finalize(); 
@@ -118,7 +113,6 @@ int i, lmax;
 
   symmetry->rot = (double *) malloc(lmax * symmetry->number_of_operators * sizeof(double));
   symmetry->memory += lmax * symmetry->number_of_operators * sizeof(double);
-  //CHANGES2015symmetry->rot = (double *) malloc(100 * symmetry->number_of_operators * sizeof(double));
   if (symmetry->rot == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for rot array \n");
   MPI_Finalize(); 
@@ -156,14 +150,6 @@ int i, lmax;
   MPI_Finalize(); 
   exit(1);
   }
-
-  //symmetry->irp_k = (int *) malloc(symmetry->number_of_operators * symmetry->number_of_operators * sizeof(int));
-  //symmetry->memory += symmetry->number_of_operators * symmetry->number_of_operators * sizeof(int);
-  //if (symmetry->irp_k == NULL) {
-  //fprintf(stderr, "ERROR: There is not enough memory for irp_k array \n");
-  //MPI_Finalize(); 
-  //exit(1);
-  //}
 
   symmetry->irp_dim_k = (int *) malloc(symmetry->number_of_operators * symmetry->number_of_operators * sizeof(int));
   symmetry->memory += symmetry->number_of_operators * symmetry->number_of_operators * sizeof(int);
@@ -263,7 +249,6 @@ void free_SYMMETRY(SYMMETRY *symmetry, JOB_PARAM *job)
   free(symmetry->character_table);
   free(symmetry->inr);
   free(symmetry->grp_pm);
-  //free(symmetry->irp_k);
   free(symmetry->irp_dim_k);
   free(symmetry->grp_k);
   free(symmetry->cls_num_pm);
@@ -473,7 +458,6 @@ void allocate_ATOM_TRAN(ATOM_TRAN *atom_p, ATOM *atoms, SYMMETRY *symmetry, JOB_
   }
 
   atom_p->numb = (int *) malloc(atoms->number_of_unique_atoms * sizeof(int));
-  // CHANGES2016 atom_p->numb = (int *) malloc(atoms->number_of_atoms_in_unit_cell * symmetry->number_of_operators * sizeof(int));
   if (atom_p->P == NULL) {
   fprintf(stderr, "ERROR: There is not enough memory for atom_p in main() \n");
   MPI_Finalize(); exit(1);;
@@ -536,8 +520,6 @@ void allocate_SHELL_GAUSSIAN(SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms, JO
   shells->nele = (double *) malloc(atoms->number_of_shells_in_unit_cell * sizeof(double));
   shells->pop = (double *) malloc(2 * atoms->number_of_shells_in_unit_cell * sizeof(double));
   shells->pop_sh = (double *) malloc(2 * atoms->number_of_sh_shells_in_unit_cell * sizeof(double));
-  //shells->min_coef = (double *) malloc(atoms->number_of_shells_in_unit_cell * sizeof(double));
-  //shells->min_expo = (double *) malloc(atoms->number_of_shells_in_unit_cell * sizeof(double));
   shells->min_coef_sh = (double *) malloc(atoms->number_of_sh_shells_in_unit_cell * sizeof(double));
   shells->min_expo_sh = (double *) malloc(atoms->number_of_sh_shells_in_unit_cell * sizeof(double));
   shells->ng_sh = (int *) malloc(atoms->number_of_sh_shells_in_unit_cell * sizeof(int));
@@ -553,9 +535,7 @@ void allocate_SHELL_GAUSSIAN(SHELL *shells, GAUSSIAN *gaussians, ATOM *atoms, JO
   gaussians->pc = (double *) malloc(atoms->number_of_gaussians_in_unit_cell * sizeof(double));
   gaussians->dc = (double *) malloc(atoms->number_of_gaussians_in_unit_cell * sizeof(double));
   gaussians->fc = (double *) malloc(atoms->number_of_gaussians_in_unit_cell * sizeof(double));
-  //CHANGES2015
   gaussians->gc = (double *) malloc(atoms->number_of_gaussians_in_unit_cell * sizeof(double));
-  //CHANGES2015
   gaussians->expo_sh = (double *) malloc(atoms->number_of_sh_gaussians_in_unit_cell * sizeof(double));
   gaussians->c_sh = (double *) malloc(atoms->number_of_sh_gaussians_in_unit_cell * sizeof(double));
 
@@ -611,9 +591,7 @@ void free_SHELL_GAUSSIAN(SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job)
   free(gaussians->pc);
   free(gaussians->dc);
   free(gaussians->fc);
-  //CHANGES2015
   free(gaussians->gc);
-  //CHANGES2015
   free(gaussians->expo_sh);
   free(gaussians->c_sh);
 
@@ -622,16 +600,6 @@ void free_SHELL_GAUSSIAN(SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job)
 void allocate_SALC(SALC *salc, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
-
-/*
-  salc->ind_i = (int *) malloc(salc->total_coef * sizeof(int));
-  salc->memory +=  salc->total_coef * sizeof(int);
-  if (salc->ind_i == NULL) {
-  fprintf(stderr, "ERROR: There is not enough memory for salc in main() \n");
-  MPI_Finalize();
-  exit(1);
-  }
-*/
 
   salc->atm = (int *) malloc(salc->total_coef * sizeof(int));
   salc->memory +=  salc->total_coef * sizeof(int);
@@ -649,8 +617,6 @@ void allocate_SALC(SALC *salc, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   exit(1);
   }
 
-  //salc->num_irp = (int *) malloc(salc->num_salc * sizeof(int));
-  //salc->memory +=  salc->num_salc * sizeof(int);
   salc->num_irp = (int *) malloc(symmetry->number_of_classes * sizeof(int));
   salc->memory +=  symmetry->number_of_classes * sizeof(int);
   if (salc->num_irp == NULL) {
@@ -667,17 +633,7 @@ void allocate_SALC(SALC *salc, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   exit(1);
   }
 
-/*
-  salc->coef = (double *) malloc(salc->total_coef * sizeof(double));
-  salc->memory +=  salc->total_coef * sizeof(double);
-  if (salc->coef == NULL) {
-  fprintf(stderr, "ERROR: There is not enough memory for salc in main() \n");
-  MPI_Finalize();
-  exit(1);
-  }
-*/
-
-  int dim = 5*salc->num_atom * salc->num_salc;
+  int dim = 5 * salc->num_atom * salc->num_salc;
   AllocateDoubleMatrix(&salc->coeff,&dim,&salc->total_coef,job);
   salc->memory +=  dim * salc->total_coef * sizeof(double);
   AllocateIntMatrix(&salc->bfn_posn,&dim,&salc->total_coef,job);
@@ -717,33 +673,18 @@ void allocate_PAIR_TRAN(PAIR_TRAN *pair_p, ATOM *atoms, SYMMETRY *symmetry, REAL
   pair_p->p     = (int *) malloc(pair_p->tot * sizeof(int));
   pair_p->off   = (int *) malloc((pair_p->tot + 1) * sizeof(int));
   pair_p->Off   = (int *) malloc((pair_p->nump + 1) * sizeof(int));
-  //pair_p->Off   = (int *) malloc(pair_p->nump * sizeof(int));
   pair_p->O     = (int *) malloc(pair_p->tot * sizeof(int));
   pair_p->P     = (int *) malloc(pair_p->tot * sizeof(int));
   pair_p->ptr   = (int *) malloc(dim * sizeof(int));
   pair_p->Ptr   = (int *) malloc(dim * sizeof(int));
   pair_p->uniq  = (int *) malloc(dim * sizeof(int));
-//May2013
   pair_p->posn  = (int *) malloc(pair_p->tot * sizeof(int));
-  ////pair_p->posn  = (int *) malloc(pair_p->nump * sizeof(int));
-//May2013
-  //pair_p->posi  = (int *) malloc(pair_p->nump * sizeof(int));
-//May2013
   pair_p->numb  = (int *) malloc(pair_p->tot * sizeof(int));
-  ////pair_p->numb  = (int *) malloc(pair_p->nump * sizeof(int));
-//May2013
-  //pair_p->numi  = (int *) malloc(pair_p->nump * sizeof(int));
   pair_p->K     = (int *) malloc(pair_p->nump * symmetry->number_of_operators * 8 * sizeof(int));
-  //pair_p->Q     = (int *) malloc(pair_p->nump * symmetry->number_of_operators * 8 * sizeof(int));
-  //pair_p->I     = (int *) malloc(pair_p->nump * symmetry->number_of_operators * 8 * sizeof(int));
   pair_p->rot   = (int *) malloc(pair_p->nump * symmetry->number_of_operators * 2 * sizeof(int));
   pair_p->dist  = (double *) malloc(pair_p->tot * sizeof(double));
-  //pair_p->limit = (int *) malloc(dim1 * sizeof(int));
 
   if (pair_p->cell1 == NULL) { fprintf(file.err,"ERROR: There is not enough memory for pair_p"); exit(1); }
-
-  //pair_p->Ptr   = (int *) malloc(atoms->number_of_atoms_in_unit_cell * sizeof(int));
-  //pair_p->ovp   = (double *) malloc(pair_p->nump * sizeof(double));
 
   pair_p->memory = ((12 * pair_p->tot + (10 * symmetry->number_of_operators + 1) * pair_p->nump + 3 * dim) * sizeof(int));
 
@@ -778,15 +719,10 @@ void free_PAIR_TRAN(PAIR_TRAN *pair_p, JOB_PARAM *job)
   free(pair_p->Ptr);
   free(pair_p->uniq);
   free(pair_p->posn);
-  //free(pair_p->posi);
   free(pair_p->numb);
-  //free(pair_p->numi);
   free(pair_p->K);
-  //free(pair_p->Q);
-  //free(pair_p->I);
   free(pair_p->rot);
   free(pair_p->dist);
-  //free(pair_p->limit);
 
 }
 

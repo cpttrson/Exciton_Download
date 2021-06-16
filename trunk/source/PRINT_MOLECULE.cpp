@@ -630,6 +630,7 @@ fprintf(file.out,"%3d %3d\n",blocks,remndr);
 
 }
 
+*/
 void print_double_matrix2(DoubleMatrix *a, int transpose, int cols, double scale_factor, FILES file)
 
 {
@@ -723,6 +724,8 @@ void print_double_matrix2(DoubleMatrix *a, int transpose, int cols, double scale
     }
 
 }
+
+/*
 
 void PrintComplexMatrix(ComplexMatrix *a, FILES file){
   int i,j;

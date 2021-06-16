@@ -31,6 +31,8 @@ void shell_screen_direct(int*, double*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, 
 
 void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file);
 
+void read_write_SCF_eigenvectors(FERMI*, ATOM*, JOB_PARAM*, FILES);
+
 //void coulomb_matrix_crystal_compute_integrals(double *Fock_2c, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file);
 
 //void exchange_matrix_crystal_compute_integrals(double *Fock_2e, double *S2, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file);

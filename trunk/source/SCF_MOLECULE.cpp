@@ -62,10 +62,11 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   char buf1[110], buf2[110], buf4[110];
   char xx[10] = "/evalfile", yy[10] = "/scf_evec", zz[20] = "/new_density_matrix";
   char filename[15] = "/scf_evec";
-  FILE *scf_evectors, *scf_evalues; 
+  FILE *scf_evectors; 
+  //FILE *scf_evectors, *scf_evalues; 
+  //char zz4[24] = "scf_evalues";
   char zz1[24] = "scf_evectors.";
   char zz2[24] = "scf_evectors";
-  char zz4[24] = "scf_evalues";
   char xx1[4];
   Complex alpha = Complex(k_one, k_zero);
   Complex beta = Complex(k_zero, k_zero);
@@ -284,6 +285,8 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
   array_dimensions(&dim, &dimg, &pair_p, atoms, job, file);
   allocate_INT_1E(&one_ints, dim, Function, job, file);
+  fock_element_1e2(&one_ints, &pair_p, Function, R, G, atoms, shells, gaussians, crystal, job, file);
+/*
   allocate_INT_1E(&one_ints_buffer, dim, Function, job, file);
   allocate_INT_1E(&one_ints_buffer1, dim, Function, job, file);
   time1 = MPI_Wtime();
@@ -304,6 +307,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   MPI_Allgatherv(&one_ints_buffer1.ElecNuc[offset_p[job->taskid]],receive_p[job->taskid],MPI_DOUBLE,&one_ints.ElecNuc[0],receive_p,\
   offset_p,MPI_DOUBLE,MPI_COMM_WORLD);
   free_INT_1E(&one_ints_buffer1, Function, job, file);
+  */
 
   // ******************************************************************************************
   // * Check for small eigenvalues of S_k                                                     *
@@ -529,7 +533,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
    scf_evectors = fopen(zz1, "wb");
    else if (crystal->type[0] == 'M' && job->taskid == 0) {
    scf_evectors = fopen(zz2, "wb");
-   scf_evalues = fopen(zz4, "wb");
+   ////scf_evalues = fopen(zz4, "wb");
   }
 
    if (job->values == 1 || job->values == 2)
@@ -1091,7 +1095,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
     if (job->values == 2) {
 
-      if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {
+      //if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {
 
       MPI_File_seek(eh, 0, MPI_SEEK_SET) ;
       for (k = 0; k < knet.unique; k++) {
@@ -1100,15 +1104,16 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 	 }
 	}
 
-       }
+       //}
 
-      else if (crystal->type[0] == 'M' && job->taskid == 0) {
+      //else if (crystal->type[0] == 'M' && job->taskid == 0) {
+      if (crystal->type[0] == 'M' && job->taskid == 0) {
 
 	for (s = 0; s < job->spin_dim; s++) {
-	fwrite(&eigval1[s * dim1 + fermi->bands[0] - 1], sizeof(double), value_size, scf_evalues);
+	////fwrite(&eigval1[s * dim1 + fermi->bands[0] - 1], sizeof(double), value_size, scf_evalues);
 	//printf("%3d %3d %lf %lf %lf %lf\n",s * dim1 + fermi->bands[0] - 1,value_size,eigval1[s * dim1 + 0],eigval1[s * dim1 + 1],\
         eigval1[s * dim1 + 2],eigval1[s * dim1 + 3]);
-	fflush(scf_evalues);
+	////fflush(scf_evalues);
        }
       }
 
@@ -1293,7 +1298,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
     if (crystal->type[0] == 'M' && job->taskid == 0) {
     fclose(scf_evectors);
-    fclose(scf_evalues);
+    ////fclose(scf_evalues);
    }
 
     if (job->values  == 1 || job->values  == 2) MPI_File_close(&eh);
@@ -1323,6 +1328,12 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     if (job->taskid == 0)
     printf("\nTime for SCF calculation %10.4e\n\n",(double)(time4 - time3));
    }
+
+  // ******************************************************************************************
+  // * Write SCF eigenvectors in parallel file for possible BSE run                           *
+  // ******************************************************************************************
+
+  read_write_SCF_eigenvectors(fermi,atoms,job,file);
 
   DestroyDoubleArray(&S1,&job->dimf,job);
   //if (crystal->type[0] != 'M') { 

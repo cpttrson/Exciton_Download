@@ -51,10 +51,6 @@ double *integral_buffer1, *integral_buffer2;
 DoubleMatrix *V_inv;
 DoubleMatrix *Sigma;
 
-  // ******************************************************************************************
-  // * Read scf_evals and write to GW_evals                                                   *
-  // ******************************************************************************************
-  
   time1 = MPI_Wtime();
 
   if (ntransitions <= 0) {
@@ -70,7 +66,7 @@ DoubleMatrix *Sigma;
   nqA = numroc_(&ntransitions, &nbsize, &mycol, &izero, &npcol);
   if (job->taskid == 0) printf("mpA %7d nqA %7d blocksize %7d ntransitions %7d\n",mpA,nqA,nbsize,ntransitions);
 
-  read_write_scf_eigenvectors(fermi,atoms,job,file);
+  ////read_write_scf_eigenvectors(fermi,atoms,job,file);
 
   // ******************************************************************************************
   // * Generate three centre integrals needed for matrix elements                             *
@@ -111,7 +107,7 @@ DoubleMatrix *Sigma;
   // * Generate and diagonalise Casida matrix                                                 *
   // ******************************************************************************************
   
-  bse_hamiltonian_in_core1(&ictxt,&nbsize,Ham_buffer1,Ham_buffer2,integral_buffer1,integral_buffer2,fermi,atom_p,atoms, \
+  bse_hamiltonian_in_core1(&ictxt,&nbsize,Ham_buffer1,Ham_buffer2,integral_buffer1,integral_buffer2,fermi,atom_p,atoms,\
   atoms_ax,shells_ax,gaussians_ax,crystal,symmetry,R,R_tables,G,job,file);
   DestroyIntArray(&dim_send,&job->numtasks,job);
   time3 = MPI_Wtime();
@@ -194,7 +190,7 @@ DoubleMatrix *V_inv;
   descinit_(descA, &ntransitions, &ntransitions, &nbsize, &nbsize, &izero, &izero, &ictxt, &itemp, &info);
   if (job->taskid == 0) printf("mpA %7d nqA %7d blocksize %7d ntransitions %7d\n",mpA,nqA,nbsize,ntransitions);
 
-  read_write_scf_eigenvectors(fermi,atoms,job,file);
+  ////read_write_scf_eigenvectors(fermi,atoms,job,file);
 
   // ******************************************************************************************
   // * Allocate memory for BSE eigenvectors and eigenvalues                                   *
@@ -260,10 +256,13 @@ DoubleMatrix *V_inv;
  } // close switch (job->bse_tda)
   time4 = MPI_Wtime() - time3;
 
+  char zz6[24] = "/bse_eigenvalues";
+  read_SCF_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, zz6, job, file);
+
   if (job->taskid == 0) {
-  bse_evalues  = fopen(yy, "rb");
-  size_t result = fread(bse_eigenvalues, sizeof(double), ntransitions, bse_evalues);
-  fclose(bse_evalues);
+  //bse_evalues  = fopen(yy, "rb");
+  //size_t result = fread(bse_eigenvalues, sizeof(double), ntransitions, bse_evalues);
+  //fclose(bse_evalues);
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
   fprintf(file.out,"|                                GW BSE HAMILTONIAN EIGENVALUES (eV)                                      |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
@@ -340,7 +339,7 @@ DoubleMatrix *V_inv;
   descinit_(descA, &ntransitions, &ntransitions, &nbsize, &nbsize, &izero, &izero, &ictxt, &itemp, &info);
   if (job->taskid == 0) printf("mpA %7d nqA %7d blocksize %7d ntransitions %7d\n",mpA,nqA,nbsize,ntransitions);
 
-  read_write_scf_eigenvectors(fermi,atoms,job,file);
+  ////read_write_scf_eigenvectors(fermi,atoms,job,file);
 
   // ******************************************************************************************
   // * Allocate memory for RPA eigenvectors and eigenvalues                                   *
@@ -404,8 +403,8 @@ double time9, time10;
 double *Hamiltonian_buffer;
 double *Ham_temp1, *Ham_temp2;
 double *GW_eigenvalues, *scf_eigenvalues;
-char zz4[24] = "scf_evalues";
-char zz5[24] = "GW_evalues";
+//char zz4[24] = "scf_evalues";
+//char zz5[24] = "GW_evalues";
 
   time1  = MPI_Wtime();
   time4  = k_zero;
@@ -425,7 +424,11 @@ char zz5[24] = "GW_evalues";
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   AllocateDoubleArray(&GW_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
+
+  char zz6[24] = "/evalfile";
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+
+  ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
   AllocateIntArray(&dim_ham,&job->numtasks,job);
   for (row = 0; row < nprow; row++) {
     mpa = numroc_(&ntransitions, nbsize, &row, &izero, &nprow);
@@ -813,12 +816,15 @@ for (j = 0; j < ntransitions; j++) {
 
   for (i = 0; i < ntransitions; i++) bse_eigenvalues[i] = eigenvalues[ntransitions - 1 - i];
   //for (i = 0; i < ntransitions; i++) bse_eigenvalues[i] = eigenvalues[i + nt - job->bse_lim];
-  if (job->taskid == 0) {
-  bse_evalues  = fopen(yy, "wb");
-  fwrite(bse_eigenvalues, sizeof(double), ntransitions, bse_evalues);
-  fflush(bse_evalues);
-  fclose(bse_evalues);
- }
+  //if (job->taskid == 0) {
+  //bse_evalues  = fopen(yy, "wb");
+  //fwrite(bse_eigenvalues, sizeof(double), ntransitions, bse_evalues);
+  //fflush(bse_evalues);
+  //fclose(bse_evalues);
+ //}
+
+  char zz8[24] = "/bse_eigenvalues";
+  write_SCF_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, zz8, job, file); 
 
   DestroyDoubleArray(&U,&buffer_size,job);
   DestroyDoubleArray(&VT,&buffer_size,job);
@@ -901,6 +907,9 @@ FILE *bse_evalues;
   fclose(bse_evalues);
  }
 
+  char zz8[24] = "/bse_eigenvalues";
+  write_SCF_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, zz8, job, file); 
+
   DestroyDoubleArray(&bse_eigenvalues,&nt,job);
   DestroyDoubleArray(&bse_eigvec,&buffer_size,job);
 
@@ -921,7 +930,7 @@ int I1, I2, il, jl, mpA, nqA, nprow, npcol, myrow, mycol, izero = 0;
 int info = 0, ione = 1;
 char uplo = 'U';
 char jobz = 'V';
-char zz4[24] = "scf_evalues";
+//char zz4[24] = "scf_evalues";
 double time1, time2, time3, time4;
 double *scf_eigenvalues;
 
@@ -936,7 +945,11 @@ double *scf_eigenvalues;
 
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
+
+  char zz6[24] = "/evalfile";
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+
+  ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
 
   char xc[22] = "/cas_eigenvectors_mpi";
   char bufcas[120];
@@ -1202,21 +1215,20 @@ long long global_pointer;
 
  } // close else
 
-
-  FILE *cas_evals;
-  char zz6[24] = "cas_evalues";
-  cas_evals = fopen(zz6, "wb");
-  for (s = 0; s < job->spin_dim; s++) {
-    fwrite(&cas_eigenvalues[s * dim1], sizeof(double), ntransitions, cas_evals);
-    fflush(cas_evals);
-    fclose(cas_evals);
-   }
+  //FILE *cas_evals;
+  //char zz6[24] = "cas_evalues";
+  //cas_evals = fopen(zz6, "wb");
+  //for (s = 0; s < job->spin_dim; s++) {
+    //fwrite(&cas_eigenvalues[s * dim1], sizeof(double), ntransitions, cas_evals);
+    //fflush(cas_evals);
+    //fclose(cas_evals);
+   //}
   } //if (job->taskid == 0) {
 
   MPI_File_close(&fh);
 
   char buf1[110];
-  char xx[10] = "/cas_eval";
+  char xx[14] = "/cas_evalues";
   strcpy(buf1,file.scf_eigvec);
   strcat(buf1,xx);
   MPI_File eh;
@@ -1373,8 +1385,8 @@ double *temp4;
 double *M, *M_buffer;
 double *cas_eigenvalues, *scf_eigenvalues;
 double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
-char zz4[24] = "scf_evalues";
-char zz5[24] = "cas_evalues";
+//char zz4[24] = "scf_evalues";
+//char zz5[24] = "cas_evalues";
 
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
   mpA = numroc_(&ntransitions, nbsize, &myrow, &izero, &nprow);
@@ -1413,11 +1425,15 @@ char zz5[24] = "cas_evalues";
   AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
 
-  char zz6[24] = "/cas_eval";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
-  for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1419 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
+  char zz6[24] = "/evalfile";
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+
+  ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
+
+  char zz7[24] = "/cas_evalues";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  //for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1419 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
   ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
@@ -1601,8 +1617,8 @@ double *temp4;
 double *M, *M_buffer;
 double *cas_eigenvalues, *scf_eigenvalues;
 double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
-char zz4[24] = "scf_evalues";
-char zz5[24] = "cas_evalues";
+//char zz4[24] = "scf_evalues";
+//char zz5[24] = "cas_evalues";
 
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
   mpA = numroc_(&ntransitions, nbsize, &myrow, &izero, &nprow);
@@ -1642,11 +1658,15 @@ char zz5[24] = "cas_evalues";
   AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
 
-  char zz6[24] = "/cas_eval";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
-  for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1649 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
+  char zz6[24] = "/evalfile";
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+
+  ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
+
+  char zz7[24] = "/cas_eval";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  //for (i = 0; i < job->bse_lim; i++) fprintf(file.out,"1649 %5d %10.4lf\n",i,cas_eigenvalues[i] * au_to_eV);
   ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
@@ -1848,8 +1868,8 @@ double *temp4;
 double *M, *M_buffer;
 double *cas_eigenvalues, *scf_eigenvalues, *GW_eigenvalues;
 double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
-char zz4[24] = "scf_evalues";
-char zz5[24] = "cas_evalues";
+//char zz4[24] = "scf_evalues";
+//char zz5[24] = "cas_evalues";
 
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
   mpA = numroc_(&ntransitions, nbsize, &myrow, &izero, &nprow);
@@ -1890,10 +1910,11 @@ char zz5[24] = "cas_evalues";
   AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
   ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
   time3 = MPI_Wtime();
-  read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
-
-  char zz6[24] = "/cas_eval";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, job->bse_lim, zz6, job, file);
+  char zz6[24] = "/evalfile";
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+  char zz7[24] = "/cas_evalues";
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  ////read_scf_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz4, job, file);
   ////read_scf_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz5, job, file);
   time4 = MPI_Wtime() - time3;
 
@@ -1996,12 +2017,15 @@ char zz5[24] = "cas_evalues";
    }
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
   fflush(file.out);
-  char zz4[24] = "GW_evalues";
-  FILE *evals = fopen(zz4, "wb");
-  fseek(evals,0,SEEK_SET);
-  fwrite(GW_eigenvalues,sizeof(double),job->spin_dim * nbands,evals);
-  fclose(evals);
+  //char zz4[24] = "GW_evalues";
+  //FILE *evals = fopen(zz4, "wb");
+  //fseek(evals,0,SEEK_SET);
+  //fwrite(GW_eigenvalues,sizeof(double),job->spin_dim * nbands,evals);
+  //fclose(evals);
  }
+
+  char zz8[14] = "/GW_evalues";
+  write_SCF_GW_eigenvalues(GW_eigenvalues, 0, job->spin_dim * nbands, zz8, job, file); 
 
   DestroyDoubleArray(&GW_eigenvalues,&nbands,job);
   DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
@@ -2046,6 +2070,8 @@ ComplexMatrix *scf_eigenvectors;
 double time1, time2;
 char zz2[24] = "scf_evectors";
 FILE *scf_evectors;
+//fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
+
 
   time1 = MPI_Wtime();
   MPI_File fh;
@@ -2115,7 +2141,35 @@ FILE *evals;
 
 }
 
-void read_SCF_GW_eigenvalues(double *eigenvalues, int size, char *zz, JOB_PARAM *job, FILES file)
+void write_SCF_GW_eigenvalues(double *eigenvalues, int seekpoint, int size, char *zz, JOB_PARAM *job, FILES file)
+
+{
+
+  // ******************************************************************************************
+  // * Write SCF or GW eignvalues to MPI file SCF_eval or GW_eval                             *
+  // ******************************************************************************************
+
+int i;
+char buf1[110];
+MPI_File fh;
+
+  strcpy(buf1,file.scf_eigvec);
+  strcat(buf1,zz);
+
+  MPI_File_open(MPI_COMM_WORLD,buf1, MPI_MODE_RDWR | MPI_MODE_CREATE, MPI_INFO_NULL, &fh) ;
+  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+  MPI_File_write(fh, eigenvalues, size, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  MPI_File_close(&fh);
+
+  if (job->taskid == 0 && job->verbosity > 1) {
+  fprintf(file.out,"Writing %s at %d\n", buf1, seekpoint);
+  for (i = 0; i < size; i++)
+  fprintf(file.out,"%5d %10.4lf\n",i,eigenvalues[i] * au_to_eV);
+ }
+
+}
+
+void read_SCF_GW_eigenvalues(double *eigenvalues, int seekpoint, int size, char *zz, JOB_PARAM *job, FILES file)
 
 {
 
@@ -2129,13 +2183,14 @@ MPI_File eh;
 
   strcpy(buf1, file.scf_eigvec);
   strcat(buf1, zz);
+
   MPI_File_open(MPI_COMM_WORLD, buf1, MPI_MODE_RDONLY, MPI_INFO_NULL, &eh) ;
-  MPI_File_seek(eh, 0, MPI_SEEK_SET) ;
+  MPI_File_seek(eh, seekpoint * sizeof(double), MPI_SEEK_SET) ;
   MPI_File_read(eh, eigenvalues, size, MPI_DOUBLE, MPI_STATUS_IGNORE);
   MPI_File_close(&eh);
 
   if (job->taskid == 0 && job->verbosity > 1) {
-  fprintf(file.out,"reading from %s\n",buf1);
+  fprintf(file.out,"reading %s at %d\n",buf1,seekpoint);
   for (i = 0; i < size; i++)
   fprintf(file.out,"%5d %10.4lf\n",i,eigenvalues[i] * au_to_eV);
  }

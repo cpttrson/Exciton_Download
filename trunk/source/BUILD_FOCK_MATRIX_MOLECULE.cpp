@@ -1400,6 +1400,60 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
+void read_write_SCF_eigenvectors(FERMI *fermi, ATOM *atoms, JOB_PARAM *job, FILES file)
+
+{
+
+  // ******************************************************************************************
+  // * Read in SCF eigenvectors from disk and write to MPI file scf_evec_spk                  *
+  // ******************************************************************************************
+
+int i, j;
+int vector_size;
+int dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell;
+int nbands = fermi->bands[1] - fermi->bands[0] + 1;
+DoubleMatrix *eigvec;
+ComplexMatrix *scf_eigenvectors;
+double time1, time2;
+char zz2[24] = "scf_evectors";
+FILE *scf_evectors;
+
+  time1 = MPI_Wtime();
+  MPI_File fh;
+  char buf2[110], xy[14] = "/scf_evec_spk";
+  strcpy(buf2,file.scf_eigvec);
+  strcat(buf2,xy);
+  fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
+
+  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
+  if (job->taskid == 0) {
+  dimk = job->spin_dim * dim1;
+  ////dimk = job->spin_dim * nbands;
+  vector_size = dimk * dim1;
+  AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
+  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
+  scf_evectors = fopen(zz2, "rb");
+  fseek(scf_evectors, 0, SEEK_SET);
+  ////fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
+  size_t result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
+  fclose(scf_evectors);
+  for (i = 0; i < nbands; i++) {
+    for (j = 0; j < dim1; j++) {
+      eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
+      //fprintf(file.out,"read write eigvec %3d %3d %10.4lf\n",i,j,eigvec->a[i][j]);
+     }
+    }
+  DestroyComplexMatrix(&scf_eigenvectors,job);
+  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+  MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  DestroyDoubleMatrix(&eigvec,job);
+ }
+  MPI_File_close(&fh);
+  time2 = MPI_Wtime() - time1;
+  //if (job->taskid == 0) printf("end read/write evecs %3d %f\n",job->taskid,time2);
+
+}
+
 /*
 void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
