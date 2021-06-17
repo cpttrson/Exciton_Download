@@ -1109,7 +1109,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
       //else if (crystal->type[0] == 'M' && job->taskid == 0) {
       if (crystal->type[0] == 'M' && job->taskid == 0) {
 
-//HI THERE
+//HI THERE CP
 
 	for (s = 0; s < job->spin_dim; s++) {
 	////fwrite(&eigval1[s * dim1 + fermi->bands[0] - 1], sizeof(double), value_size, scf_evalues);
