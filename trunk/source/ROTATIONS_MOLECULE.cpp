@@ -330,7 +330,7 @@ int ip, jp, gj, op, pm ;
 int index_i, index_j, shelposi, shelposj, bfposi, bfposj ;
 int shift1, shift2, oppshift1, oppshift2, oppshift3 ;
 int sheli, shelj ;
-int sheli1, shelj1 ;
+int sheli1, shelj1, shelk1 ;
 int *p_i, *p_i1, *p_j, *p_j1, *p_k, *p_k1 ;
 double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
 
@@ -374,10 +374,12 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
         oppshift3 = *(symmetry->op_shift + op * (job->l_max + 2) + 2);
         sheli1 = *(symmetry->num_ij + op * (job->l_max + 2) + shells->ord[index_i]);
         shelj1 = *(symmetry->num_ij + op * (job->l_max + 2) + shells->ord[index_j]);
+        shelk1 = *(symmetry->num_ij + op * (job->l_max + 2) + 2);
         p_k1   = symmetry->ind_i + oppshift3 ;
         p_k    = symmetry->ind_j + oppshift3 ;
         p_rot3 = symmetry->rot   + oppshift3 ;
-        for (t = 0; t < 3; t++) {
+        for (t = 0; t < shelk1; t++) {
+        //for (t = 0; t < 3; t++) {
           p_i1   = symmetry->ind_i + oppshift1;
           p_i    = symmetry->ind_j + oppshift1;
           p_rot1 = symmetry->rot   + oppshift1;
@@ -389,6 +391,9 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
               p_F_reduced = F_reduced + *p_k  * nd1 * nd2 + (bfposi + *p_i)  * nd2 + bfposj + *p_j;
               p_F_rotate  = F_rotate  + *p_k1 * nd1 * nd2 + (bfposi + *p_i1) * nd2 + bfposj + *p_j1;   // no transpose
               *p_F_rotate += *p_rot1 * *p_rot2 * *p_rot3 * *p_F_reduced ;
+	      //fprintf(file.out,"op %3d %3d %3d off %3d %3d shift %3d %6.2f %6.2f %6.2f %6.2f %6.2f\n",\
+	      t,i,j,*p_k,*p_k1,oppshift3,*p_rot1,*p_rot2,*p_rot3,F_reduced[*p_k  * nd1 * nd2 + (bfposi + *p_i)  * nd2 + bfposj + *p_j],\
+	      F_rotate[*p_k1 * nd1 * nd2 + (bfposi + *p_i1) * nd2 + bfposj + *p_j1]);
               p_j++;
               p_j1++;
               p_rot2++;
@@ -421,10 +426,12 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
         oppshift3 = *(symmetry->op_shift + op * (job->l_max + 2) + 2);
         sheli1 = *(symmetry->num_ij + op * (job->l_max + 2) + shells->ord[index_i]);
         shelj1 = *(symmetry->num_ij + op * (job->l_max + 2) + shells->ord[index_j]);
+        shelk1 = *(symmetry->num_ij + op * (job->l_max + 2) + 2);
         p_k1   = symmetry->ind_i + oppshift3 ;
         p_k    = symmetry->ind_j + oppshift3 ;
         p_rot3 = symmetry->rot   + oppshift3 ;
-        for (t = 0; t < 3; t++) {
+        for (t = 0; t < shelk1; t++) {
+        //for (t = 0; t < 3; t++) {
           p_i1   = symmetry->ind_i + oppshift1;
           p_i    = symmetry->ind_j + oppshift1;
           p_rot1 = symmetry->rot   + oppshift1;

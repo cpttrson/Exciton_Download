@@ -686,13 +686,17 @@ INT_1E one_ints_buffer;
   count = 0;
    fprintf(file.out,"Coulomb\n");
       fprintf(file.out,"p %3d ip %3d jp %3d gj %3d\n",p,ip,jp,gj);
+      for(int k=0;k<3;k++) {
       for(i=0;i<atoms->bfnnumb_sh[ip];i++) {
         for(j=0;j<atoms->bfnnumb_sh[jp];j++) {
-          fprintf(file.out,"%6.2lf",one_ints_buffer.Coulomb[dim3 + dim + count]);
+          fprintf(file.out,"%6.2lf %6.2f",one_ints_buffer.Dipole[3 * dim3 + dim4 + count],dipole_cart[count]);
+          //fprintf(file.out,"%6.2lf",one_ints_buffer.Coulomb[dim3 + dim + count]);
            count++;
           }
          fprintf(file.out,"\n");
         }
+        fprintf(file.out,"\n");
+       }
         fprintf(file.out,"\n");
        }
 

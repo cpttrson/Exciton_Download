@@ -1,4 +1,3 @@
-
 #include <cstring>
 #include "mycomplex.h"
 #include "myconstants.h"
@@ -349,6 +348,7 @@ PAIR_TRAN pair_p;
 DoubleMatrix *M_k, *tmp;
 DoubleMatrix *eigvec;
 INT_1E one_ints;
+//INT_1E one_ints_buffer;
 MPI_File fh;
 //ComplexMatrix *scf_eigenvectors;
 //char zz2[24] = "scf_evectors";
@@ -376,6 +376,9 @@ MPI_File fh;
   MPI_File_seek(fh, (fermi->bands[0] - 1) * nbfn * sizeof(double), MPI_SEEK_SET) ; //read_write_eigenvectors writes from (fermi->bands[0] - 1)
   MPI_File_read(fh, &eigvec->a[0][0], dim2, MPI_DOUBLE, MPI_STATUS_IGNORE);
   MPI_File_close(&fh);
+
+  //fprintf(file.out,"eigvec\n");
+  //print_double_matrix2(eigvec,0,6,1.0,file);
 
   ntransitions = (nbands - fermi->occupied[0]) * fermi->occupied[0];
   if (ntransitions <= 0) {
@@ -438,7 +441,10 @@ MPI_File fh;
 
   //for (s = 0; s < job->spin_dim; s++) {
 
-    rotate_permute_expand_tensor_3(&one_ints.Dipole[0], &M_k->a[0][0], &pair_p, R, atoms, shells, symmetry, job, file);
+  rotate_permute_expand_tensor_3(&one_ints.Dipole[0], &M_k->a[0][0], &pair_p, R, atoms, shells, symmetry, job, file);
+
+  //fprintf(file.out,"M_k\n");
+  //print_double_matrix2(M_k,0,6,1.0,file);
 
   for (i3 = 0; i3 < 3; i3++) {
   dim  = i3 * atoms->number_of_sh_bfns_in_unit_cell;
