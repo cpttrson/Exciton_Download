@@ -205,8 +205,9 @@ double character[symmetry->number_of_classes];
             dot_product += symmetry->character_table[i * symmetry->number_of_classes + j] * character[j];
            }
             num_irrep_in_basis[i] = (int) ((dot_product + 0.000001) / (double) symmetry->grp_dim);
-            //if (job->taskid > 0)
-            //fprintf(file.out,"BASIS IRREP %3d %3d     %10.4lf\n",i,num_irrep_in_basis[i],dot_product / (double) symmetry->grp_dim);
+            if (job->taskid > 0)
+            fprintf(file.out,"BASIS IRREP class %3d num irrep in basis %3d     %10.4lf\n",\
+            i,num_irrep_in_basis[i],dot_product / (double) symmetry->grp_dim);
            }
             //if (job->taskid > 0)
             //fprintf(file.out,"\n");
@@ -292,7 +293,8 @@ void count_atom_salc(int s, int ip, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, 
 int num_salc;
 int num_irp;
 int i1, i2, i3, i4;
-int num_coef, total_coef;
+//int num_coef, total_coef;
+int num_coef, total_atom_coef;
 int i, j, k, l, m, op;
 int oppshift1, sheli1;
 int count;
@@ -304,7 +306,8 @@ DoubleMatrix *projection_operator1, *vector_new1;
 double *vector_rot, *vector;
 int dimp1, dimp2;
 
-  total_coef = 0;
+  //total_coef = 0;
+  total_atom_coef = 0;
   num_salc = 0;
   atm = atoms->uniq[ip];
   int ip1;
@@ -392,7 +395,9 @@ int dimp1, dimp2;
           for (i1 = 0; i1 < dimp1; i1++) vector_new1->a[num_irp][i1] /= sqrt(norm); 
         //fprintf(file.out,"%3d %3d %3d\n",i,s,index_i);
         //for (i2 = 0; i2 < dimp1; i2++) { fprintf(file.out,"%7.3lf",vector_new1->a[num_irp][i2]); } fprintf(file.out,"\n");
-          total_coef += dimp1;
+          total_atom_coef += shells->shar[index_i];
+          //total_coef += shells->shar[index_i];
+          //total_coef += dimp1;
           num_irp++;
           num_salc++;
          } // close if (norm
@@ -405,7 +410,8 @@ int dimp1, dimp2;
         DestroyDoubleMatrix(&projection_operator1,job);
        } // close index_i
        salc->num_salc = num_salc;
-       salc->total_coef = total_coef;
+       salc->total_coef = total_atom_coef;
+       //fprintf(file.out,"counted %3d %3d %3d\n",total_coef,salc->num_atom,total_coef * salc->num_atom);
 
 }
 
@@ -546,36 +552,32 @@ void generate_atom_salc(int s, int ip, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_
 
 int num_salc;
 int num_irp;
-int i1, i2, i3, i4;
-int num_coef, total_coef, total_atom_coef;
+int i1, i2, i3, i4, ip1;
+int num_coef, total_atom_coef;
+//int num_coef, total_coef, total_atom_coef;
 int i, j, k, l, m, op;
 int oppshift1, sheli1;
+int offset, atm, atm_rot, index_i, shelposi, bfposi;
+int dimp1, dimp2;
 int count;
 int *p_ind_i, *p_ind_j, *num_i, *p_num, *p_ost;
 double *p_rot, *p_rot1;
 double norm;
-int offset, atm, atm_rot, index_i, shelposi, bfposi;
-DoubleMatrix *projection_operator, *vector_new;
 double *vector_rot, *vector;
-int dimp1, dimp2;
+DoubleMatrix *projection_operator, *vector_new;
 
-  total_coef = 0;
+  for (i = 0; i < salc->num_atom; i++) { for (j = 0; j < salc->total_coef; j++) { salc->coeff->a[i][j] = k_zero; }}
+  //total_coef = 0;
   total_atom_coef = 0;
   num_salc = 0;
   atm = atoms->uniq[ip];
-  int ip1;
   ip = atm;
   ip1 = atom_p->posn[atm];
   salc->num_atom = atom_p->numb[atm];
   shelposi = atoms->shelposn_sh[ip1];
   bfposi = 0;
   salc->num_irp[s] = 0;
-  //fprintf(file.out,"atm %3d salc->num_atom %3d\n",atm,salc->num_atom);
   for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip1]; index_i++) {
-    //double vector[atom_p->numb[atm] * shells->shar[index_i]];
-    //double vector_rot[atom_p->numb[atm] * shells->shar[index_i]];
-    //double vector_new[atom_p->numb[atm] * shells->shar[index_i] * symmetry->cls_num_k[s]][atom_p->numb[atm]*shells->shar[index_i]];
-    //double projection_operator[atom_p->numb[atm] * shells->shar[index_i]][atom_p->numb[atm] * shells->shar[index_i]];
     dimp1 = atom_p->numb[atm] * shells->shar[index_i];
     dimp2 = dimp1 * (symmetry->cls_num_k[s] + 1);
     AllocateDoubleArray(&vector,&dimp1,job);
@@ -585,127 +587,132 @@ int dimp1, dimp2;
     num_irp = 0;
     for (i = 0; i < shells->shar[index_i]; i++) {
       ResetDoubleArray(vector,&dimp1);
-      //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i];i1++) vector[i1] = k_zero;
-        op = 0;
-        for (i2 = 0; i2 < symmetry->number_of_classes; i2++) {
-          for (i3 = 0; i3 < symmetry->cls_num_k[i2]; i3++) {
-            oppshift1 = *(symmetry->op_shift + op * (job->l_max + 2) + shells->ord_sh[index_i]);
-            p_num = symmetry->num_ij + op * (job->l_max + 2) + shells->ord_sh[index_i];
-            atm_rot = atom_p->K[ip1 * symmetry->number_of_operators + op];
-            offset = (atm_rot - ip1) * shells->shar[index_i]; 
-            p_ind_i = symmetry->ind_i  + oppshift1;
-            p_ind_j = symmetry->ind_j  + oppshift1;
-            p_rot   = symmetry->rot    + oppshift1;
-            for (i4 = 0; i4 < *p_num; i4++) {
-              if (i == *p_ind_j) vector[offset + *p_ind_i] += *p_rot * \
-              (double) symmetry->character_table[s * symmetry->number_of_classes + i2];
-              p_ind_i++;
-              p_ind_j++;
-              p_rot++;
-             }
-            op++;
-           } // close loop on i3
-          } // close loop on i2
-            norm = k_zero;
-            //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) norm += vector[i1] * vector[i1];
-            for (i1 = 0; i1 < dimp1; i1++) norm += vector[i1] * vector[i1];
-              if (fabs(norm) > 0.00001) {
-                //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) vector[i1] /= sqrt(norm); 
-                for (i1 = 0; i1 < dimp1; i1++) vector[i1] /= sqrt(norm); 
-               }
-        for (op = 0; op < symmetry->number_of_operators; op++) {
+      op = 0;
+      for (i2 = 0; i2 < symmetry->number_of_classes; i2++) {
+        for (i3 = 0; i3 < symmetry->cls_num_k[i2]; i3++) {
           oppshift1 = *(symmetry->op_shift + op * (job->l_max + 2) + shells->ord_sh[index_i]);
           p_num = symmetry->num_ij + op * (job->l_max + 2) + shells->ord_sh[index_i];
-          ResetDoubleArray(vector_rot,&dimp1);
-          //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i];i1++) vector_rot[i1] = k_zero;
-          for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
-            atm_rot = atom_p->K[(ip1 + i1) * symmetry->number_of_operators + op];
-            offset = (atm_rot - ip1) * shells->shar[index_i];
-            p_ind_i = symmetry->ind_i  + oppshift1;
-            p_ind_j = symmetry->ind_j  + oppshift1;
-            p_rot   = symmetry->rot    + oppshift1;
-            for (i2 = 0; i2 < *p_num; i2++) {
-              vector_rot[offset + *p_ind_i] += *p_rot * vector[i1 * shells->shar[index_i] + *p_ind_j];
-              p_ind_i++;
-              p_ind_j++;
-              p_rot++;
-             } // close loop on i2
-            } // close loop on i1
-            norm = k_zero;
-            // Gram-Schmidt orthogonalise
-            for (i2 = 0; i2 < dimp1; i2++) vector_new->a[num_irp][i2] = k_zero;
-            //for (i2 = 0; i2 < atom_p->numb[atm] * shells->shar[index_i]; i2++) vector_new[num_irp][i2] = k_zero;
-            ResetDoubleMatrix(projection_operator);
-            for (i1 = 0; i1 < dimp1; i1++) {
-            //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) {
-              //for (i2 = 0; i2 < atom_p->numb[atm] * shells->shar[index_i]; i2++) {
-                //projection_operator[i1][i2] = k_zero;
-                //projection_operator->a[i1][i2] = k_zero;
-               //}
-                //projection_operator[i1][i1] = k_one;
-                projection_operator->a[i1][i1] = k_one;
-               }
-            for (i1 = 0; i1 < num_irp; i1++) {
-              for (i2 = 0; i2 < dimp1; i2++) {
-                 for (i3 = 0; i3 < dimp1; i3++) {
-              //for (i2 = 0; i2 < atom_p->numb[atm] * shells->shar[index_i]; i2++) {
-                 //for (i3 = 0; i3 < atom_p->numb[atm] * shells->shar[index_i]; i3++) {
-                   //projection_operator[i2][i3] -= vector_new[i1][i2] * vector_new[i1][i3];
-                   projection_operator->a[i2][i3] -= vector_new->a[i1][i2] * vector_new->a[i1][i3];
-                   //projection_operator->a[i2][i3] -= vector_new[i1][i2] * vector_new[i1][i3];
-                  }
-                 }
-                }
-            for (i1 = 0; i1 < dimp1; i1++) {
-              for (i2 = 0; i2 < dimp1; i2++) {
-            //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) {
-              //for (i2 = 0; i2 < atom_p->numb[atm] * shells->shar[index_i]; i2++) {
-                //vector_new[num_irp][i1] += projection_operator[i1][i2] * vector_rot[i2];
-                vector_new->a[num_irp][i1] += projection_operator->a[i1][i2] * vector_rot[i2];
-                //vector_new[num_irp][i1] += projection_operator->a[i1][i2] * vector_rot[i2];
+          atm_rot = atom_p->K[ip1 * symmetry->number_of_operators + op];
+          offset = (atm_rot - ip1) * shells->shar[index_i]; 
+          p_ind_i = symmetry->ind_i  + oppshift1;
+          p_ind_j = symmetry->ind_j  + oppshift1;
+          p_rot   = symmetry->rot    + oppshift1;
+          for (i4 = 0; i4 < *p_num; i4++) {
+            if (i == *p_ind_j) vector[offset + *p_ind_i] += *p_rot * (double) symmetry->character_table[s * symmetry->number_of_classes + i2];
+            p_ind_i++;
+            p_ind_j++;
+            p_rot++;
+           }
+          op++;
+         } // close loop on i3
+        } // close loop on i2
+      norm = k_zero;
+      for (i1 = 0; i1 < dimp1; i1++) norm += vector[i1] * vector[i1];
+        if (fabs(norm) > 0.00001) {
+          for (i1 = 0; i1 < dimp1; i1++) vector[i1] /= sqrt(norm); 
+         }
+      for (op = 0; op < symmetry->number_of_operators; op++) {
+        oppshift1 = *(symmetry->op_shift + op * (job->l_max + 2) + shells->ord_sh[index_i]);
+        p_num = symmetry->num_ij + op * (job->l_max + 2) + shells->ord_sh[index_i];
+        ResetDoubleArray(vector_rot,&dimp1);
+        for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
+          atm_rot = atom_p->K[(ip1 + i1) * symmetry->number_of_operators + op];
+          offset = (atm_rot - ip1) * shells->shar[index_i];
+          p_ind_i = symmetry->ind_i  + oppshift1;
+          p_ind_j = symmetry->ind_j  + oppshift1;
+          p_rot   = symmetry->rot    + oppshift1;
+          for (i2 = 0; i2 < *p_num; i2++) {
+            vector_rot[offset + *p_ind_i] += *p_rot * vector[i1 * shells->shar[index_i] + *p_ind_j];
+            p_ind_i++;
+            p_ind_j++;
+            p_rot++;
+           } // close loop on i2
+          } // close loop on i1
+          norm = k_zero;
+          // Gram-Schmidt orthogonalise
+          for (i2 = 0; i2 < dimp1; i2++) vector_new->a[num_irp][i2] = k_zero;
+          ResetDoubleMatrix(projection_operator);
+          for (i1 = 0; i1 < dimp1; i1++) {
+              projection_operator->a[i1][i1] = k_one;
+             }
+          for (i1 = 0; i1 < num_irp; i1++) {
+            for (i2 = 0; i2 < dimp1; i2++) {
+              for (i3 = 0; i3 < dimp1; i3++) {
+                projection_operator->a[i2][i3] -= vector_new->a[i1][i2] * vector_new->a[i1][i3];
                }
               }
-            norm = k_zero;
-            num_coef = 0;
-            //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) 
-            //norm += vector_new[num_irp][i1] * vector_new[num_irp][i1];
-            for (i1 = 0; i1 < dimp1; i1++) 
-            norm += vector_new->a[num_irp][i1] * vector_new->a[num_irp][i1];
-            if (norm > 0.0000001) {
-            //for (i1 = 0; i1 < atom_p->numb[atm] * shells->shar[index_i]; i1++) vector_new[num_irp][i1] /= sqrt(norm); 
-            for (i1 = 0; i1 < dimp1; i1++) vector_new->a[num_irp][i1] /= sqrt(norm); 
-            //for (i1 = 0; i1 < dimp1; i1++) vector_new->a[num_irp][i1] /= sqrt(norm); 
-            //fprintf(file.out,"%3d %3d %3d\n",s,index_i,i);
-            //for (i2 = 0; i2 < atom_p->numb[atm] * shells->shar[index_i]; i2++) {
-            //fprintf(file.out,"%7.3lf",vector_new->a[num_irp][i2]); } fprintf(file.out,"\n"); 
-            for (i2 = 0; i2 < shells->shar[index_i]; i2++) {
-              for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
-                //salc->coeff->a[i1][total_atom_coef]  = vector_new[num_irp][i1 * shells->shar[index_i] + i2];  // FIX num_salc
-                salc->coeff->a[i1][total_atom_coef]  = vector_new->a[num_irp][i1 * shells->shar[index_i] + i2];  // FIX num_salc
-                salc->bfn_posn->a[i1][total_atom_coef]  = bfposi + i2;
-                total_coef++;
-               }
-                total_atom_coef++;
-                num_coef++;
-               }
-                salc->num_coef[num_salc] = num_coef;
-               (salc->num_irp[s])++;
-                salc->irp[num_salc] = s;
-                num_irp++;
-                num_salc++;
-               } // close if (norm
-              } // close loop on op
-             } // close loop on i
-              //fprintf(file.out,"\n");
-           bfposi += shells->shar[index_i];
-          DestroyDoubleArray(&vector,&dimp1,job);
-          DestroyDoubleArray(&vector_rot,&dimp1,job);
-          DestroyDoubleMatrix(&vector_new,job);
-          DestroyDoubleMatrix(&projection_operator,job);
-          } // close index_i
-         salc->num_salc = num_salc;
-         salc->total_coef = total_coef;
+             }
+          for (i1 = 0; i1 < dimp1; i1++) {
+            for (i2 = 0; i2 < dimp1; i2++) {
+              vector_new->a[num_irp][i1] += projection_operator->a[i1][i2] * vector_rot[i2];
+             }
+            }
+          norm = k_zero;
+          num_coef = 0;
+          for (i1 = 0; i1 < dimp1; i1++) norm += vector_new->a[num_irp][i1] * vector_new->a[num_irp][i1];
+	  //fprintf(file.out,"s %3d index_i %3d xyz %3d op %3d norm %18.12f\n",s,index_i,i,op,norm);
+          if (norm > 0.0000001) {
+          for (i1 = 0; i1 < dimp1; i1++) vector_new->a[num_irp][i1] /= sqrt(norm); 
+          for (i2 = 0; i2 < shells->shar[index_i]; i2++) {
+            for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
+              salc->coeff->a[i1][total_atom_coef] = vector_new->a[num_irp][i1 * shells->shar[index_i] + i2];
+              salc->bfn_posn->a[i1][total_atom_coef] = bfposi + i2;
+              //total_coef++;
+             }
+              total_atom_coef++;
+              num_coef++;
+             }
+              salc->num_coef[num_salc] = num_coef;
+             (salc->num_irp[s])++;
+              salc->irp[num_salc] = s;
+	      //fprintf(file.out,"s %3d op %3d num_irp %3d norm %14.8f\n",s,op,salc->num_irp[s],norm);
+              num_irp++;
+              num_salc++;
+             } // close if (norm
+            } // close loop on op
+           } // close loop on i
+        bfposi += shells->shar[index_i];
+        DestroyDoubleArray(&vector,&dimp1,job);
+        DestroyDoubleArray(&vector_rot,&dimp1,job);
+        DestroyDoubleMatrix(&vector_new,job);
+        DestroyDoubleMatrix(&projection_operator,job);
+        } // close index_i
+        salc->num_salc = num_salc;
+        //salc->total_coef = total_coef;
+        salc->total_coef = total_atom_coef;
+        //fprintf(file.out,"needed %3d\n",total_atom_coef);
 
+       bfposi = 0;
+       total_atom_coef = 0;
+       shelposi = atoms->shelposn_sh[ip1];
+       if (job->verbosity > 1)
+       for (j = 0; j < salc->num_irp[s]; j++) {
+         for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip1]; index_i++) {
+           for (i2 = 0; i2 < shells->shar[index_i]; i2++) {
+             for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
+               fprintf(file.out,"class %3d atm %3d shell %3d xyz %3d atmp %3d salc %3d coeff %14.8f %3d\n",\
+      	       s,atm,index_i,i2,i1,j,salc->coeff->a[i1][total_atom_coef],total_atom_coef);
+              }
+               total_atom_coef++;
+              }
+             fprintf(file.out,"\n");
+             bfposi += shells->shar[index_i];
+            }
+             fprintf(file.out,"\n");
+            }
+
+       int count_j = 0;
+       if (job->verbosity > 1)
+       for (int r = 0; r < salc->num_irp[s]; r++){
+         for (int t = 0; t < salc->num_coef[r]; t++){
+           for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
+             fprintf(file.out,"irp %3d i1 %3d t %3d count %3d %3d %14.8f\n",\
+	     r,i1,t,count_j+t,salc->bfn_posn->a[i1][count_j+t],salc->coeff->a[i1][count_j+t]);
+            }
+           }
+	  fprintf(file.out,"\n");
+          count_j += salc->num_coef[r];
+         }
 }
 
 void generate_atom_salc_crystal(int s, IntMatrix *lattice_tran, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, REAL_LATTICE_TABLES *R_tables, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
@@ -1240,6 +1247,9 @@ SALC salc1;
 
   for (r = 0; r < atoms->number_of_sh_bfns_in_unit_cell; r++)
   eigval_ord_inverse[eigval_ord[r]] = r;
+
+  //for (int i = 0; i < atoms->number_of_sh_bfns_in_unit_cell; i++) 
+  //fprintf(file.out,"salc eigenvalues in order %3d %3d %10.4f\n",i,irrep[i],eigval[i]);
 
   count_irrep1 = 0;
   for (v = 0; v < symmetry->number_of_classes; v++) {
@@ -1841,4 +1851,48 @@ atm1 = atom_p->posn[atm];
 
 }
 */
+
+	/*
+  #include "SYMMETRY_ADAPTATION.h"
+  SALC salc1;
+  int r, t, i1, count_j, atm1, num_irrep_in_basis[symmetry->number_of_classes];
+  double dot_product;
+  DoubleMatrix *salc_rows, *salc_cols;
+  IntMatrix *num_irrep_in_atom, *salc_count1;
+
+  AllocateIntMatrix(&num_irrep_in_atom, &symmetry->number_of_classes, &atoms->number_of_unique_atoms, job);
+  AllocateIntMatrix(&salc_count1, &symmetry->number_of_classes, &atoms->number_of_unique_atoms, job);
+  ResetIntMatrix(salc_count1);
+  count_atom_irrep(num_irrep_in_atom,atoms,atom_p,shells,symmetry,job,file);
+  count_basis_irrep(num_irrep_in_basis,atoms,atom_p,shells,symmetry,job,file);
+
+  if (job->verbosity >= 1)
+  for (atm1 = 0; atm1 < atoms->number_of_unique_atoms; atm1++) {
+    for (s = 0; s < symmetry->number_of_classes; s++) {
+      count_atom_salc(s,atm1,&salc1,atoms,atom_p,pair_p,shells,symmetry,job,file);
+      if (salc1.num_salc == 0) continue;
+      allocate_SALC(&salc1,symmetry,job,file);
+      fprintf(file.out,"\nsalc1 %3d %3d\n",atm1,s);
+      generate_atom_salc(s,atm1,&salc1,atoms,atom_p,pair_p,shells,symmetry,job,file);
+      bfposi = atoms->bfnposn_sh[atm1];
+      for (k = 0; k < occupied[0]; k++) {
+        count_j = 0;
+        dot_product = k_zero;
+        for (r = 0; r < salc1.num_irp[s]; r++){
+          for (t = 0; t < salc1.num_coef[r]; t++){
+            for (i1 = 0; i1 < atom_p->numb[atm1]; i1++) {
+              fprintf(file.out,"wfn %3d irp %3d i1 %3d t %3d count %3d %3d %14.8f %10.4f\n",\
+              k,r,i1,t,count_j+t,salc1.bfn_posn->a[i1][count_j+t],salc1.coeff->a[i1][count_j+t],eigenvectors->a[k][salc1.bfn_posn->a[k][count_j+t]]);
+              if (i1 == 0) dot_product += salc1.coeff->a[i1][count_j+t] * eigenvectors->a[k][salc1.bfn_posn->a[k][count_j+t]];
+             }
+            }
+           fprintf(file.out,"\n");
+           count_j += salc1.num_coef[r];
+          }
+         fprintf(file.out,"dot product %3d %14.8f\n",k,dot_product);
+        }
+       free_SALC(&salc1,job);
+      }
+     }
+  */
 

@@ -11,6 +11,8 @@ void density_matrix_molecule2(FERMI*, double*, double*, KPOINT_TRAN*, int*, REAL
 
 void reduced_density_matrix_molecule2(FERMI*, double*, KPOINT_TRAN*, int*, REAL_LATTICE*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
+void reduced_density_matrix_molecule3(int*, double*, FERMI*, double*, KPOINT_TRAN*, int*, REAL_LATTICE*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
+
 void expand_density_matrix(double*, double*, PAIR_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
 void atom_shell_populations2(INT_1E*, double*, PAIR_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);

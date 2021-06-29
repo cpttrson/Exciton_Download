@@ -1321,7 +1321,7 @@ void generate_cartesian_symmetry_operators(CRYSTAL *crystal, SYMMETRY *symmetry,
    generate_group_conjugacy_classes(symmetry, print, file);
    if (job->C09 != 1) // reorder operators by conjugacy classes and recompute group multiplication table and inverses
    reorder_symmetry_operators_by_class(symmetry,job,file);
-   generate_Dirac_characters(symmetry,job,file);
+   generate_Dirac_characters_complex(symmetry,job,file);
    generate_permutation_group_table(symmetry,job,file);
    print_symmetry_operators(symmetry,job,file);
 
@@ -1690,7 +1690,9 @@ void generate_Dirac_characters(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
         }
        ResetDoubleMatrix(tmp);
        ResetDoubleMatrix(tmp1);
+       //fprintf(file.out,"matrix\n");
        //print_double_matrix(matrix, file);
+       //fprintf(file.out,"eigvec\n");
        //print_double_matrix(eigvec, file);
        DoubleGEMM(&no_trans, &no_trans, &alpha, &eigvec, &matrix, &beta, &tmp);
        //print_double_matrix(tmp, file);
@@ -1758,6 +1760,282 @@ void generate_Dirac_characters(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   DestroyDoubleMatrix(&matrix,job);
   DestroyDoubleMatrix(&eigenvalues_real,job);
   DestroyDoubleArray(&eigenvalues_imag,&dim,job);
+  DestroyDoubleMatrix(&eigval,job);
+  DestroyDoubleMatrix(&eigenvectors,job);
+  DestroyDoubleMatrix(&eigvec,job);
+  DestroyDoubleMatrix(&tmp,job);
+  DestroyDoubleMatrix(&tmp1,job);
+
+}
+
+void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
+    
+    // generate Dirac characters
+
+    // See Group Theory with Applications in Chemical Physics, P. Jacobs, CUP (2005) A2 Class Algebra
+    // or Symmetry Principles in Solid State and Molecular Physics, M. Lax, Wiley (1974) Sec 1.3 for details
+
+    //fprintf(file.out,"DIRAC CHARACTERS\n\n");
+
+  int dim = symmetry->number_of_classes;
+  int i, j, k, l, pos_i, pos_j, count;
+  int info = 0;
+  int inv_cls_k[symmetry->number_of_operators];
+  int degeneracy[symmetry->number_of_classes];
+  int character_product[symmetry->number_of_operators];
+  int class_constants[symmetry->number_of_classes][symmetry->number_of_classes][symmetry->number_of_classes];
+  char trans = 'T', no_trans = 'N', conj_trans = 'C';
+  char uplo = 'U';
+  char jobz = 'V';
+  //HERE double *eigenvalues_imag;
+  double alpha = k_one, beta = k_zero;
+  double sum[symmetry->number_of_classes];
+  DoubleMatrix *eigenvalues_real, *eigenvalues_imag, *eigval, *tmp, *tmp1;
+  DoubleMatrix *matrix, *eigenvectors, *eigvec;
+
+  ComplexMatrix *Cmatrix, *Ceigval, *Ceigenvectors, *Ceigvec, *Ctmp, *Ctmp1;
+  Complex *Ceigenvalues, Calpha = Complex(k_one, k_zero), Cbeta = Complex(k_zero, k_zero);
+  Complex Csum[symmetry->number_of_classes];
+  AllocateComplexMatrix(&Ceigenvectors,&dim,&dim,job);
+  AllocateComplexMatrix(&Ceigval,&dim,&dim,job);
+  AllocateComplexArray(&Ceigenvalues,&dim,job);
+  AllocateComplexMatrix(&Cmatrix,&dim,&dim,job);
+  AllocateComplexMatrix(&Ceigvec,&dim,&dim,job);
+  AllocateComplexMatrix(&Ctmp,&dim,&dim,job);
+  AllocateComplexMatrix(&Ctmp1,&dim,&dim,job);
+
+  AllocateDoubleMatrix(&matrix,&dim,&dim,job);
+  AllocateDoubleMatrix(&eigenvalues_real,&dim,&dim,job);
+  AllocateDoubleMatrix(&eigenvalues_imag,&dim,&dim,job);
+  AllocateDoubleMatrix(&eigval,&dim,&dim,job);
+  //HERE AllocateDoubleArray(&eigenvalues_imag,&dim,job);
+  AllocateDoubleMatrix(&eigenvectors,&dim,&dim,job);
+  AllocateDoubleMatrix(&eigvec,&dim,&dim,job);
+  AllocateDoubleMatrix(&tmp,&dim,&dim,job);
+  AllocateDoubleMatrix(&tmp1,&dim,&dim,job);
+
+  for (i = 0; i < symmetry->number_of_operators; i++) { 
+    inv_cls_k[i] = symmetry->inverse[symmetry->cls_k[i]];
+   }
+  for (i = 0; i < symmetry->number_of_classes; i++) { 
+    for (j = 0; j < symmetry->number_of_classes; j++) { 
+      for (k = 0; k < symmetry->number_of_classes; k++) { 
+        class_constants[i][j][k] = 0;
+       }
+      }
+     }
+
+  for (i = 0; i < symmetry->number_of_classes; i++) { 
+    pos_i = symmetry->cls_pos_k[i];
+    for (j = 0; j < symmetry->number_of_classes; j++) { 
+      pos_j = symmetry->cls_pos_k[j];
+      for (k = 0; k < symmetry->number_of_operators; k++) 
+      character_product[k] = 0;
+      for (k = 0; k < symmetry->cls_num_k[i]; k++) { 
+        for (l = 0; l < symmetry->cls_num_k[j]; l++) { 
+          (character_product[symmetry->inverse[symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]]])++;
+          //HERE (character_product[symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]])++;
+          //fprintf(file.out,"%3d %3d  %3d %3d   %3d\n",\
+          i+1,j+1,k,l,symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]);
+         }
+        }
+       //fprintf(file.out,"\n");
+       count = 0;
+       for (k = 0; k < symmetry->number_of_classes; k++) { 
+         for (l = 0; l < symmetry->cls_num_k[k]; l++) { 
+           class_constants[i][j][k] += character_product[count];
+           count++;
+          }
+         }
+        }
+       }
+  for (i = 0; i < symmetry->number_of_classes; i++) { 
+    for (j = 0; j < symmetry->number_of_classes; j++) { 
+      for (k = 0; k < symmetry->number_of_classes; k++) { 
+        class_constants[i][j][k] /= symmetry->cls_num_k[k];
+       }
+      }
+     }
+
+  if (job->verbosity > 1 && job->taskid == 0) {
+  fprintf(file.out,"GROUP CLASS CONSTANTS\n\n");
+  for (k = 0; k < symmetry->number_of_classes; k++) { 
+    fprintf(file.out,"k = %3d\n\n",k);
+    for (i = 0; i < symmetry->number_of_classes; i++) { 
+      for (j = 0; j < symmetry->number_of_classes; j++) { 
+        fprintf(file.out,"%3d ",class_constants[i][j][k]);
+       }
+       fprintf(file.out,"\n");
+      }
+       fprintf(file.out,"\n");
+      }
+     }
+
+  // Identify which eigenvalues belong to each representation using eigenvectors with no eigenvalue degeneracy
+
+  ResetDoubleMatrix(matrix);
+  ResetComplexMatrix(Cmatrix);
+  for (i = 0; i < symmetry->number_of_classes; i++) {
+    degeneracy[i] = 0;
+    pos_i = symmetry->cls_pos_k[i];
+    for (j = 0; j < symmetry->number_of_classes; j++) { 
+      pos_j = symmetry->cls_pos_k[j];
+      for (k = 0; k < symmetry->number_of_classes; k++) { 
+        int pos_k = symmetry->cls_pos_k[k];
+        matrix->a[j][k] += sqrt (i + 3.4) * (double) class_constants[i][j][k];
+        Cmatrix->a[j][k] += Complex(sqrt (i + 3.4) * (double) class_constants[i][j][k], k_zero);
+	//fprintf(file.out,"ijk %3d %3d %3d pos_k %3d inv %3d\n",i,j,k,pos_k,inv_cls_k[pos_k]);
+        ResetDoubleMatrix(eigenvectors);
+        ResetComplexMatrix(Ceigenvectors);
+       }
+      }
+       //fprintf(file.out,"Cmatrix\n");
+       //print_complex_matrix(Cmatrix, file); fflush(file.out);
+       //fprintf(file.out,"matrix\n");
+       //print_double_matrix(matrix, file); fflush(file.out);
+       if (i == symmetry->number_of_classes - 1)
+       DiagonaliseComplexGeneral(&Cmatrix, &Ceigenvalues, &Ceigenvectors, &info); 
+       //if (i == symmetry->number_of_classes - 1) {
+       //DiagonaliseComplexGeneral(&Cmatrix, &Ceigenvalues, &Ceigenvectors, &info); 
+       //for (int iii = 0; iii < dim; iii++)  {fprintf(file.out,"Ceig %10.4f %10.4f\n",(Ceigenvalues[iii]).real(),(Ceigenvalues[iii]).imag()); 
+       //for (int jjj = 0; jjj < dim; jjj++) fprintf(file.out,"%10.4f %10.4f\n",(Ceigenvectors->a[iii][jjj]).real(),(Ceigenvectors->a[iii][jjj]).imag()); 
+        //}
+       //for (j = 0; j < symmetry->number_of_classes; j++) { 
+         //for (k = 0; k < j; k++) { 
+           //fprintf(file.out,"%3d %3d %f %f\n",j,k,eigenvalues_real->a[i][j] , eigenvalues_real->a[i][k]); fflush(file.out);
+           //if (cabs(Ceigenvalues_real->a[i][j] - Ceigenvalues_real->a[i][k]) < 0.00001) (degeneracy[i])++;
+          //}
+         //}
+       //}
+
+       if (i == symmetry->number_of_classes - 1) 
+       DiagonaliseRealGeneral(&matrix, &eigenvalues_real->a[i], &eigenvalues_imag->a[i], &eigenvectors, &info);
+       //HERE DiagonaliseRealGeneral(&matrix, &eigenvalues_real->a[i], &eigenvalues_imag, &eigenvectors, &info);
+       //print_real_eigenvector_matrix(eigenvectors, eigenvalues_real->a[i], file); fflush(file.out);
+       for (j = 0; j < symmetry->number_of_classes; j++) { 
+         for (k = 0; k < j; k++) { 
+           //fprintf(file.out,"%3d %3d %f %f\n",j,k,eigenvalues_real->a[i][j] , eigenvalues_imag[j]); fflush(file.out);
+           //fprintf(file.out,"%3d %3d %f %f\n",j,k,eigenvalues_real->a[i][j] , eigenvalues_real->a[i][k]); fflush(file.out);
+           //if (fabs(eigenvalues_real->a[i][j] - eigenvalues_real->a[i][k]) < 0.00001) (degeneracy[i])++;
+           if (fabs(eigenvalues_real->a[i][j] - eigenvalues_real->a[i][k]) < 0.00001 \
+	   &&  fabs(eigenvalues_imag->a[i][j] - eigenvalues_imag->a[i][k]) < 0.00001) (degeneracy[i])++;
+          }
+         }
+          //fprintf(file.out,"DEGENERACY %3d\n",degeneracy[i]); fflush(file.out);
+          if (degeneracy[i] == 0) {
+          for (j = 0; j < symmetry->number_of_classes; j++) {
+            for (k = 0; k < symmetry->number_of_classes; k++) {
+              eigvec->a[j][k] = eigenvectors->a[j][k];
+              Ceigvec->a[j][k] = Ceigenvectors->a[j][k];
+             }
+            }
+            //print_real_eigenvector_matrix(eigvec, eigenvalues_real->a[i], file);
+           }
+          } // close loop on i
+
+  for (i = 0; i < symmetry->number_of_classes; i++) sum[i] = k_zero;
+    ResetDoubleMatrix(eigval);
+    ResetComplexMatrix(Ceigval);
+    for (i = 0; i < symmetry->number_of_classes; i++) {
+      for (j = 0; j < symmetry->number_of_classes; j++) { 
+        for (k = 0; k < symmetry->number_of_classes; k++) { 
+          matrix->a[j][k] = class_constants[i][j][k];
+          Cmatrix->a[j][k] = Complex(class_constants[i][j][k], k_zero);
+         }
+        }
+       ResetComplexMatrix(Ctmp);
+       ResetComplexMatrix(Ctmp1);
+       ResetDoubleMatrix(tmp);
+       ResetDoubleMatrix(tmp1);
+       //fprintf(file.out,"matrix %3d\n",i);
+       //print_double_matrix(matrix, file);
+       //fprintf(file.out,"Cmatrix %3d\n",i);
+       //print_complex_matrix(Cmatrix, file);
+       //fprintf(file.out,"eigvec\n");
+       ComplexGEMM1(&no_trans, &no_trans, &Calpha, &Ceigvec, &Cmatrix, &Cbeta, &Ctmp);
+       ComplexGEMM1(&no_trans, &conj_trans, &Calpha, &Ctmp, &Ceigvec, &Cbeta, &Ctmp1);
+       //print_double_matrix(eigvec, file);
+       DoubleGEMM(&no_trans, &no_trans, &alpha, &eigvec, &matrix, &beta, &tmp);
+       //print_double_matrix(tmp, file);
+       DoubleGEMM(&no_trans, &trans, &alpha, &tmp, &eigvec, &beta, &tmp1);
+       //fprintf(file.out,"tmp1 %3d\n",i);
+       //print_double_matrix(tmp1, file);
+       //fprintf(file.out,"Ctmp1 %3d\n",i);
+       //print_complex_matrix(Ctmp1, file);
+       for (j = 0; j < symmetry->number_of_classes; j++) { 
+         eigval->a[i][j] = tmp1->a[j][j];
+         Ceigval->a[i][j] = Ctmp1->a[j][j];
+	 // Eq (16) p442
+         sum[j] += tmp1->a[j][j] * tmp1->a[j][j] / (double) symmetry->cls_num_k[i];
+         Csum[j] += Ctmp1->a[j][j] * Ctmp1->a[j][j] / (double) symmetry->cls_num_k[i];
+        }
+         //fprintf(file.out,"eigval\n");
+         //print_double_matrix(eigval, file);
+         if (i == symmetry->number_of_classes - 1) fprintf(file.out,"Ceigval Csum %10.4f %10.4f\n",(Csum[i]).real(),(Csum[i]).imag());
+         if (i == symmetry->number_of_classes - 1) print_complex_matrix(Ceigval, file);
+         //print_real_eigenvector_matrix(eigvec, eigval->a[i], file);
+        } // close loop on i
+
+   for (i = 0; i < symmetry->number_of_classes; i++) {
+     symmetry->irp_dim_k[i] = (int) sqrt((double) symmetry->grp_dim / sum[i] + 1e-04);
+     //fprintf(file.out,"%3d %10.4lf %3d %20.14f %3d\n",i,sum[i],symmetry->grp_dim,sqrt((double) symmetry->grp_dim / sum[i]), \
+     symmetry->irp_dim_k[i]);
+    }
+   
+  // generate character table
+
+  for (i = 0; i < symmetry->number_of_classes; i++) { 
+  //fprintf(file.out,"|  %2d   |    %2d     |",i + 1, symmetry->irp_dim_k[i]);
+  for (j = 0; j < symmetry->number_of_classes; j++) { 
+  // Eq. (17) p442
+  symmetry->character_table[i * symmetry->number_of_classes + j] = (double) symmetry->irp_dim_k[i] / \
+  (double) symmetry->cls_num_k[j] * eigval->a[j][i];
+  //fprintf(file.out,"%3d %3d %10.4f %10.4f %10.4f\n",\
+  symmetry->irp_dim_k[i] , symmetry->cls_num_k[j] , eigval->a[j][i],(Ceigval->a[j][i]).real(),(Ceigval->a[j][i]).imag());
+  //fprintf(file.out,"%4.0lf  |",symmetry->character_table[i * symmetry->number_of_classes + j]);
+   }
+  //fprintf(file.out,"\n");
+   }
+
+  if (job->taskid >= 0 && job->verbosity >= 1) {
+  fprintf(file.out,"---------------------");
+  for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
+  fprintf(file.out,"\n");
+  fprintf(file.out,"| CHARACTER TABLE   |");
+  for (i = 0; i < symmetry->number_of_classes - 1; i++) fprintf(file.out,"       ");
+  fprintf(file.out,"      |\n");
+  fprintf(file.out,"---------------------");
+  for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
+  fprintf(file.out,"\n");
+  fprintf(file.out,"| IRREP | DIMENSION |");
+  for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"  %2d  |",symmetry->cls_num_k[i]);
+  fprintf(file.out,"\n");
+  fprintf(file.out,"---------------------");
+  for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
+  fprintf(file.out,"\n");
+  for (i = 0; i < symmetry->number_of_classes; i++) { 
+  fprintf(file.out,"|  %2d   |    %2d     |",i + 1, symmetry->irp_dim_k[i]);
+  for (j = 0; j < symmetry->number_of_classes; j++) { 
+  ////symmetry->character_table[i * symmetry->number_of_classes + j] = (double) symmetry->irp_dim_k[i] / \
+  (double) symmetry->cls_num_k[j] * eigval->a[j][i];
+  //fprintf(file.out,"%3d %3d %f\n",symmetry->irp_dim_k[i] , symmetry->cls_num_k[j] , eigval->a[j][i]);
+  fprintf(file.out,"%4.0lf  |",symmetry->character_table[i * symmetry->number_of_classes + j]);
+   }
+  fprintf(file.out,"\n");
+   }
+  fprintf(file.out,"---------------------");
+  for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
+  fprintf(file.out,"\n");
+  fprintf(file.out,"\n\n");
+  //fflush(file.out);
+ }
+
+  DestroyDoubleMatrix(&matrix,job);
+  DestroyDoubleMatrix(&eigenvalues_real,job);
+  DestroyDoubleMatrix(&eigenvalues_imag,job);
+  //DestroyDoubleArray(&eigenvalues_imag,&dim,job);
   DestroyDoubleMatrix(&eigval,job);
   DestroyDoubleMatrix(&eigenvectors,job);
   DestroyDoubleMatrix(&eigvec,job);
@@ -1887,6 +2165,8 @@ void generate_group_conjugacy_classes(SYMMETRY *symmetry, int print, FILES file)
     // generate group conjugacy classes
 
 int i, j, k;
+
+print = 1;
 
     int taken[symmetry->number_of_operators];
     int total_taken = 0;

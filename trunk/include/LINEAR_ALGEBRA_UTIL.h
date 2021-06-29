@@ -48,6 +48,8 @@ void DiagonaliseHermitianX(ComplexMatrix **,double **, ComplexMatrix **, char *,
 
 void DiagonaliseRealGeneral(DoubleMatrix **, double **, double **, DoubleMatrix **, int *);
 
+void DiagonaliseComplexGeneral(ComplexMatrix**, Complex**, ComplexMatrix**, int*);
+
 #ifdef ISOF2003
 
 void ComplexDotProdv1(Complex *, const int *, Complex **, const int *, Complex **, const int *);
@@ -87,6 +89,8 @@ void dgesv_(const int*, const int*, double*, const int*, int*, double*, const in
 void zgesv_(const int*, const int*, Complex*, const int*, int*, Complex*, const int*, int*);
 
 void dgeev_(const char*, const char*, const int*, double*, const int*, double*, double*, double*, const int*, double*, const int*, double *, int *, int *);
+
+void zgeev_(const char*, const char*, const int*, Complex*, const int*, Complex*, Complex*, const int*, Complex*, const int*, Complex *, int *, double *, int *);
 
 void pdgemm_(const char*, const char*, const int*, const int*, const int*, const double*, const double*, const int*, const int*, const int*, const double*, const int*, const int*, const int*, const double*, double*, const int*, const int*, const int*);
 

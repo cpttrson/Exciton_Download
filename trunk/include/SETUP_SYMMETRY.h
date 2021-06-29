@@ -15,6 +15,8 @@ void generate_group_conjugacy_classes(SYMMETRY*, int, FILES);
 
 void generate_Dirac_characters(SYMMETRY*, JOB_PARAM*, FILES);
 
+void generate_Dirac_characters_complex(SYMMETRY*, JOB_PARAM*, FILES);
+
 void generate_permutation_group_table(SYMMETRY*, JOB_PARAM*, FILES);
 
 void print_symmetry_operators(SYMMETRY*, JOB_PARAM*, FILES);

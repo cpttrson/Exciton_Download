@@ -1,18 +1,3 @@
-/*
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-#include <mpi.h>
-#include "mycomplex.h"
-#include "mylogical.h"
-#include "conversion_factors.h"
-#include "LIMITS.h"
-#include "CRYSTAL1.h"
-*/
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"
@@ -27,18 +12,53 @@ void generate_rotation_operators_ivanic_ruedenberg(SYMMETRY *symmetry, JOB_PARAM
 
 {
 
+  // *********************************************************************************************
+  // * Routines in this source file are based on the following papers by Ivanic and Ruedenberg:  *
+  // *                                                                                           *
+  // *[1] J. Ivanic and K. Ruedenberg, J. Phys. Chem. 100, 6342 (1996).                          *
+  // *[2] J. Ivanic and K. Ruedenberg, J. Phys. Chem. A, 102, 9099 (1998).                       *
+  // *                                                                                           *
+  // * This routine calls routines adapted from the code by Bing Jian available through the      *
+  // * Mathworks File Exchange at:                                                               *
+  // *                                                                                           *
+  // * https://uk.mathworks.com/matlabcentral/fileexchange/15377-real-valued-spherical-harmonics *
+  // *                                                                                           *
+  // * The text of the license agreement for the adapted code in this source file is:            *
+  // *                                                                                           *
+  // * Copyright (c) 2016, Bing Jian                                                             *
+  // * All rights reserved.                                                                      *
+  // *                                                                                           *
+  // * Redistribution and use in source and binary forms, with or without modification, are      *
+  // * permitted provided that the following conditions are met:                                 *
+  // *                                                                                           *
+  // * Redistributions of source code must retain the above copyright notice, this list of       *
+  // * conditions and the following disclaimer.                                                  *
+  // *                                                                                           *
+  // * Redistributions in binary form must reproduce the above copyright notice, this list of    *
+  // * conditions and the following disclaimer in the documentation and/or other materials       *
+  // * provided with the distribution.                                                           *
+  // *                                                                                           *
+  // * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY       *
+  // * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES      *
+  // * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT       *
+  // * SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, *
+  // * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT  *
+  // * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) *
+  // * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,     *
+  // * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS     *
+  // * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                              *
+  // *                                                                                           *
+  // *********************************************************************************************
+
 int i, j, k, l, m, n, count, memsize;
 int *p_ind_i, *p_ind_j, *p_num, *p_ost;
 double u, v, w;
 double R[2 * job->l_max + 1][2 * job->l_max + 1], Z[5][5];
 double *p_irr, *p_rot;
 
-//printf("lmax %3d\n", job->l_max);
-
   memsize = 9;
   for (i = 2; i <= job->l_max; i++) {
   memsize += (2 * i + 1) * (2 * i + 1);
-//printf("memsize %3d %3d\n",i,memsize);
  }
   double S[memsize];
 
@@ -79,7 +99,7 @@ double *p_irr, *p_rot;
     for (i = 1; i < 4; i++) { // p part of sp shell
       for (j = 1; j < 4; j++) {
         //fprintf(file.out,"sp p_irr %3d %3d %lf %3d\n",i,j,*p_irr,*p_num) ;
-        if (fabs(*(p_irr)) > 0.00001) {
+        if (fabs(*(p_irr)) > 0.00000001) {
           *p_ind_i = i;
           *p_ind_j = j;
           *p_rot = *p_irr;
@@ -103,7 +123,7 @@ double *p_irr, *p_rot;
     for (i = 0; i < 3; i++) { // p shell
       for (j = 0; j < 3; j++) {
         //fprintf(file.out,"p p_irr %3d %3d %lf %3d\n",i,j,*p_irr,*p_num) ;
-        if (fabs(*(p_irr)) > 0.00001) {
+        if (fabs(*(p_irr)) > 0.00000001) {
           *p_ind_i = i;
           *p_ind_j = j;
           *p_rot = *p_irr;
@@ -483,7 +503,6 @@ void test_rotation_operators(ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB
 }
 */
 
-//CHANGES2015 l = 5;
   l = 2 * job->l_max + 1;
 
   F_rotate = (double *) malloc(l * l * sizeof(double));
@@ -497,26 +516,16 @@ void test_rotation_operators(ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB
  
     for (j = 0; j < l; j++) 
     F_unit_matrix[j * l + j] = k_one;
-    //F_unit_matrix[0] = k_one;
       
     for (op = 0; op < symmetry->number_of_operators; op++) {
 
     for (j = 0; j < l * l; j++) 
     F_rotate[j] = k_zero;
  
-        //oppshift1 = *(symmetry->op_shift + op * 5 + shells->ord[index_i]);
-        //oppshift2 = *(symmetry->op_shift + op * 5 + shells->ord[index_j]);
-        //sheli1 = *(symmetry->num_ij + op * 5 + shells->ord[index_i]);
-        //shelj1 = *(symmetry->num_ij + op * 5 + shells->ord[index_j]);
-        //CHANGES2015oppshift1 = *(symmetry->op_shift + op * 5 + 3);
-        //oppshift2 = *(symmetry->op_shift + op * 5 + 3);
-        //sheli1 = *(symmetry->num_ij + op * 5 + 3);
-        //CHANGES2015shelj1 = *(symmetry->num_ij + op * 5 + 3);
         oppshift1 = *(symmetry->op_shift + op * (job->l_max + 2) + job->l_max + 1);
         oppshift2 = *(symmetry->op_shift + op * (job->l_max + 2) + job->l_max + 1);
         sheli1 = *(symmetry->num_ij + op * (job->l_max + 2) + job->l_max + 1);
         shelj1 = *(symmetry->num_ij + op * (job->l_max + 2) + job->l_max + 1);
-        //fprintf(file.out,"oppshift %3d %3d %3d %3d %3d %3d\n",l,op,oppshift1,oppshift2,sheli1,shelj1) ;
 
         p_i1 = symmetry->ind_i + oppshift1;
         p_i = symmetry->ind_j + oppshift1;
@@ -526,11 +535,8 @@ void test_rotation_operators(ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB
           p_j = symmetry->ind_j + oppshift2;
           p_rot2 = symmetry->rot + oppshift2;
           for (j = 0; j < shelj1; j++) {
-            //p_F_unit_matrix = F_unit_matrix + *p_i1 * l + *p_j1;
-            //p_F_rotate      = F_rotate      + *p_i  * l + *p_j;
             p_F_unit_matrix = F_unit_matrix + *p_i * l + *p_j;
             p_F_rotate      = F_rotate      + *p_i1  * l + *p_j1;
-            //fprintf(file.out,"*p_i,j  %d %d %d %d\n",*p_i1, *p_j1, *p_i, *p_j);
            *p_F_rotate += *p_rot1 * *p_rot2 * *p_F_unit_matrix;
             p_j++;
             p_j1++;
@@ -566,4 +572,3 @@ void test_rotation_operators(ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB
   free(F_unit_matrix);
 
 }
-

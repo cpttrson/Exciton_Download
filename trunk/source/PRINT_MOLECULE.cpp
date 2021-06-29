@@ -159,8 +159,8 @@ void print_real_matrix2(DoubleMatrix *a, int transpose, int cols, double scale_f
     }
 
 }
-
-void print_complex_eigenvector_matrix(ComplexMatrix *a, double *e, FILES file){
+*/
+void print_complex_eigenvector_matrix3(ComplexMatrix *a, double *e, FILES file){
   int i, j, k, blocks, remndr;
   blocks = a->iCols / 6;
   remndr = a->iCols - blocks * 6;
@@ -200,7 +200,7 @@ void print_complex_eigenvector_matrix(ComplexMatrix *a, double *e, FILES file){
     }
 
 }
-
+/*
 void print_complex_eigenvector_matrix1(ComplexMatrix *a, double *e, int cols, double scale_factor, FILES file)
 
 {
@@ -321,7 +321,7 @@ void print_complex_eigenvector_matrix2(ComplexMatrix *a, double *e, int cols, in
     }
 
 }
-
+*/
 void print_real_eigenvector_matrix(DoubleMatrix *a, double *e, FILES file){
 
   int i, j, k, blocks, remndr;
@@ -362,6 +362,7 @@ void print_real_eigenvector_matrix(DoubleMatrix *a, double *e, FILES file){
      fprintf(file.out,"\n\n");
 
 }
+/*
 
 void print_real_eigenvector_matrix2(DoubleMatrix *a, double *e, int cols, int last_vector, double scale_factor, FILES file)
 
@@ -455,7 +456,8 @@ void print_complex_matrix(ComplexMatrix *a, FILES file)
      for (i=0;i<a->iRows;i++){
        for(j = 0; j < remndr; j++) {
          //fprintf(file.out,"%15.10lf  ",a->a[i][k * 6 + j].real());
-         fprintf(file.out,"%9.5lf%9.5lf  ",a->a[i][k * 6 + j].real(),a->a[i][k * 6 + j].imag());
+         fprintf(file.out,"%11.7lf%9.5lf  ",a->a[i][k * 6 + j].real(),a->a[i][k * 6 + j].imag());
+         //fprintf(file.out,"%9.5lf%9.5lf  ",a->a[i][k * 6 + j].real(),a->a[i][k * 6 + j].imag());
         }
        fprintf(file.out,"\n");
       }

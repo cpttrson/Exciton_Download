@@ -638,6 +638,42 @@ void DiagonaliseRealGeneral(DoubleMatrix **a, double **w, double **u, DoubleMatr
 
 }
 
+void DiagonaliseComplexGeneral(ComplexMatrix **a, Complex **w, ComplexMatrix **eig, int *info)
+
+{
+
+#ifndef ISOF2003
+
+ Complex tmp[1], *work;
+ int lwork, *iwork;
+ double *rwork;
+ char jobvl='N', jobvr='V'; // Only right eigenvectors are calculated
+
+#endif
+
+   lwork=-1;
+
+   rwork = (double *) malloc(2 * (**a).iCols * sizeof(double));
+
+   zgeev_(&jobvl, &jobvr, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig).a), &(**eig).iCols, *((**eig).a),&(**eig).iCols,\
+   tmp, &lwork, rwork, info);
+
+   lwork=(int)tmp[0].real();
+   work = (Complex *) malloc(lwork * sizeof(Complex));
+
+  if (work == NULL) {
+    *info = -400;
+    return;
+  }
+
+   zgeev_(&jobvl, &jobvr, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig).a),&(**eig).iCols, *((**eig).a),&(**eig).iCols,\
+   work, &lwork, rwork, info);
+
+  free(work);
+  free(rwork);
+
+}
+
 void CholeskySymmetric(DoubleMatrix **S, int *pivot, int *dimension, double *threshold)
 
 {

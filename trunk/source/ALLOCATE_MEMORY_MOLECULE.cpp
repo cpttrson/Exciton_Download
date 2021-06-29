@@ -633,11 +633,14 @@ void allocate_SALC(SALC *salc, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   exit(1);
   }
 
-  int dim = 5 * salc->num_atom * salc->num_salc;
-  AllocateDoubleMatrix(&salc->coeff,&dim,&salc->total_coef,job);
-  salc->memory +=  dim * salc->total_coef * sizeof(double);
-  AllocateIntMatrix(&salc->bfn_posn,&dim,&salc->total_coef,job);
-  salc->memory +=  dim * salc->total_coef * sizeof(int);
+  //int dim = 5 * salc->num_atom * salc->num_salc;
+  //AllocateDoubleMatrix(&salc->coeff,&dim,&salc->total_coef,job);
+  AllocateDoubleMatrix(&salc->coeff,&salc->num_atom,&salc->total_coef,job);
+  AllocateIntMatrix(&salc->bfn_posn,&salc->num_atom,&salc->total_coef,job);
+  salc->memory +=  salc->num_atom * salc->total_coef * sizeof(double);
+  salc->memory +=  salc->num_atom * salc->total_coef * sizeof(int);
+  //AllocateIntMatrix(&salc->bfn_posn,&dim,&salc->total_coef,job);
+  //salc->memory +=  dim * salc->total_coef * sizeof(int);
 
 }
 

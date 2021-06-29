@@ -36,6 +36,7 @@ void initial_density_matrix(double *P0, double *F0, PAIR_TRAN *pair_p, FERMI *fe
   dimk = job->spin_dim * nkunique * atoms->number_of_sh_bfns_in_unit_cell;
   vector_size = dimk * dim1;
   time1 = MPI_Wtime();
+
   for (i = 0; i < atoms->number_of_basis_sets; i++) taken[i] = -1;
   total_electron_occupation_up = k_zero;
   total_electron_occupation_down = k_zero;
@@ -64,7 +65,14 @@ void initial_density_matrix(double *P0, double *F0, PAIR_TRAN *pair_p, FERMI *fe
           ResetDoubleMatrix(eigenvectors);
           ResetDoubleArray(eigenvalues,&dims);
           ResetDoubleArray(occupation,&dims);
-          atom_scf(atoms,j,eigenvectors,eigenvalues,occupation,occupied,shells,gaussians,job,file);
+
+  // ******************************************************************************************
+  // * Choice of initial density - comment initial_density_matrix and uncomment atom_scf and  *
+  // * section just below for atomic self-consistent initial guess                            *
+  // ******************************************************************************************
+
+          initial_density_matrix_atom(P, atoms, &j, occupation, occupied, shells, job, file);
+          //atom_scf(atoms,j,eigenvectors,eigenvalues,occupation,occupied,shells,gaussians,job,file);
           if (atoms->magnetic[j] == 1)
             for (m = 0; m < atoms->bfnnumb_sh[j]; m++) {
               electron_occupation_up   += occupation[m];
@@ -88,29 +96,53 @@ void initial_density_matrix(double *P0, double *F0, PAIR_TRAN *pair_p, FERMI *fe
              }
             }
           //for (m = 0; m < dims; m++) fprintf(file.out,"%3d %10.4f\n",m,occupation[m]);
-        fprintf(file.out,"%d %d Occup/dn %3d %3d occup/dn %10.4f %10.4f totup/dn  ctup/dn %10.4f %10.4f job->spin_dim %3d\n",\
-        atoms->magnetic[j],atoms->spin[j],occupied[0],occupied[1],electron_occupation_up,electron_occupation_down,electron_count_up,\
-        electron_count_down,job->spin_dim);
+          //fprintf(file.out,"%d %d Occup/dn %3d %3d occup/dn %10.4f %10.4f totup/dn  ctup/dn %10.4f %10.4f job->spin_dim %3d\n",\
+          atoms->magnetic[j],atoms->spin[j],occupied[0],occupied[1],electron_occupation_up,electron_occupation_down,electron_count_up,\
+          electron_count_down,job->spin_dim);
 
   // ******************************************************************************************
   // * Calculate density matrix for unique atom j                                             *
   // ******************************************************************************************
 
-          for (s = 0; s < atoms->magnetic[j]; s++) {
-            offset = s * atoms->bfnnumb_sh[j];
-            fac = k_one;
-            if (job->spin_dim == 1) fac = electron_occupation_up / electron_count_up;
-            //if (s == 0 && occupied[s] > 0) fac = electron_occupation_up   / electron_count_up;
-            //if (s == 1 && occupied[s] > 0) fac = electron_occupation_down / electron_count_down;
-            //fprintf(file.out,"fac %f %f %f %f\n",electron_occupation_up,electron_count_up,electron_occupation_down,electron_count_down);
-            for (k = 0; k < dim; k++) {
-              for (l = 0; l < dim; l++) {
-                for (m = 0; m < occupied[s]; m++) {
-                  P->a[offset + k][l] += fac * eigenvectors->a[m][k] * eigenvectors->a[m][l];
-                 }
-                }
-               }
-              }
+  // ******************************************************************************************
+  // * Choice of initial density - uncomment this section and atom_scf above for atomic       *
+  // * atomic self-consistent initial guess                                                   *
+  // ******************************************************************************************
+
+   for (s = 0; s < atoms->magnetic[j]; s++) {
+     offset = s * atoms->bfnnumb_sh[j];
+     fac = k_one;
+     if (job->spin_dim == 1) fac = electron_occupation_up / electron_count_up;
+     //if (s == 0 && occupied[s] > 0) fac = electron_occupation_up   / electron_count_up;
+     //if (s == 1 && occupied[s] > 0) fac = electron_occupation_down / electron_count_down;
+     //fprintf(file.out,"fac %f %f %f %f\n",electron_occupation_up,electron_count_up,electron_occupation_down,electron_count_down);
+     for (k = 0; k < dim; k++) {
+       for (l = 0; l < dim; l++) {
+         for (m = 0; m < occupied[s]; m++) {
+            //P->a[offset + k][l] += fac * eigenvectors->a[m][k] * eigenvectors->a[m][l];
+            if (k == l) P->a[offset + k][l] += fac * eigenvectors->a[m][k] * eigenvectors->a[m][l];
+          }
+         }
+        }
+       }
+	  
+  // for (s = 0; s < atoms->magnetic[j]; s++) {
+  //   offset = s * atoms->bfnnumb_sh[j];
+  //   fac = k_one;
+  //   if (job->spin_dim == 1) fac = electron_occupation_up / electron_count_up;
+  //   //if (s == 0 && occupied[s] > 0) fac = electron_occupation_up   / electron_count_up;
+  //   //if (s == 1 && occupied[s] > 0) fac = electron_occupation_down / electron_count_down;
+  //   //fprintf(file.out,"fac %f %f %f %f\n",electron_occupation_up,electron_count_up,electron_occupation_down,electron_count_down);
+  //   for (k = 0; k < dim; k++) {
+  //     for (l = 0; l < dim; l++) {
+  //       for (m = 0; m < occupied[s]; m++) {
+  //          P->a[offset + k][l] += fac * eigenvectors->a[m][k] * eigenvectors->a[m][l];
+  //          //if (k == l) P->a[offset + k][l] += fac * eigenvectors->a[m][k] * eigenvectors->a[m][l];
+  //        }
+  //       }
+  //      }
+  //     }
+	  
           if (job->taskid == 0 && job->verbosity > 1) {
             fprintf(file.out,"eigvec2 %3d %3d\n",dims,dim);
             ////if (job->spin_polarisation == 0)
@@ -667,7 +699,8 @@ ComplexMatrix *eigenvectors;
     scf_evectors = fopen(zz, "rb");
     result = fread(&eigenvectors->a[0][0], sizeof(double), 2 * vector_size, scf_evectors);
     fclose(scf_evectors);
-    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
+
+    //print_complex_eigenvector_matrix3(eigenvectors, eigenvalues, file);
 
     //printf("fermi->occupied density matrix2 %3d %3d\n",fermi->occupied[0],fermi->occupied[1]);
 
@@ -712,6 +745,160 @@ ComplexMatrix *eigenvectors;
 
    if (job->taskid == 0 && job->verbosity > 1) {
      fprintf(file.out,"reduced density matrix\n");
+     count = 0;
+     for (s = 0; s < job->spin_dim; s++) {
+       for (p = 0; p < pair_p->nump; p++) {
+          q = pair_p->posn[p];
+            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p->cell1[q],pair_p->cell2[q],s);
+         //fprintf(file.out,"pair %d spin %d \n",p,s);
+         for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+           for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+             //fprintf(file.out,"%16.12lf ",P[count]);
+             fprintf(file.out,"%6.2f ",P[count]);
+             //fprintf(file.out,"%9.2e ",P[count]);
+             //fprintf(file.out,"%10.3e ",P[count]);
+             count++;
+            }
+           fprintf(file.out,"\n");
+          }
+         fprintf(file.out,"\n");
+        }
+       fprintf(file.out,"\n");
+      }
+     }
+
+}
+
+void reduced_density_matrix_molecule3(int *p_irrep, double *p_eigval, FERMI *fermi, double *P, KPOINT_TRAN *knet, int *nkunique, REAL_LATTICE *R, PAIR_TRAN *pair_p, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shell, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
+
+int i, j, l, n, p, q, s;
+int dim, dim1, dimk;
+int dimp_spin = job->dimp * job->spin_dim;
+int bfposi, bfposj;
+int vector_size;
+int count;
+size_t result;
+double *P_buffer, *eigenvalues;
+char zz[24] = "scf_evectors";
+FILE *scf_evectors; 
+ComplexMatrix *eigenvectors;
+//char buf2[110];
+//char yy[10] = "/scf_evec";;
+//MPI_File fh;
+
+    dim1 = atoms->number_of_sh_bfns_in_unit_cell;
+    dimk = job->spin_dim * atoms->number_of_sh_bfns_in_unit_cell;
+    //printf("dimp %3d %3d %3d\n",dimk,dim1,dimp_spin);
+    vector_size = dimk * dim1;
+    AllocateComplexMatrix(&eigenvectors,&dimk,&dim1,job);
+    AllocateDoubleArray(&eigenvalues,&dimk,job);
+    AllocateDoubleArray(&P_buffer,&dimp_spin,job); // check between these last two alternatives : second, seems correct but dumps
+    ResetDoubleArray(P_buffer,&dimp_spin);
+
+    //strcpy(buf2,file.scf_eigvec);
+    //strcat(buf2,yy);
+    //MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDONLY,MPI_INFO_NULL,&fh) ;
+    //MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+    //MPI_File_read(fh, &eigenvectors->a[0][0], 2 * vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE) ;
+    //MPI_File_close(&fh);
+    //fprintf(file.out,"eigenvectors from disk\n");
+    //PrintComplexMatrix(eigenvectors, file);
+    //print_complex_eigenvector_matrix(eigenvectors, eigenvalues, file);
+
+    if (job->taskid == 0) {
+
+    scf_evectors = fopen(zz, "rb");
+    result = fread(&eigenvectors->a[0][0], sizeof(double), 2 * vector_size, scf_evectors);
+    fclose(scf_evectors);
+
+    for (i = 0; i < atoms->number_of_sh_bfns_in_unit_cell; i++) fprintf(file.out,"mol3 %3d %3d %10.4f\n",i,p_irrep[i],p_eigval[i]);
+
+    //print_complex_eigenvector_matrix3(eigenvectors, eigenvalues, file);
+
+    //printf("fermi->occupied density matrix2 %3d %3d\n",fermi->occupied[0],fermi->occupied[1]);
+
+    dim = 0;
+    for (s = 0; s < job->spin_dim; s++) {
+      for (p = 0; p < pair_p->nump; p++) {
+        q = pair_p->posn[p];
+        bfposi = 0;
+        bfposj = 0;
+        for (l = 0; l < pair_p->cell1[q]; l++)
+          bfposi += atoms->bfnnumb_sh[l];
+          for (l = 0; l < pair_p->cell2[q]; l++)
+            bfposj += atoms->bfnnumb_sh[l];
+              for (n = 0; n < fermi->occupied[s]; n++) {
+                count = 0;
+                for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+                  for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+                    //fprintf(file.out,"s %3d p %3d %3d oc %3d i %3d j %3d dim %3d c %3d i %3d j %3d %16.11lf %16.11lf %16.11lf\n", \
+                    s,p,l,n,i,j,dim,count,bfposi+i,bfposj+j,eigenvectors->a[s * dim1 + n][bfposi + i].real(),\
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real(),job->spin_fac*eigenvectors->a[s * dim1 + n][bfposi + i].real()*\
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real());
+                    P_buffer[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
+                    //P[dim + count] += job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
+                    count++;
+                   }
+                  }
+                 }
+               dim += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
+              }
+             //printf("%3d %3d\n",dim,count);
+             }
+
+    double fac;
+    if (job->sym_adapt == 1 && (fabs(p_eigval[fermi->occupied[0] - 1] - p_eigval[fermi->occupied[0]]) < 0.00001)) {
+
+	    fprintf(file.out,"sym_adapt flag set\n");
+
+    dim = 0;
+    for (s = 0; s < job->spin_dim; s++) {
+      for (p = 0; p < pair_p->nump; p++) {
+        q = pair_p->posn[p];
+        bfposi = 0;
+        bfposj = 0;
+        for (l = 0; l < pair_p->cell1[q]; l++)
+          bfposi += atoms->bfnnumb_sh[l];
+          for (l = 0; l < pair_p->cell2[q]; l++)
+            bfposj += atoms->bfnnumb_sh[l];
+              for (n = fermi->occupied[s] - 1; n <= fermi->occupied[s]; n++) {
+                count = 0;
+		if (n == fermi->occupied[0] - 1) fac = -half;
+		if (n == fermi->occupied[0])     fac =  half;
+                for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+                  for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+                    P_buffer[dim + count] += fac * job->spin_fac * eigenvectors->a[s * dim1 + n][bfposi + i].real() * \
+                    eigenvectors->a[s * dim1 + n][bfposj + j].real();
+                    count++;
+                   }
+                  }
+                 }
+               dim += atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]];
+              }
+             //printf("%3d %3d\n",dim,count);
+             }
+
+            } // close if(fabs(p_eigval
+
+
+            } // close if (job->taskid
+
+            //MPI_Allreduce(P_buffer,P,vector_size,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+            MPI_Allreduce(P_buffer,P,dimp_spin,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+            DestroyComplexMatrix(&eigenvectors,job);
+            DestroyDoubleArray(&eigenvalues,&dimk,job);
+            DestroyDoubleArray(&P_buffer,&dimp_spin,job);
+            //free(eigenvalues);
+
+
+    //expand_density_matrix(P0,F0,pair_p,atoms,shells,symmetry,job,file);
+
+   if (job->taskid == 0 && job->verbosity > 1) {
+     fprintf(file.out,"reduced density matrix3\n");
      count = 0;
      for (s = 0; s < job->spin_dim; s++) {
        for (p = 0; p < pair_p->nump; p++) {

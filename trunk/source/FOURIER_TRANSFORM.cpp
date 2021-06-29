@@ -331,6 +331,8 @@ IntMatrix *num_irrep_in_atom, *salc_count1;
   for(i = 0; i < symmetry->number_of_classes; i++) {
   if (num_irrep_in_basis[i] == 0) continue;
   ResetComplexMatrix(S_k[i]);
+  //fprintf(file.out,"zeroing overlap %3d\n",i);
+  //print_complex_matrix2(S_k[i],0,6,1.0,file);
  }
 
   dim2 = 0;
@@ -390,7 +392,9 @@ IntMatrix *num_irrep_in_atom, *salc_count1;
     allocate_SALC(&salc1,symmetry,job,file);
     allocate_SALC(&salc2,symmetry,job,file);
     time_salc1 = MPI_Wtime();
+    //fprintf(file.out,"\nsalc1\n");
     generate_atom_salc(s,atm1,&salc1,atoms,atom_p,pair_p,shells,symmetry,job,file);
+    //fprintf(file.out,"\nsalc2\n");
     generate_atom_salc(s,atm2,&salc2,atoms,atom_p,pair_p,shells,symmetry,job,file);
     time_salc += MPI_Wtime() - time_salc1;
     AllocateDoubleMatrix(&salc_rows,&salc1.num_salc,&nd1,job);
@@ -476,6 +480,8 @@ IntMatrix *num_irrep_in_atom, *salc_count1;
    DestroyDoubleMatrix(&salc_cols,job);
    free_SALC(&salc2,job);
    free_SALC(&salc1,job);
+   //fprintf(file.out,"s %3d p %3d S_k\n",s,p);
+   //print_complex_matrix2(S_k[s],0,6,1.0,file);
 
   } // close loop on s
 

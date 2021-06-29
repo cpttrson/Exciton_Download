@@ -55,7 +55,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   double *P0, *P1, *F0, *F1;
   double *P2;
   double *delta_P0, *delta_F0, *lse_F0;
-  double threshold = 1e-03;
+  double threshold = 1e-04;
   char NoTrans = 'N', ConjTrans = 'C';
   char uplo = 'U';
   char jobz = 'V';
@@ -179,6 +179,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     knet.nktot = 1;
     knet.unique = 1;
     fermi->knet = &knet;
+fermi->nkunique = knet.nktot;
     fermi->nktot = knet.nktot;
     //if (job->kss == 0)      fermi->nkunique = knet.nktot;
     //else if (job->kss == 1) fermi->nkunique = knet.unique;
@@ -315,7 +316,8 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
   //if (job->taskid == 0 && job->verbosity > 1) {
   dim11 = dim1;
-  if (job->diis == 1 && job->sym_adapt == 0) {
+  if (job->sym_adapt == 0) {
+  //if (job->diis == 1 && job->sym_adapt == 0) {
     n = 0;
     ComplexMatrix *S_k1;
     AllocateComplexMatrix(&S_k1,&dim1,&dim1,job);
@@ -335,7 +337,8 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     ResetDoubleArray(eigenvalues,&dim1);
    }
 
-  if (job->diis == 1 && job->sym_adapt == 1) {
+  else if (job->sym_adapt == 1) {
+  //if (job->diis == 1 && job->sym_adapt == 1) {
     int dim_salc, num_irrep_in_basis[symmetry->number_of_classes];
     int count1;
     double *eigenvalues_S_k[symmetry->number_of_classes];
@@ -344,7 +347,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     count_basis_irrep(num_irrep_in_basis,atoms,atom_p,shells,symmetry,job,file);
     for (iii = 0; iii < symmetry->number_of_classes; iii++) {
       dim_salc = symmetry->irp_dim_k[iii] * num_irrep_in_basis[iii];
-      if (dim_salc == 0) dim_salc = 1;
+      if (dim_salc == 0) dim_salc = 1; 
       if (num_irrep_in_basis[iii] == 0) continue;
       nk[0] = 0;
       nk[1] = 0;
@@ -352,8 +355,12 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
       AllocateComplexMatrix(&eigenvectors_S_k[iii],&dim_salc,&dim_salc,job);
       AllocateDoubleArray(&eigenvalues_S_k[iii],&dim_salc,job);
      }
+//fprintf(file.out,"Overlap diis\n");
+
       fourier_transform_salc1(&one_ints.Overlap[0], S_salc1, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job,file);
+
     for (iii = 0; iii < symmetry->number_of_classes; iii++) {
+      if (num_irrep_in_basis[iii] == 0) continue;
       DiagonaliseHermitian(&S_salc1[iii], &eigenvalues_S_k[iii], &eigenvectors_S_k[iii], &jobz, &uplo, &info);
       dim_salc = symmetry->irp_dim_k[iii] * num_irrep_in_basis[iii];
       if (dim_salc == 0) dim_salc = 1;
@@ -402,14 +409,14 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   num_irrep_in_basis[0] = 1;
   count1 = 0;
   for (jjj = 0; jjj < job->mixing_order; jjj++) {
-      AllocateComplexMatrix(&Residual[count1],&dim11,&dim11,job);
-      AllocateComplexMatrix(&FockHist[count1],&dim1,&dim1,job);
-      //AllocateComplexMatrix(&FockHist[count1],&dim11,&dim11,job);
-      ResetComplexMatrix(Residual[count1]);
-      ResetComplexMatrix(FockHist[count1]);
-      count1++;
-     }
-    }
+    AllocateComplexMatrix(&Residual[count1],&dim11,&dim11,job);
+    AllocateComplexMatrix(&FockHist[count1],&dim1,&dim1,job);
+    //AllocateComplexMatrix(&FockHist[count1],&dim11,&dim11,job);
+    ResetComplexMatrix(Residual[count1]);
+    ResetComplexMatrix(FockHist[count1]);
+    count1++;
+   }
+  }
 
  else if (job->sym_adapt == 1) {
   count_basis_irrep(num_irrep_in_basis,atoms,atom_p,shells,symmetry,job,file);
@@ -431,9 +438,13 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   ResetDoubleMatrix(C_o);
   ResetDoubleMatrix(D);
 
+//for (i = 0; i < dimp_spin; i++)
+//P0[i] = k_zero;
   for (i = 0; i < dimp_spin; i++)
   delta_P0[i] = P0[i];
-  for (i = 0; i < dimf_spin; i++)
+//for (i = 0; i < dimf_spin; i++)
+//F0[i] = k_zero;
+  for (i = 0; i < dimp_spin; i++)
   delta_F0[i] = F0[i];
 
 /*
@@ -789,6 +800,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     ComplexMatrix *F_k0_salc[symmetry->number_of_classes];
     ComplexMatrix *F_k1_salc[symmetry->number_of_classes];
     ComplexMatrix *S_salc1[symmetry->number_of_classes];
+ComplexMatrix *S_salc2[symmetry->number_of_classes];
     ComplexMatrix *xtmp1_salc[symmetry->number_of_classes];
     ComplexMatrix *eigenvectors_salc[symmetry->number_of_classes];
     ComplexMatrix *eigvec_salc[symmetry->number_of_classes];
@@ -805,6 +817,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     dim_salc = symmetry->irp_dim_k[iii] * num_irrep_in_basis[iii];
     if (dim_salc == 0) dim_salc = 1;
     AllocateComplexMatrix(&S_salc1[iii],&dim_salc,&dim_salc,job);
+AllocateComplexMatrix(&S_salc2[iii],&dim_salc,&dim_salc,job);
     AllocateComplexMatrix(&Cholesky_S_k[iii],&dim_salc,&dim_salc,job);
     AllocateComplexMatrix(&eigenvectors_S_k[iii],&dim_salc,&dim_salc,job);
     AllocateComplexMatrix(&eigvec_salc[iii],&dim_salc,&dim_salc,job);
@@ -817,10 +830,13 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   // * scf_trans == 0/1 Canonical/Cholesky transformation of AO basis                         *
   // ******************************************************************************************
 
+//fprintf(file.out,"Overlap\n");
     if (job->scf_trans == 0) 
     fourier_transform_salc1(&one_ints.Overlap[0], S_salc1, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job,file);
     if (job->scf_trans == 1) 
     fourier_transform_salc1(&one_ints.Overlap[0], Cholesky_S_k, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job,file);
+
+fourier_transform_salc1(&one_ints.Overlap[0], S_salc2, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job,file);
 
   // ******************************************************************************************
   // * Loop over symmetry classes                                                             *
@@ -837,12 +853,18 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
       if (job->scf_trans == 0) { 
 
-        //fprintf(file.out,"S_salc\n");
-        //print_complex_matrix(S_salc1[iii], file);
+//fprintf(file.out,"S_salc\n");
+//for (i = 0; i < S_salc1[iii]->iRows; i++) {
+//fprintf(file.out,"%11.7f %11.7f\n",(S_salc1[iii]->a[i][i]).real(),(S_salc1[iii]->a[i][i]).imag()); }
+//for (j = 0; j < S_salc1[iii]->iCols; j++) {
+//S_salc1[iii]->a[i][j] /= S_salc1[iii]->a[i][i]; }}
+//fflush(file.out);
+//S_salc1[iii]->a[i][j] /= Complex(k_one,k_zero); }}
+//print_complex_matrix(S_salc1[iii], file);
 	DiagonaliseHermitian(&S_salc1[iii], &eigenvalues_S_k[iii], &eigenvectors_S_k[iii], &jobz, &uplo, &info);
         //fprintf(file.out,"Eigvec S_salc\n");
         //print_complex_eigenvector_matrix2(eigenvectors_S_k[iii], eigenvalues_S_k[iii], 6, 12, 1.0, file);
-        //for (i = 0; i < dim_salc; i++) fprintf(file.out,"%3d %12.4e\n", i,eigenvalues_S_k[iii][i]);
+        for (i = 0; i < dim_salc; i++) fprintf(file.out,"%3d %12.4e\n", i,eigenvalues_S_k[iii][i]);
 	n1 = 0;
 	for (jjj = 0; jjj < dim_salc; jjj++) {
 	  //if (eigenvalues_S_k[iii][jjj] < threshold && job->taskid == 0)  \
@@ -886,6 +908,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
   for (s = 0; s < job->spin_dim; s++) {
 
+//fprintf(file.out,"Fock\n");
     fourier_transform_salc1(&Fock[s * dimp], F_k0_salc, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job, file);
 
   // ******************************************************************************************
@@ -899,7 +922,9 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
         AllocateComplexMatrix(&P0_salc[iii],&dim_salc,&dim_salc,job);
         AllocateComplexMatrix(&S0_salc[iii],&dim_salc,&dim_salc,job);
        }
+//fprintf(file.out,"P0\n");
         fourier_transform_salc1(&P0[s * dimp], P0_salc, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job, file);
+//fprintf(file.out,"Over\n");
         fourier_transform_salc1(&one_ints.Overlap[0], S0_salc, &knet, nk, atom_p, &pair_p, R, atoms, shells, symmetry, job,file);
         C_DIIS_extrapolation_salc(F_k0_salc, P0_salc, S0_salc, xtrn1_salc, FockHist, Residual, num_irrep_in_basis, &dim1, dim_salc2,\
         symmetry, job,file);
@@ -961,6 +986,14 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 	  ResetComplexMatrix(eigvec_salc[iii]);
 	  ComplexGEMM1(&NoTrans, &NoTrans, &alpha, &eigenvectors_salc[iii], &xtrn1_salc[iii], &beta, &eigvec_salc[iii]);
 
+          //fprintf(file.out,"S_salc2 %3d\n",iii);
+          //print_complex_matrix(S_salc2[iii], file);
+          //ResetComplexMatrix(xtmp1_salc[iii]);
+          //ComplexGEMM1(&NoTrans, &NoTrans, &alpha, &eigvec_salc[iii], &S_salc2[iii], &beta, &xtmp1_salc[iii]);
+          //ResetComplexMatrix(F_k1_salc[iii]);
+          //ComplexGEMM1(&NoTrans, &ConjTrans, &alpha, &xtmp1_salc[iii], &eigvec_salc[iii], &beta, &F_k1_salc[iii]);
+          //print_complex_matrix(F_k1_salc[iii], file);
+
 	 }
 
   // ******************************************************************************************
@@ -989,7 +1022,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
         //for (jjj = 0; jjj < dim_salc; jjj++) irrep[num_eigval + jjj] = iii;
         //for (jjj = 0; jjj < dim_salc1; jjj++) eigval[num_eigval + jjj] = eigenvalues_salc[iii][jjj];
-        //for (jjj = 0; jjj < dim_salc; jjj++)  fprintf(file.out,"eigenval salc %3d %10.4f \n",jjj,eigenvalues_salc[iii][jjj]);
+
         p_irrep  =  &irrep[(s * fermi->nkunique + k) * dim1];
         p_eigval = &eigval[(s * fermi->nkunique + k) * dim1];
         for (jjj = 0; jjj < dim_salc1; jjj++) p_eigval[num_eigval + jjj] = eigenvalues_salc[iii][jjj];
@@ -1001,6 +1034,7 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 	     }
 	    }
          for (jjj = dim_salc1; jjj < dim_salc; jjj++) p_eigval[num_eigval + jjj] = 9999.9; // set zero eigenvalues to large number
+         //for (jjj = 0; jjj < dim_salc; jjj++) fprintf(file.out,"eigenval salc %3d irrep %3d %10.4f\n",jjj,p_irrep[num_eigval+jjj],eigenvalues_salc[iii][jjj]);
 	 num_eigval  += dim_salc;
 	 num_eigval1 += dim_salc1;
 
@@ -1014,13 +1048,28 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
    }
 
   // ******************************************************************************************
-  // * Transform eigenvectors is salc basis to AO basis                                       *
+  // * Transform eigenvectors from salc basis to AO basis                                     *
   // ******************************************************************************************
 
     ResetComplexMatrix(eigvec);
     transform_salc_to_atomic_basis(eigvec,p_eigval,p_irrep,eigvec_salc,&knet,nk,atom_p,&pair_p,R,atoms,shells,symmetry,job,file);
     //print_complex_eigenvector_matrix2(eigvec, p_eigval, 6, num_eigval, 1.0, file);
     //for (iii = 0; iii < dim_salc; iii++) fprintf(file.out,"%3d %3d %10.4f\n",iii + 1,p_irrep[iii], au_to_eV * p_eigval[iii]);
+
+    /*
+ComplexMatrix *xtmp1, *S_k, *xtmp2;
+AllocateComplexMatrix(&S_k,&dim1,&dim1,job);
+AllocateComplexMatrix(&xtmp1,&dim1,&dim1,job);
+AllocateComplexMatrix(&xtmp2,&dim1,&dim1,job);
+fourier_transform(&one_ints.Overlap[0], &S_k->a[0][0], &knet, nk, &pair_p, R, atoms, shells, symmetry, job, file);
+
+ResetComplexMatrix(xtmp1);
+ResetComplexMatrix(xtmp2);
+ComplexGEMM1(&NoTrans, &NoTrans, &alpha, &eigvec, &S_k, &beta, &xtmp1);
+ComplexGEMM1(&NoTrans, &ConjTrans, &alpha, &xtmp1, &eigvec, &beta, &xtmp2);
+fprintf(file.out,"xtmp2\n");
+print_complex_matrix(xtmp2, file);
+*/
 
   // ******************************************************************************************
   // * Write eigenvectors in AO basis to disk or update density matrix (job->mpp == 0/1)      *
@@ -1034,6 +1083,34 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     fwrite(&eigvec->a[fermi->bands[0] - 1][0], sizeof(double), 2 * vector_size, scf_evectors);
     fflush(scf_evectors);
    }
+
+    //ResetDoubleArray(P2,&dimp_spin);
+    //reduced_density_matrix_molecule3(p_irrep,p_eigval,fermi,P2,&knet,&fermi->nkunique,R,&pair_p,atom_p,atoms,shells,symmetry,job,file);
+    //expand_density_matrix(P2,F1,&pair_p,atoms,shells,symmetry,job,file);
+
+      if (job->taskid == 0 && job->verbosity > 1) {
+      fprintf(file.out,"density matrix %d\n",pair_p.nump);
+      count = 0;
+      for (s = 0; s < job->spin_dim; s++) {
+        for (p = 0; p < pair_p.nump; p++) {
+          q = pair_p.posn[p];
+            fprintf(file.out,"pair %d [%3d %3d] spin %d \n",p,pair_p.cell1[q],pair_p.cell2[q],s);
+              for (k = 0; k < pair_p.numb[p]; k++) {
+          for (i = 0; i < atoms->bfnnumb_sh[pair_p.cell1[q]]; i++) {
+            for (j = 0; j < atoms->bfnnumb_sh[pair_p.cell2[q]]; j++) {
+              //fprintf(file.out,"%16.12f ",F0[count]);
+              fprintf(file.out,"%6.2f ",F1[count]);
+              count++;
+              }
+            fprintf(file.out,"\n");
+           }
+            fprintf(file.out,"\n");
+           }
+          fprintf(file.out,"\n\n");
+         }
+        fprintf(file.out,"\n\n");
+       }
+      }
 
   }
     else if (job->mpp == 1) {
@@ -1175,7 +1252,11 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
      //if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P')
      //density_matrix_crystal2(fermi,P1,F1,&knet,filename,&fermi->nkunique,R,R_tables,&pair_p,atom_p,atoms,shells,symmetry,job,file);
      //if (crystal->type[0] == 'M')
-     density_matrix_molecule2(fermi,P1,F1,&knet,&fermi->nkunique,R,&pair_p,atom_p,atoms,shells,symmetry,job,file);
+     ////density_matrix_molecule2(fermi,P1,F1,&knet,&fermi->nkunique,R,&pair_p,atom_p,atoms,shells,symmetry,job,file);
+    ResetDoubleArray(P1,&dimp_spin);
+    ResetDoubleArray(F1,&dimf_spin);
+    reduced_density_matrix_molecule3(p_irrep,p_eigval,fermi,P1,&knet,&fermi->nkunique,R,&pair_p,atom_p,atoms,shells,symmetry,job,file);
+    expand_density_matrix(P1,F1,&pair_p,atoms,shells,symmetry,job,file);
      time1 = MPI_Wtime() - time2;
      if (job->taskid == 0)
      printf("Time to generate density matrix %10.4e\n",(double)(time1));
@@ -1474,7 +1555,7 @@ ComplexMatrix *Residual_tmp, *xtmp_salc, *xtmp_salc1, *C_element;
     dgesv_(&nmix1,&ione,C->a[0],&nmix1,work,B,&nmix1,&info);
     mix_or_not = 1;
     for (i = 0; i < nmix; i++) { if (fabs(B[i]) > 20.0 || fabs(job->energy_change) > 0.5) mix_or_not = 0; //}
-    fprintf(file.out,"%3d %3d %3d %14.8lf ",mix_or_not,job->iter,job->mixing_order,B[i]); fprintf(file.out," B\n"); }
+    fprintf(file.out,"mix %3d %3d %3d %14.8lf %14.8lf",mix_or_not,job->iter,job->mixing_order,B[i],job->energy_change); fprintf(file.out," B\n"); }
     if (mix_or_not == 1) {
       end = 8 - nmix;
       if (end < 0) end = 0;
