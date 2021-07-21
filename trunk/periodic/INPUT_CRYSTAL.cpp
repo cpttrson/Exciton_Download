@@ -35,6 +35,7 @@
 #include "SCF_MOLECULE.h"
 #include "SCF_CRYSTAL.h"
 #include "OPTICAL_SPECTRUM_MOLECULE.h"
+#include "ANALYSIS.h"
 #include "GW_BSE_MOLECULE.h"
 #include "TDHF_CRYSTAL.h"
 #include "ERRORS.h"
@@ -2886,6 +2887,214 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
     }
 
       */
+
+    /*****JOB: DENSITY OF STATES TETRAHEDRON METHOD ********************************/
+
+    else if (!strcmp(jobname, "STATE_DENSITY")) {
+
+      int is_den[3], bands_den[4];
+      int npoints, nprojections, natoms[5], nat1[20];
+      //CHANGES2014int npoints, nproj, nprojections, natoms, nat[20];
+      double atom_proj[atoms->number_of_sh_bfns_in_unit_cell][5];
+      double energy_range[2];
+      char density_type = 'D';
+      double_value[0] = lower_energy_limit;
+      double_value[1] = upper_energy_limit;
+      //double_range = "ENERGY RANGE";
+      char double_range[13] = "ENERGY RANGE";
+      int_value[0] = 1;
+      int_value[1] = atoms->number_of_sh_bfns_in_unit_cell;
+      //int_range = "ENERGY BAND";
+      char int_range[12] = "ENERGY BAND";
+
+      job->guess_type = 1;
+      job->vectors    = 2;
+      job->values     = 2;
+
+      read_line(file.job, title, 99);
+      sscanf(title, "%d %d %d %d %d", &is_den[0], &is_den[1], &is_den[2], &bands_den[0], &bands_den[1]);
+
+      read_line(file.job, title, 99);
+      //sscanf(title, "%s", file.directory1);
+      sscanf(title, "%s", file.scf_eigvec);
+
+      knet_check(is_den,jobname,crystal,file);
+      int_range_check(bands_den,int_value,int_range,jobname,file);
+
+      read_line(file.job, title, 99);
+      sscanf(title, "%d %d %lf %lf", &npoints, &nprojections, &energy_range[0], &energy_range[1]);
+
+      if (job->taskid == 0 && (npoints < 50 || npoints > 5000)) {
+       fprintf(file.out,"NUMBER OF ENERGY SAMPLING POINTS %d IN %s MUST BE BETWEEN 50 and 5000\n",npoints,jobname);
+        MPI_Finalize();
+        exit(1);
+       }
+
+      if (job->taskid == 0 && (nprojections < 1 || nprojections > 4)) {
+       fprintf(file.out,"NUMBER OF PROJECTIONS %d IN %s MUST BE BETWEEN 1 and 4\n",nprojections,jobname);
+        MPI_Finalize();
+        exit(1);
+       }
+
+      double_range_check(energy_range,double_value,double_range,jobname,file);
+ //     if (job->taskid == 0)
+ //      {
+ //       fprintf(file.out, "DENSITY OF STATES CALCULATION\n");
+ //        fprintf(file.out,"SHRINKING FACTOR %d %d %d\tLOWER BAND LIMIT %d\tUPPER BAND LIMIT %d\n",
+ //         is_den[0],is_den[1],is_den[2], bands_den[0], bands_den[1]);
+ //          fprintf(file.out, "ENERGY RANGE\t %10.4lf\t TO %10.4lf eV\n", energy_range[0], energy_range[1]);
+ //           fprintf(file.out, "NUMBER OF ENERGY SAMPLING POINTS\t %d\t NUMBER OF ATOM PROJECTIONS\t %d\n", npoints, 
+ //           nprojections);
+ //           }
+ //     nprojections++;
+
+
+      //double atom_proj[nprojections * atoms->number_of_sh_bfns_in_unit_cell];
+
+       //read_line(file.job, title, 99); // number of projections
+       //sscanf(title, "%d",&nprojections);
+
+       if (nprojections < 1 || nprojections > 4) {
+       if (job->taskid == 0) {
+       fprintf(file.out,"ERROR: Number of projections in STATE_DENSITY %3d must lie beween 1 and 4\n",nprojections);
+      }
+       MPI_Finalize();
+       exit(1);
+      }
+
+       natoms[0] = 0;
+       natoms[1] = 0;
+       natoms[2] = 0;
+       natoms[3] = 0;
+       read_line(file.job, title, 99); // number of atoms to project onto, first projection is unit operator
+       sscanf(title, "%d %d %d %d", &natoms[0], &natoms[1], &natoms[2], &natoms[3]);
+       //fprintf(file.out,"natoms %d %d %d %d\n",natoms[0], natoms[1], natoms[2], natoms[3]);
+       int nat[nprojections][20];
+       for (i = 0; i < nprojections; i++) {
+       for (j = 0; j < 20; j++) {
+       nat[i][j] = 0;
+      }
+      }
+
+       for (j = 0; j < atoms->number_of_sh_bfns_in_unit_cell; j++) 
+       atom_proj[j][0] = k_one;
+       for (i = 0; i < nprojections; i++) {
+       for (j = 0; j < atoms->number_of_sh_bfns_in_unit_cell; j++) 
+       atom_proj[j][i + 1] = k_zero;
+      }
+
+       //fprintf(file.out,"natoms %d %d %d %d %d\n",nprojections,natoms[0], natoms[1], natoms[2], natoms[3]);
+       for (i = 0; i < nprojections; i++) {
+       for (j = 0; j < 20; j++) nat1[j] = 0;
+       read_line(file.job, title, 99); // list of atoms to project onto
+       sscanf(title, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d", \
+       &nat1[0],&nat1[1], &nat1[2], &nat1[3], &nat1[4], &nat1[5], &nat1[6], &nat1[7], &nat1[8], &nat1[9], \
+       &nat1[10], &nat1[11], &nat1[12], &nat1[13], &nat1[14], &nat1[15], &nat1[16], &nat1[17], &nat1[18], &nat1[19]);
+       for (j = 0; j < 20; j++) {
+       if (nat1[j] < 0 || nat1[j] > atoms->number_of_atoms_in_unit_cell) {
+       if (job->taskid == 0) {
+       fprintf(file.out,"ERROR: Atom [%3d] in projection [%2d] in STATE_DENSITY must lie beween 1 and number of atoms in unit cell\n",nat1[j],i);
+      }
+       MPI_Finalize();
+       exit(0);
+      }
+       nat[i][j] = nat1[j];
+      }
+       for (j = 0; j < natoms[i]; j++) {
+         for (k = 0; k < atoms->bfnnumb_sh[nat1[j] - 1]; k++) {
+           atom_proj[atoms->bfnposn_sh[nat1[j] - 1] + k][i + 1] = k_one;
+          }
+         }
+        }
+
+       //MPI_Finalize();
+       //exit(0);
+
+  //      for (i = 0; i < nprojections * atoms->number_of_sh_bfns_in_unit_cell; i++) {
+  //        atom_proj[i] = k_zero;
+  //       }
+  //
+  //      for (j = 0; j < atoms->number_of_sh_bfns_in_unit_cell; j++) {
+  //       atom_proj[j] = k_one;
+  //      }
+  //
+  //   if (job->taskid == 0 && nprojections == 1) {
+  //    fprintf(file.out,"CALCULATION OF TOTAL DENSITY OF STATES\n");
+  //     fprintf(file.out,"\n");
+  //    }
+  //
+  //   if (nprojections > 1) {
+  //    if (job->taskid == 0)
+  //    fprintf(file.out,"CALCULATION OF ATOM PROJECTED DENSITY OF STATES\n");
+  //     for (i = 1; i < nprojections; i++) {
+  //      if (job->taskid == 0)
+  //      fprintf(file.out,"PROJECTION %d:\t",i);
+  //       read_line(file.job, title, 99);
+  //        sscanf(title, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d", 
+  //         &natoms, &nat[0],&nat[1], &nat[2], &nat[3], &nat[4], &nat[5], &nat[6], &nat[7], &nat[8], &nat[9], 
+  //         &nat[10], &nat[11], &nat[12], &nat[13], &nat[14], &nat[15], &nat[16], &nat[17], &nat[18], &nat[19]);
+  //         if (job->taskid == 0 && natoms > atoms->number_of_atoms_in_unit_cell) {
+  //          fprintf(file.out,"NUMBER OF ATOMS IN PROJECTION %d IS GREATER THAN NUMBER OF ATOMS IN UNIT CELL\n",i);
+  //           MPI_Finalize();
+  //           exit(1);
+  //          }
+  //         if (job->taskid == 0 && natoms > 20) {
+  //          fprintf(file.out,"NUMBER OF ATOMS IN PROJECTION %d IS GREATER THAN LIMIT OF 20\n",i);
+  //           MPI_Finalize();
+  //           exit(1);
+  //          }
+  //         for (j = 0; j < natoms; j++) {
+  //           if (job->taskid == 0)
+  //           fprintf(file.out,"%d ",nat[j]);
+  //            for (k = 0; k < atoms->bfnnumb_sh[nat[j] - 1]; k++) {
+  //             atom_proj[i * atoms->number_of_sh_bfns_in_unit_cell + atoms->bfnposn_sh[nat[j] - 1] + k] = k_one;
+  //            }
+  //           }
+  //         if (job->taskid == 0)
+  //         fprintf(file.out,"\n");
+  //        }
+  //       if (job->taskid == 0)
+  //       fprintf(file.out,"\n");
+  //      }
+  // 
+  //     if (job->taskid == 0 && job->verbosity > 1) {
+  //      for (i = 0; i < nprojections; i++) {
+  //       for (j = 0; j < atoms->number_of_sh_bfns_in_unit_cell; j++) {
+  //       fprintf(file.out,"%4.1f ",atom_proj[i * atoms->number_of_sh_bfns_in_unit_cell + j]);
+  //      }
+  //     fprintf(file.out,"\n\n");
+  //    }
+  //   }
+
+      energy_range[0] /= au_to_eV;
+      energy_range[1] /= au_to_eV;
+
+    if (job->taskid == 0) {
+    fprintf(file.out,"===========================================================================================================\n");
+    fprintf(file.out,"|                          DENSITY OF STATES AND ATOM POPULATION CALCULATION                              |\n");
+    fprintf(file.out,"===========================================================================================================\n");
+    //fprintf(file.out,"| %-99s     |\n", title3);
+    //fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+    fprintf(file.out,"| MONKHORST-PACK   %2d %2d %2d | BAND RANGE %4d TO %4d | NUMBER OF PROJECTIONS%2d |                         |\n",
+    //fprintf(file.out,"| SHRINKING FAC %3d %3d %3d | BAND RANGE %4d TO %4d | NUMBER OF PROJECTIONS%2d |                         |\n",
+    is_den[0], is_den[1], is_den[2], bands_den[0], bands_den[1], nprojections);
+    fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+    //fprintf(file.out,"|                                      ATOMS FOR PROJECTION                                               |\n");
+    //fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+    for (i = 0; i < nprojections; i++) {
+    fprintf(file.out,"| PROJECTION %3d:",i + 1);
+    for (j = 0; j < 20; j++) {
+    if (j < natoms[i]) fprintf(file.out," %3d",nat[i][j]);
+    else fprintf(file.out,"    ");
+   }
+    fprintf(file.out,"         |\n");
+   }
+   }
+
+     state_density(is_den,bands_den,npoints,nprojections,atom_proj,energy_range,density_type,atoms,atom_p,shells,gaussians,crystal,\
+     symmetry,R,R_tables,G,job,file);
+
+    }
 
   } while (strcmp(jobname, "END"));
 

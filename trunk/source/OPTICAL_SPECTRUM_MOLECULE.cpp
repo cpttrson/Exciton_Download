@@ -329,6 +329,462 @@ for (i = lim; i < job->bse_lim; i++) {
 
 }
 
+void electroabsorption_spectrum_molecule(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, int *numfrag, int *natom, int nat[][2], SHELL* shells, GAUSSIAN* gaussians, ATOM *atoms_ax, SHELL *shells_ax, GAUSSIAN *gaussians_ax,CRYSTAL* crystal, SYMMETRY* symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
+
+{
+
+fermi->nkunique = 1;
+allocate_fermi(fermi,atoms,job,file);
+fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
+
+int i, j, k, i1, j1, i3, j3, l, m, n, s, t;
+int nbands = fermi->bands[1] - fermi->bands[0] + 1;
+int nocc = fermi->occupied[0];
+int nvir = nbands - fermi->occupied[0];
+int ntransitions_hole_hole = nocc * nocc;
+int ntransitions_hole_electron = nocc * nvir;
+int ntransitions_electron_electron = nvir * nvir;
+int nt_hh = ntransitions_hole_hole;
+int nt_he = ntransitions_hole_electron;
+int nt_ee = ntransitions_electron_electron;
+int count1, count2, off1, off2, d, e;
+int dim4 = nbands * 3;
+int seek, count;
+double E, E_tot, energy, range = job->energy_range[1] - job->energy_range[0];
+double increment = range / (double) (job->npoints + 1);
+double *scf_eigenvalues, *GW_eigenvalues, *bse_eigenvalues;
+char xx[20] = "/bse_eigenvectors";
+char zz6[24] = "/evalfile";
+char zz7[24] = "/bse_eigenvalues";
+char buf2[110];
+FILE *bse_evalues, *spect;
+VECTOR_DOUBLE mu_gs;
+DoubleMatrix *bse_eigenvectors, *M_k, *M_x, *tmp;
+MPI_File fh;
+
+  // ******************************************************************************************
+  // * Allocate memory for GW and SCF eigenvalues                                             *
+  // * Read eigenvalues from disk                                                             *
+  // ******************************************************************************************
+ 
+  AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
+  ResetDoubleArray(scf_eigenvalues,&nbands);
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
+  AllocateDoubleArray(&bse_eigenvalues,&nt_he,job);
+  ResetDoubleArray(bse_eigenvalues,&nt_he);
+  read_SCF_GW_eigenvalues(bse_eigenvalues, 0, nt_he, zz7, job, file);
+
+  // ******************************************************************************************
+  // * Allocate memory for BSE eigenvectors                                                   *
+  // * Read eigenvectors from disk                                                            *
+  // ******************************************************************************************
+
+  if (job->bse_lim == 0) job->bse_lim = nt_he;
+  if (job->taskid == 0) printf("BSE vector limit %3d\n",job->bse_lim);
+  if (job->taskid == 0)
+  AllocateDoubleMatrix(&bse_eigenvectors,&job->bse_lim,&nt_he,job);
+  //AllocateDoubleMatrix(&bse_eigenvectors,&ntransitions,&ntransitions,job);
+  strcpy(buf2,file.scf_eigvec);
+  strcat(buf2,xx);
+  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
+  if (job->taskid == 0 && job->bse_tda == 0) {
+  //printf("bse_eigenvectors directory: %s %s\n",buf2,file.scf_eigvec);
+  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+  //for (i = 0; i < nt; i++) 
+  for (i = 0; i < job->bse_lim; i++) 
+  //MPI_File_read(fh, &bse_eigenvectors->a[nt - 1 - i][0], nt, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  //MPI_File_read(fh, &bse_eigenvectors->a[i][0], nt, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  MPI_File_read(fh, &bse_eigenvectors->a[job->bse_lim - 1 - i][0], nt_he, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  for (j = 0; j < bse_eigenvectors->iRows; j++) { 
+    for (k = 0; k < bse_eigenvectors->iCols; k++) { 
+      //fprintf(file.out,"%3d %3d %10.4f\n",j,k,bse_eigenvectors->a[j][k]);
+      bse_eigenvectors->a[j][k] /= two * sqrt(bse_eigenvalues[j]); 
+     }
+    } 
+   }
+  else if (job->taskid == 0 && job->bse_tda == 1) {
+long long lim, memsize;
+lim = job->bse_lim;
+if (lim > 25000) lim = 25000;
+memsize = lim * nt_he;
+MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+MPI_File_read(fh, &bse_eigenvectors->a[0][0], memsize, MPI_DOUBLE, MPI_STATUS_IGNORE);
+for (i = lim; i < job->bse_lim; i++) {
+  for (j = 0; j < nt_he; j++) { 
+    bse_eigenvectors->a[i][j] = k_zero;
+   }
+  }
+ }
+MPI_File_close(&fh);
+//fprintf(file.out,"|                                    BSE EIGENVECTOR MATRIX (eV)                                      |\n");
+//if (job->taskid == 0)  
+//print_real_eigenvector_matrix2(bse_eigenvectors, bse_eigenvalues, 8, 50, au_to_eV, file);
+
+  // ******************************************************************************************
+  // * Calculate dipole matrix elements                                                       *
+  // ******************************************************************************************
+
+  //if (job->taskid == 0)
+  //for (i = 0; i < bse_eigenvectors->iRows; i++) { 
+  //fprintf(file.out,"%3d %10.4f ",i,bse_eigenvalues[i]);
+  //for (j = 0; j < bse_eigenvectors->iCols; j++) { 
+  //fprintf(file.out,"%8.3f",bse_eigenvectors->a[i][j]); 
+  //}
+  //fprintf(file.out,"\n");
+  //}
+
+  if (job->taskid == 0) {
+  AllocateDoubleMatrix(&M_x,&dim4,&nbands,job);
+  ResetDoubleMatrix(M_x);
+ }
+  dipole_matrix_elements_molecule(M_x,fermi,atoms,atom_p,shells,gaussians,crystal,symmetry,R,R_tables,G,job,file);
+
+  // ******************************************************************************************
+  // * Allocate memory for optical matrix elements                                            *
+  // ******************************************************************************************
+
+  if (job->taskid == 0) {
+  double free_particle_matrix_element_hh[job->field_dirs][nt_hh];
+  double free_particle_matrix_element_he[job->field_dirs][nt_he];
+  double free_particle_matrix_element_ee[job->field_dirs][nt_ee];
+  double bse_matrix_element_hh[job->field_dirs][job->bse_lim * job->bse_lim];
+  double bse_matrix_element_he[job->field_dirs][job->bse_lim];
+  double bse_matrix_element_ee[job->field_dirs][job->bse_lim * job->bse_lim];
+  double bse_spectrum[job->spin_dim][job->field_dirs][job->npoints + 1];
+  double free_particle_spectrum[job->spin_dim][job->field_dirs][job->npoints + 1];
+  double E_trans_hh[nt_hh];
+  double E_trans_he[nt_he];
+  double E_trans_ee[nt_ee];
+  double TRK_sum_rule[job->field_dirs];
+  double TRK_sum_rule1[job->field_dirs];
+  char field[80];
+
+  for (i = 0; i < job->spin_dim; i++) {
+    for (j3 = 0; j3 < job->field_dirs; j3++) { 
+      for (j = 0; j < job->npoints + 1; j++) {
+        bse_spectrum[i][j3][j] = k_zero;
+        free_particle_spectrum[i][j3][j] = k_zero;
+       }
+      }
+     }
+
+    for (j3 = 0; j3 < job->field_dirs; j3++) TRK_sum_rule[j3] = k_zero;
+    for (j3 = 0; j3 < job->field_dirs; j3++) TRK_sum_rule1[j3] = k_zero;
+
+  // ******************************************************************************************
+  // * Generate Bethe-Salpeter and single-particle dielectric functions                       *
+  // ******************************************************************************************
+  
+  //fprintf(file.out,"BSE Eigenvalues\n");
+  //for (s = 0; s < job->spin_dim; s++) {
+  //for (i = 0; i < nbands; i++) {
+  //fprintf(file.out,"%5d %5d %10.4lf\n",s,i,bse_eigenvalues[s * nbands + i] * au_to_eV);
+  //}
+  //}
+  //print_real_matrix2(M_x,0,8,1.0,file);
+
+   sprintf(field," %d     %4.1lf %4.1lf %4.1lf    %4.1lf %4.1lf %4.1lf   %4.1lf %4.1lf %4.1lf",job->field_dirs, \
+   job->e_field[0].comp1, job->e_field[0].comp2, job->e_field[0].comp3, \
+   job->e_field[1].comp1, job->e_field[1].comp2, job->e_field[1].comp3, \
+   job->e_field[2].comp1, job->e_field[2].comp2, job->e_field[2].comp3);
+   fprintf(file.out,"|                                      LARGEST OSCILLATOR STRENGTHS                                       |\n");
+   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+   fprintf(file.out,"| MODE NUMBER   ENERGY (eV) | FIELDS   %66s |\n", field);
+   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+
+  for (s = 0; s < job->spin_dim; s++) {
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (t = 0; t < nt_hh; t++) {
+      free_particle_matrix_element_hh[j3][t] = k_zero;
+     }
+    }
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (t = 0; t < nt_he; t++) {
+      free_particle_matrix_element_he[j3][t] = k_zero;
+     }
+    }
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (t = 0; t < nt_ee; t++) {
+      free_particle_matrix_element_ee[j3][t] = k_zero;
+     }
+    }
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (t = 0; t < job->bse_lim * job->bse_lim; t++) {
+      bse_matrix_element_hh[j3][t] = k_zero;
+     }
+    }
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (t = 0; t < job->bse_lim; t++) {
+      bse_matrix_element_he[j3][t] = k_zero;
+     }
+    }
+
+ for (j3 = 0; j3 < job->field_dirs; j3++) {
+   for (t = 0; t < job->bse_lim * job->bse_lim; t++) {
+     bse_matrix_element_ee[j3][t] = k_zero;
+    }
+   }
+
+  // ******************************************************************************************
+  // * Electron-hole dipole matrix element <l|x|gs>                                           *
+  // ******************************************************************************************
+  
+    mu_gs.comp1 = k_zero;
+    mu_gs.comp2 = k_zero;
+    mu_gs.comp3 = k_zero;
+    count = 0;
+    for (m = 0; m < fermi->occupied[0]; m++) {
+      for (n = fermi->occupied[0]; n < nbands; n++) {
+        for (j3 = 0; j3 < job->field_dirs; j3++) {
+          free_particle_matrix_element_he[j3][count] = \
+         (job->e_field[j3].comp1 * M_x->a[m][n] + \
+          job->e_field[j3].comp2 * M_x->a[nbands + m][n] + \
+          job->e_field[j3].comp3 * M_x->a[2 * nbands + m][n]);
+          E_trans_he[count] = scf_eigenvalues[n] - scf_eigenvalues[m];
+          for (t = 0; t < job->bse_lim; t++) {
+            bse_matrix_element_he[j3][t] += free_particle_matrix_element_he[j3][count] * bse_eigenvectors->a[t][count];
+         }
+        }
+        count++; // counter for all transitions
+       } // close loop on n
+       mu_gs.comp1 += M_x->a[m][m];
+       mu_gs.comp2 += M_x->a[nbands + m][m];
+       mu_gs.comp3 += M_x->a[2 * nbands + m][m];
+      } // close loop on m
+      fprintf(file.out,"mu_gs %10.4f %10.4f %10.4f\n",mu_gs.comp1,mu_gs.comp2,mu_gs.comp3);
+
+    job->bse_lim = 10;
+
+  // ******************************************************************************************
+  // * Hole-hole dipole matrix element <m|x|l>                                                *
+  // ******************************************************************************************
+  
+    count1 = 0;
+    fprintf(file.out,"Hole-Hole matrix element\n");
+    for (m = 0; m < job->bse_lim; m++) {
+      for (n = 0; n < job->bse_lim; n++) {
+        count2 = 0;
+        for (d = 0; d < fermi->occupied[0]; d++) {
+          for (e = 0; e < fermi->occupied[0]; e++) {
+            off1 = (d - 1) * nvir;
+            off2 = (e - 1) * nvir;
+            for (j3 = 0; j3 < job->field_dirs; j3++) {
+              free_particle_matrix_element_hh[j3][count2] = \
+              (job->e_field[j3].comp1 * M_x->a[d][e] + \
+               job->e_field[j3].comp2 * M_x->a[nbands + d][e] + \
+               job->e_field[j3].comp3 * M_x->a[2 * nbands + d][e]);
+               E_trans_hh[count1] = bse_eigenvalues[m] - bse_eigenvalues[n];
+               for (k = fermi->occupied[0]; k < nbands; k++) {
+                 bse_matrix_element_hh[j3][count1] += bse_eigenvectors->a[m][off1 + k] * bse_eigenvectors->a[n][off2 + k] * \
+	         free_particle_matrix_element_hh[j3][count2];
+              } // close loop on k
+             }
+            count2++; // counter for all transitions
+           } // close loop on e
+          } // close loop on d
+ //if (fabs(bse_matrix_element_hh[2][m * job->bse_lim + m]) > 0.01)
+ fprintf(file.out,"m n %3d %3d mm %8.2f %8.2f %8.2f nn %8.2f %8.2f %8.2f mn %8.2f %8.2f %8.2f E_mn %8.2f\n",
+ m,n,bse_matrix_element_hh[0][m * job->bse_lim + m],bse_matrix_element_hh[1][m * job->bse_lim + m],bse_matrix_element_hh[2][m * job->bse_lim + m],\
+     bse_matrix_element_hh[0][n * job->bse_lim + n],bse_matrix_element_hh[1][n * job->bse_lim + n],bse_matrix_element_hh[2][n * job->bse_lim + n],\
+     bse_matrix_element_hh[0][count1],bse_matrix_element_hh[1][count1],bse_matrix_element_hh[2][count1],E_trans_hh[count1]*au_to_eV);
+         count1++; // counter for all transitions
+        } // close loop on n
+       } // close loop on m
+
+  // ******************************************************************************************
+  // * Electron-electron dipole matrix element <m|x|n>                                        *
+  // ******************************************************************************************
+  
+    count1 = 0;
+    fprintf(file.out,"Electron-Electron matrix element\n");
+    for (m = 0; m < job->bse_lim; m++) {
+      for (n = 0; n < job->bse_lim; n++) {
+        count2 = 0;
+        for (d = fermi->occupied[0]; d < nbands; d++) {
+          for (e = fermi->occupied[0]; e < nbands; e++) {
+            for (j3 = 0; j3 < job->field_dirs; j3++) {
+              free_particle_matrix_element_ee[j3][count2] = \
+              (job->e_field[j3].comp1 * M_x->a[d][e] + \
+               job->e_field[j3].comp2 * M_x->a[nbands + d][e] + \
+               job->e_field[j3].comp3 * M_x->a[2 * nbands + d][e]);
+               E_trans_ee[count1] = bse_eigenvalues[m] - bse_eigenvalues[n];
+               for (k = 0; k < fermi->occupied[0]; k++) {
+                 bse_matrix_element_ee[j3][count1] += bse_eigenvectors->a[m][k * nvir + d] * bse_eigenvectors->a[n][k * nvir + e] * \
+	         free_particle_matrix_element_ee[j3][count2];
+              } // close loop on k
+             }
+            count2++; // counter for all transitions
+           } // close loop on e
+          } // close loop on d
+ //if (fabs(bse_matrix_element_ee[2][m * job->bse_lim + m]) > 0.01)
+ fprintf(file.out,"m n %3d %3d mm %8.2f %8.2f %8.2f nn %8.2f %8.2f %8.2f mn %8.2f %8.2f %8.2f E_mn %8.2f\n",
+ m,n,bse_matrix_element_ee[0][m * job->bse_lim + m],bse_matrix_element_ee[1][m * job->bse_lim + m],bse_matrix_element_ee[2][m * job->bse_lim + m],\
+     bse_matrix_element_ee[0][n * job->bse_lim + n],bse_matrix_element_ee[1][n * job->bse_lim + n],bse_matrix_element_ee[2][n * job->bse_lim + n],\
+     bse_matrix_element_ee[0][count1],bse_matrix_element_ee[1][count1],bse_matrix_element_ee[2][count1],E_trans_ee[count1]*au_to_eV);
+         count1++; // counter for all transitions
+        } // close loop on n
+       } // close loop on m
+
+  double matrix_element[job->bse_lim][job->bse_lim][job->bse_lim];
+  double electro_absorption_spectrum[job->spin_dim][job->field_dirs][job->npoints];
+  for (i = 0; i < job->spin_dim; i++) {
+    for (j3 = 0; j3 < job->field_dirs; j3++) { 
+      for (j = 0; j < job->npoints + 1; j++) {
+        electro_absorption_spectrum[i][j3][j] = k_zero;
+       }
+      }
+     }
+
+
+  for (j3 = 0; j3 < job->field_dirs; j3++) {
+    for (j1 = 0; j1 < job->npoints; j1++) {
+      E = increment * (double) j1 + job->energy_range[0];
+
+    count1 = 0;
+    for (l = 0; l < job->bse_lim; l++) {
+      count2 = 0;
+      for (m = 0; m < job->bse_lim; m++) {
+        for (n = 0; n < job->bse_lim; n++) {
+          matrix_element[l][m][n] = bse_matrix_element_he[j3][l] * \
+				   (bse_matrix_element_hh[j3][count1] + bse_matrix_element_ee[j3][count1]) * \
+                                   (bse_matrix_element_hh[j3][count2] + bse_matrix_element_ee[j3][count2]) * \
+				    bse_matrix_element_he[j3][n];
+	  //if (fabs(matrix_element[l][m][n]) > 1e-04) \
+	  fprintf(file.out,"%3d  %3d %3d %3d    %3d %3d  %18.8f %10.4f %10.4f %10.4f %10.4f   %10.4f %10.4f %10.4f\n",j3,l,m,n,count1,count2,\
+          matrix_element[l][m][n],  bse_matrix_element_he[j3][l], \
+				   (bse_matrix_element_hh[j3][count1] + bse_matrix_element_ee[j3][count1]), \
+                                   (bse_matrix_element_hh[j3][count2] + bse_matrix_element_ee[j3][count2]), \
+				    bse_matrix_element_he[j3][n],bse_eigenvalues[l],bse_eigenvalues[m],bse_eigenvalues[n]);
+          //electro_absorption_spectrum[s][j3][j1] += job->spin_fac * two * matrix_element[l][m][n]; // * \
+          //bse_eigenvalues[t] * job->linewidth / ((E - bse_eigenvalues[t]) * (E - bse_eigenvalues[t]) + job->linewidth * job->linewidth);
+	  count2++;
+         }
+	count1++;
+       }
+      }
+     }
+    }
+
+      for (j1 = 0; j1 < job->npoints; j1++) {
+        E = increment * (double) j1 + job->energy_range[0];
+        for (j3 = 0; j3 < job->field_dirs; j3++) {
+          //for (t = 0; t < ntransitions; t++) {
+          for (t = 0; t < job->bse_lim; t++) {
+            //bse_spectrum[s][j3][j1] += bse_matrix_element[j3][t] * bse_matrix_element[j3][t] * \
+            pi / del / E / E * exp(-(*(bse_eigenvalues + t) - E) * (*(bse_eigenvalues + t) - E) / del / del);
+            //free_particle_spectrum[s][j3][j1] += free_particle_matrix_element[j3][t] * free_particle_matrix_element[j3][t] * \
+            pi / del / E / E * exp(-(E_trans_he[t] - E) * (E_trans_he[t] - E) / del / del);
+            //bse_spectrum[s][j3][j1] += job->spin_fac * two * bse_matrix_element[j3][t] * bse_matrix_element[j3][t] * \
+            bse_eigenvalues[t] * \
+            job->linewidth / pi / ((E - bse_eigenvalues[t]) * (E - bse_eigenvalues[t]) + job->linewidth * job->linewidth);
+            bse_spectrum[s][j3][j1] += job->spin_fac * two * bse_matrix_element_he[j3][t] * bse_matrix_element_he[j3][t] * \
+            bse_eigenvalues[t] * \
+            job->linewidth / ((E - bse_eigenvalues[t]) * (E - bse_eigenvalues[t]) + job->linewidth * job->linewidth);
+            free_particle_spectrum[s][j3][j1] += job->spin_fac * two * free_particle_matrix_element_he[j3][t] * \
+            free_particle_matrix_element_he[j3][t] * E_trans_he[t] * \
+            job->linewidth / ((E - E_trans_he[t]) * (E - E_trans_he[t]) + job->linewidth * job->linewidth);
+            //free_particle_spectrum[s][j3][j1] += job->spin_fac * two * free_particle_matrix_element[j3][t] * \
+            free_particle_matrix_element[j3][t] * E_trans_he[t] * \
+            job->linewidth / pi / ((E - E_trans_he[t]) * (E - E_trans_he[t]) + job->linewidth * job->linewidth);
+           }
+          }
+         }
+
+        //for (t = 0; t < ntransitions; t++) {
+        for (t = 0; t < job->bse_lim; t++) {
+          for (j3 = 0; j3 < job->field_dirs; j3++) {
+            TRK_sum_rule[j3] +=  job->spin_fac * two / three * bse_matrix_element_he[j3][t] * bse_matrix_element_he[j3][t] * \
+            bse_eigenvalues[t];
+           }
+          }
+
+        //for (t = 0; t < ntransitions; t++) {
+        for (t = 0; t < job->bse_lim; t++) {
+          //if ((bse_matrix_element_he[0][t] * bse_matrix_element_he[0][t] * bse_eigenvalues[t] > 0.05) || \
+              (bse_matrix_element_he[1][t] * bse_matrix_element_he[1][t] * bse_eigenvalues[t] > 0.05) || \
+              (bse_matrix_element_he[2][t] * bse_matrix_element_he[2][t] * bse_eigenvalues[t] > 0.05)) {
+          if ((bse_matrix_element_he[0][t] * bse_matrix_element_he[0][t] * bse_eigenvalues[t] > 0.00) || \
+              (bse_matrix_element_he[1][t] * bse_matrix_element_he[1][t] * bse_eigenvalues[t] > 0.00) || \
+              (bse_matrix_element_he[2][t] * bse_matrix_element_he[2][t] * bse_eigenvalues[t] > 0.00)) {
+          fprintf(file.out,"| %4d           %10.4lf ", t + 1, bse_eigenvalues[t] * au_to_eV);
+          for (j3 = 0; j3 < job->field_dirs; j3++) {
+            fprintf(file.out,"|              %10.4lf ", \
+            job->spin_fac * two / three * bse_matrix_element_he[j3][t] * bse_matrix_element_he[j3][t] * bse_eigenvalues[t]);
+           }
+          fprintf(file.out,"|\n");
+         }
+        }
+
+   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+   fprintf(file.out,"| TRK SUM RULE   %10.4lf |              %10.4lf |              %10.4lf |              %10.4lf |\n", \
+   TRK_sum_rule[0] + TRK_sum_rule[1] + TRK_sum_rule[2], TRK_sum_rule[0], TRK_sum_rule[1], TRK_sum_rule[2]);
+   fprintf(file.out,"===========================================================================================================\n");
+   if (job->taskid == 0 && job->field_dirs < 3)
+   fprintf(file.out,"WARNING: Thomas-Reiche-Kun Sum Rule: %3d out of 3 components calculated.\n", job->field_dirs);
+   fflush(file.out);
+
+     } // close loop on s
+
+    spect = fopen("Electroabsorption_spectrum.dat", "w");
+    if (spect == NULL) { fprintf(file.out, "cannot open file Electroabsorption_spectrum.dat in electroabsorption_optical_spectrum_molecule\n"); exit(1); }
+        for (j = 0; j < job->npoints; j++) {
+         energy = job->energy_range[0] + range * (double) j / (double) job->npoints;
+          fprintf(spect, "%10.4e   ", energy * au_to_eV);
+           for (l = 0; l < job->spin_dim; l++) {
+            for (j3 = 0; j3 < job->field_dirs; j3++) {
+            fprintf(spect, "%12.4e", free_particle_spectrum[l][j3][j]);
+           }
+          }
+         fprintf(spect,"\n");
+        }
+       fflush(spect);
+       fclose(spect);
+
+    spect = fopen("Free_particle_optical_spectrum.dat", "w");
+    if (spect == NULL) { fprintf(file.out, "cannot open file Free_particle_optical_spectrum.dat in bethe_salpeter\n"); exit(1); }
+        for (j = 0; j < job->npoints; j++) {
+         energy = job->energy_range[0] + range * (double) j / (double) job->npoints;
+          fprintf(spect, "%10.4e   ", energy * au_to_eV);
+           for (l = 0; l < job->spin_dim; l++) {
+            for (j3 = 0; j3 < job->field_dirs; j3++) {
+            fprintf(spect, "%12.4e", free_particle_spectrum[l][j3][j]);
+           }
+          }
+         fprintf(spect,"\n");
+        }
+       fflush(spect);
+       fclose(spect);
+
+    if      (job->bse_tda == 0 && job->bse_ham == 0) spect = fopen("TDHF_optical_spectrum.dat", "w");
+    else if (job->bse_tda == 0 && job->bse_ham == 1) spect = fopen("BSE_optical_spectrum.dat", "w");
+    else if (job->bse_tda == 1 && job->bse_ham == 0) spect = fopen("TDHF_TDA_optical_spectrum.dat", "w");
+    else if (job->bse_tda == 1 && job->bse_ham == 1) spect = fopen("BSE_TDA_optical_spectrum.dat", "w");
+    if (spect == NULL) { fprintf(file.out, "cannot open spectrum file in bethe_salpeter routine\n"); exit(1); }
+        for (j = 0; j < job->npoints; j++) {
+         energy = job->energy_range[0] + range * (double) j / (double) job->npoints;
+          fprintf(spect, "%10.4e   ", energy * au_to_eV);
+           for (l = 0; l < job->spin_dim; l++) {
+            for (j3 = 0; j3 < job->field_dirs; j3++) {
+            fprintf(spect, "%12.4e", bse_spectrum[l][j3][j]);
+           }
+          }
+         fprintf(spect,"\n");
+        }
+       fflush(spect);
+       fclose(spect);
+       DestroyDoubleArray(&bse_eigenvalues,&nt_he,job);
+       DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
+       DestroyDoubleMatrix(&M_x,job);
+       DestroyDoubleMatrix(&bse_eigenvectors,job);
+      } // close if (job->taskid == 0)
+
+}
+
 void dipole_matrix_elements_molecule(DoubleMatrix *M_x, FERMI*fermi, ATOM* atoms, ATOM_TRAN *atom_p, SHELL *shells, GAUSSIAN* gaussians, CRYSTAL* crystal, SYMMETRY* symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)
 
 {
@@ -456,7 +912,7 @@ MPI_File fh;
  //} // close loop on s
  
   //fprintf(file.out,"DIPOLE MATRIX\n");
-  //print_double_matrix2(M_x,0,6,1.0,file);
+  //print_double_matrix2(M_x,0,9,1.0,file);
 
  } // close if (job->taskid
 

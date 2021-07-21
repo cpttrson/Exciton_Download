@@ -321,6 +321,7 @@ void print_complex_eigenvector_matrix2(ComplexMatrix *a, double *e, int cols, in
 
 }
 
+/*
 void print_real_eigenvector_matrix(DoubleMatrix *a, double *e, FILES file){
 
   int i, j, k, blocks, remndr;
@@ -361,6 +362,7 @@ void print_real_eigenvector_matrix(DoubleMatrix *a, double *e, FILES file){
      fprintf(file.out,"\n\n");
 
 }
+*/
 
 void print_real_eigenvector_matrix2(DoubleMatrix *a, double *e, int cols, int last_vector, double scale_factor, FILES file)
 

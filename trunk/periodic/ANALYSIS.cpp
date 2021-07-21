@@ -9,9 +9,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include <gsl/gsl_linalg.h>
-#include <gsl/gsl_complex.h>
-#include <gsl/gsl_complex_math.h>
+//#include <gsl/gsl_linalg.h>
+//#include <gsl/gsl_complex.h>
+//#include <gsl/gsl_complex_math.h>
 
 
 #include "mycomplex.h"
@@ -27,12 +27,14 @@
 #include "PARALLEL.h"
 #include "ALLOCATE_MEMORY.h"
 #include "ROTATION_OPERATORS.h"
+#include "ROTATIONS_MOLECULE.h"
 #include "PAIRS_QUADS.h"
 #include "INTEGRALS1.h"
 #include "INTEGRALS_TWO_CENTRE.h"
 #include "INTEGRALS_THREE_CENTRE.h"
 #include "DENSITY_MATRIX.h"
 #include "DIELECTRIC_FUNCTION.h"
+#include "FOURIER_TRANSFORM.h"
 #include "ANALYSIS.h"
 
 using namespace std;
@@ -209,11 +211,13 @@ void state_density(int is[3], int bands[4], int npoints, int nprojections, doubl
       char ConjTrans = 'C', Trans = 'T', NoTrans = 'N';
       char uplo = 'U';
       char jobz = 'V';
-      Complex alpha, beta;
-      alpha.real() = k_one;
-      alpha.imag() = k_zero;
-      beta.real() = k_zero;
-      beta.imag() = k_zero;
+Complex alpha = Complex(k_one, k_zero);
+Complex  beta = Complex(k_zero, k_zero);
+      //Complex alpha, beta;
+      //alpha.real() = k_one;
+      //alpha.imag() = k_zero;
+      //beta.real() = k_zero;
+      //beta.imag() = k_zero;
 
   // ******************************************************************************************
   // * Routine calculates electronic density of states and atom and shell populations         *
@@ -415,7 +419,7 @@ fflush(stdout);
         fprintf(file.out,"| E  %9.2e to %9.2e | BAND ENERGY RANGE     %10.3e to %10.3e eV | FERMI ENERGY %10.4lf |\n", \
         energy_range[0] * au_to_eV,energy_range[1] * au_to_eV,*eigval * au_to_eV,*(eigval + nbands - 1) * au_to_eV,job->fermi_energy);
         fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-        fprintf(file.out,"| UNIQUE PAIRS       %6d | TOTAL PAIRS      %6d | INTERACTION RANGE %5.2lf |                         |\n", \
+        fprintf(file.out,"| M-P NET  %3d %3d %3d | TOTAL PAIRS %5d  %5d | INTERACTION RANGE %5.2lf |                         |\n", \
         is[0],is[1],is[2],pair_p.nump,pair_p.tot,R->cutoff * bohr_to_AA);
         print_atom_populations2(atoms, shells, job, file);
         print_shell_populations2(atoms, shells, job, file);
@@ -476,11 +480,13 @@ fflush(stdout);
       char ConjTrans = 'C', Trans = 'T', NoTrans = 'N';
       char uplo = 'U';
       char jobz = 'V';
-      Complex alpha, beta;
-      alpha.real() = k_one;
-      alpha.imag() = k_zero;
-      beta.real() = k_zero;
-      beta.imag() = k_zero;
+Complex alpha = Complex(k_one, k_zero);
+Complex  beta = Complex(k_zero, k_zero);
+      //Complex alpha, beta;
+      //alpha.real() = k_one;
+      //alpha.imag() = k_zero;
+      //beta.real() = k_zero;
+      //beta.imag() = k_zero;
       ComplexMatrix *xtrn1, *S_k1, *S_k2, *xtmp1, *eigenvectors;
       double *eigenvalues;
       AllocateComplexMatrix(&S_k1,&dim4,&dim4,job);
@@ -771,11 +777,13 @@ void susceptibility(int is[3], int bands[2], int npoints, double energy_range[2]
   FERMI fermi;
   MPI_File fh ;
   MPI_File gh ;
-  Complex alpha, beta;
-  alpha.real() = k_one;
-  alpha.imag() = k_zero;
-  beta.real() = k_zero;
-  beta.imag() = k_zero;
+Complex alpha = Complex(k_one, k_zero);
+Complex  beta = Complex(k_zero, k_zero);
+  //Complex alpha, beta;
+  //alpha.real() = k_one;
+  //alpha.imag() = k_zero;
+  //beta.real() = k_zero;
+  //beta.imag() = k_zero;
 
   // ******************************************************************************************
   // * Routine calculates long wavelength dielectric susceptibility as function of frequency  *
@@ -1059,7 +1067,8 @@ void susceptibility(int is[3], int bands[2], int npoints, double energy_range[2]
 
     for (int i2 = 0; i2 < nbands; i2++) {
       for (int j2 = 0; j2 < nbfn; j2++) {
-        eigvec1->a[i2][j2].imag() *= -k_one;
+        //eigvec1->a[i2][j2].imag() *= -k_one;
+        eigvec1->a[i2][j2] = conj(eigvec1->a[i2][j2]);
        }
       }
 
@@ -1363,11 +1372,13 @@ void susceptibility1(int is[3], int bands[2], int npoints, double energy_range[2
   FERMI fermi;
   MPI_File fh ;
   MPI_File gh ;
-  Complex alpha, beta;
-  alpha.real() = k_one;
-  alpha.imag() = k_zero;
-  beta.real() = k_zero;
-  beta.imag() = k_zero;
+Complex alpha = Complex(k_one, k_zero);
+Complex  beta = Complex(k_zero, k_zero);
+  //Complex alpha, beta;
+  //alpha.real() = k_one;
+  //alpha.imag() = k_zero;
+  //beta.real() = k_zero;
+  //beta.imag() = k_zero;
 
         //FILE *mat, *mat1, *mat2;
         //mat = fopen("data", "w");
@@ -1627,7 +1638,8 @@ nktot = fermi.nktot;
 
     for (int i2 = 0; i2 < nbands; i2++) {
       for (int j2 = 0; j2 < nbfn; j2++) {
-        eigvec1->a[i2][j2].imag() *= -k_one;
+        //eigvec1->a[i2][j2].imag() *= -k_one;
+        eigvec1->a[i2][j2] = conj(eigvec1->a[i2][j2]);
       }
      }
 
@@ -2050,11 +2062,13 @@ void dielectric_function(int is[3], int bands[2], int npoints, double energy_ran
   FERMI fermi;
   MPI_File fh ;
   MPI_File gh ;
-  Complex alpha, beta;
-  alpha.real() = k_one;
-  alpha.imag() = k_zero;
-  beta.real() = k_zero;
-  beta.imag() = k_zero;
+Complex alpha = Complex(k_one, k_zero);
+Complex  beta = Complex(k_zero, k_zero);
+  //Complex alpha, beta;
+  //alpha.real() = k_one;
+  //alpha.imag() = k_zero;
+  //beta.real() = k_zero;
+  //beta.imag() = k_zero;
 
   // ******************************************************************************************
   // * Routine calculates RPA dielectric function                                             *
@@ -2212,7 +2226,7 @@ void dielectric_function(int is[3], int bands[2], int npoints, double energy_ran
   ResetDoubleArray(overlap_integrals,&dimtp);
   ResetDoubleArray(Polarisability,&dimp1);
 
-  three_centre_overlap2(overlap_integrals, &Triple, R, atoms, shells, gaussians, crystal, job, file);
+  //// three_centre_overlap2(overlap_integrals, &Triple, R, atoms, shells, gaussians, crystal, job, file);
   //contract_three_centre_overlap(Polarisability,overlap_integrals,&fermi,&pair_p,&Triple,crystal,atoms,shells,symmetry,R,job,file);
  
   // ******************************************************************************************
@@ -2369,29 +2383,29 @@ void dielectric_function(int is[3], int bands[2], int npoints, double energy_ran
   DestroyComplexMatrix(&D_k, job);
 
   int ss;
-  gsl_matrix_complex *M = gsl_matrix_complex_alloc (dim11,dim11), *I = gsl_matrix_complex_alloc (dim11,dim11);
-  gsl_permutation *pp = gsl_permutation_alloc (dim11);
+  //gsl_matrix_complex *M = gsl_matrix_complex_alloc (dim11,dim11), *I = gsl_matrix_complex_alloc (dim11,dim11);
+  //gsl_permutation *pp = gsl_permutation_alloc (dim11);
 
   for (i = 0; i < dim11; i++) {
     for (j = 0; j < dim11; j++) {
-      gsl_matrix_complex_set(M,i,j,gsl_complex_rect((D_k1->a[i][j]).real(), (D_k1->a[i][j]).imag()));
-      gsl_matrix_complex_set(I,i,j,gsl_complex_rect(k_zero, k_zero));
+      //gsl_matrix_complex_set(M,i,j,gsl_complex_rect((D_k1->a[i][j]).real(), (D_k1->a[i][j]).imag()));
+      //gsl_matrix_complex_set(I,i,j,gsl_complex_rect(k_zero, k_zero));
      }
     }
 
-  gsl_linalg_complex_LU_decomp (M, pp, &ss);
-  gsl_linalg_complex_LU_invert (M, pp, I);
+  //gsl_linalg_complex_LU_decomp (M, pp, &ss);
+  //gsl_linalg_complex_LU_invert (M, pp, I);
 
   for (i = 0; i < dim11; i++) {
     for (j = 0; j < dim11; j++) {
-      (D_k1_inv->a[i][j]).real() = GSL_REAL(gsl_matrix_complex_get(I,i,j));
-      (D_k1_inv->a[i][j]).imag() = GSL_IMAG(gsl_matrix_complex_get(I,i,j));
+      //(D_k1_inv->a[i][j]).real() = GSL_REAL(gsl_matrix_complex_get(I,i,j));
+      //(D_k1_inv->a[i][j]).imag() = GSL_IMAG(gsl_matrix_complex_get(I,i,j));
      }
     }
 
-  gsl_permutation_free (pp);
-  gsl_matrix_complex_free (I);
-  gsl_matrix_complex_free (M);
+  //gsl_permutation_free (pp);
+  //gsl_matrix_complex_free (I);
+  //gsl_matrix_complex_free (M);
 
   if (job->taskid == 0 && job->verbosity > 1) {
   ComplexMatrix *D_k4;

@@ -809,7 +809,7 @@ void count_all_crystal_atoms(ATOM *atoms, JOB_PARAM *job, FILES file)
   // ******************************************************************************************
 
   FILE *output;
-  char *title;
+  char title[6];
 
       output = fopen("OUTPUT", "r");
       if (output == NULL) {
@@ -860,9 +860,9 @@ void generate_all_crystal_atoms(CRYSTAL *crystal, REAL_LATTICE *R, SYMMETRY *sym
   int atm, bas, count, count1[atoms->number_of_atoms_in_unit_cell];
   double *p_irr;
   FILE *output;
-  char *title;
+  char title[6];
   char TF[8];
-  char *line;
+  char line[150];
   VECTOR_DOUBLE Rvec_tmp[2], O_tmp, cell_vec1;
   VECTOR_DOUBLE O_tmp_crys[atoms->number_of_atoms_in_unit_cell], cell_vec2;
 

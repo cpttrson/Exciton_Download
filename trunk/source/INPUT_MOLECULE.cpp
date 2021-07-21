@@ -1,28 +1,14 @@
-/*
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <xc.h>
-#include "ALLOCATE_MEMORY.h"
-#include "MATRIX_UTIL.h"
-#include "SCF.h"
-#include "SCF_CRYSTAL.h"
-#include "BETHE_SALPETER.h"
-#include "BETHE_SALPETER1.h"
-#include "GW.h"
-#include "GW_CRYSTAL.h"
-#include "TDHF_CRYSTAL.h"
-#include "GW_BSE_SCALAPACK.h"
-#include "GW_3D.h"
-#include "ANALYSIS.h"
-#include "PLOTTING.h"
-#include "ROTATION_OPERATORS.h"
-#include "KPOINTS.h"
-#include "CRYSTAL09.h"
-#include "INTEGRALS_TEST.h"
-*/
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
+
 #include <mpi.h>
 #include <cstring>
 #include "mycomplex.h"
@@ -1765,7 +1751,9 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
         //else if (job->bse_spk == 1) {
         bse_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
         symmetry,R,R_tables,G,job,file);
-        optical_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
+        //optical_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
+        crystal,symmetry,R,R_tables,G,job,file);
+        electroabsorption_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
         crystal,symmetry,R,R_tables,G,job,file);
         //BSE_molecule_spk(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
         symmetry,R,R_tables,G,job,file);
