@@ -50,14 +50,6 @@ set(VERSION_MINOR "0")
 set(VERSION_PATCH "0")
 
 
-find_program(SVN "svn")
-if(SVN)
-  execute_process(COMMAND ${SVN} info ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE SVN_OUT)
-  string(REGEX REPLACE "\n" " " svn_int "${SVN_OUT}")
-  string(REGEX REPLACE ".*Revision: ([^ ]+).*" "\\1" VERSION_PATCH "${svn_int}" )
-  set(VERSION_PATCH "svn_${VERSION_PATCH}")
-endif(SVN)
-
 set(AUTHOR "Charles Patterson")
 set(AUTHOR_DETAILS "charles.patterson@tcd.ie")
 set(DESCRIPTION "Exciton")

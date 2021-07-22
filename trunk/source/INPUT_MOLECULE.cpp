@@ -11,6 +11,7 @@
 
 #include <mpi.h>
 #include <cstring>
+#include <cstdlib>
 #include "mycomplex.h"
 #include "conversion_factors.h"
 #include "myconstants.h"

@@ -1,16 +1,3 @@
-#include "myconstants.h"
-#include "USER_DATA.h"
-#include "MATRIX_UTIL.h"
-#include "PRINT_UTIL.h"
-#include "ALLOCATE_MEMORY_MOLECULE.h"
-#include "SYMMETRY_ADAPTATION.h"
-#include "IVANIC_RUEDENBERG.h"
-
-using namespace std;
-
-void generate_rotation_operators_ivanic_ruedenberg(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-
-{
 
   // *********************************************************************************************
   // * Routines in this source file are based on the following papers by Ivanic and Ruedenberg:  *
@@ -49,6 +36,21 @@ void generate_rotation_operators_ivanic_ruedenberg(SYMMETRY *symmetry, JOB_PARAM
   // * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                              *
   // *                                                                                           *
   // *********************************************************************************************
+
+#include <cstdlib>
+#include "myconstants.h"
+#include "USER_DATA.h"
+#include "MATRIX_UTIL.h"
+#include "PRINT_UTIL.h"
+#include "ALLOCATE_MEMORY_MOLECULE.h"
+#include "SYMMETRY_ADAPTATION.h"
+#include "IVANIC_RUEDENBERG.h"
+
+using namespace std;
+
+void generate_rotation_operators_ivanic_ruedenberg(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
+
+{
 
 int i, j, k, l, m, n, count, memsize;
 int *p_ind_i, *p_ind_j, *p_num, *p_ost;

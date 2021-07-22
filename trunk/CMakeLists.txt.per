@@ -84,7 +84,7 @@ find_package(MPI REQUIRED)
 ##########################################
 ### Make sure the compiler can find include files from our project
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include
-${PROJECT_SOURCE_DIR}/libxc/include)
+${PROJECT_SOURCE_DIR}/libxc-5.1.5/include)
 #${MPI_INCLUDE_PATH}
 #${PROJECT_SOURCE_DIR}/libxc/include)
 
@@ -117,7 +117,7 @@ find_package(MKL REQUIRED)
 ###message("Using this linkage for gsl: ${GSL_LIBRARIES} with flags  ${CMAKE_GSL_CXX_FLAGS}\n\n")
 ####INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR})
 ###set(LIBS ${CMAKE_GSL_CXX_FLAGS} ${GSL_LIBRARIES}
-set (LIBS ${PROJECT_SOURCE_DIR}/lib/libxc.a)
+set (LIBS ${PROJECT_SOURCE_DIR}/libxc-5.1.5/lib/libxc.a)
 ###set (LIBS ${PROJECT_SOURCE_DIR}/libxc/lib/libxc.a)
 
 set(MKL_BLACS_MPI INTELMPI)

@@ -1,3 +1,15 @@
+
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
+
 /*
 #include <cstdio>
 #include <cstdlib>
@@ -5,6 +17,7 @@
 #include <cstring>
 #include <fstream>
 */
+#include <cstdlib>
 #include "USER_DATA.h"
 #include "HEADER.h"
 
@@ -22,9 +35,13 @@ void print_header(FILES file)
   fprintf(file.out,"|        AUTHORS                                                                                          |\n");
   fprintf(file.out,"|        Charles H. Patterson                                                                             |\n");
   fprintf(file.out,"|                                                                                                         |\n");
+  fprintf(file.out,"|        CONTRIBUTORS                                                                                     |\n");
+  fprintf(file.out,"|        Alin-Marin Elena                                                                                 |\n");
+  fprintf(file.out,"|        Svjetlana Gamaic-Mulaomerovic                                                                    |\n");
+  fprintf(file.out,"|                                                                                                         |\n");
   fprintf(file.out,"|        School of Physics                                                                                |\n");
   fprintf(file.out,"|        University of Dublin, Trinity College, Dublin 2, Ireland                                         |\n");
-  fprintf(file.out,"|        Last modified April 30th 2021                                                                    |\n");
+  fprintf(file.out,"|        Last modified July 22nd 2021                                                                    |\n");
   fprintf(file.out,"|                                                                                                         |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n\n");
 
