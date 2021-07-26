@@ -10,6 +10,7 @@
 #include "mycomplex.h"
 #include "mylogical.h"
 */
+#include <cstdlib>
 #include "conversion_factors.h"
 #include "myconstants.h"
 #include "USER_DATA.h"

@@ -12,6 +12,7 @@
 */
 
 #include <cstring>
+#include <cstdlib>
 #include "mycomplex.h"
 #include "myconstants.h"
 #include "conversion_factors.h"

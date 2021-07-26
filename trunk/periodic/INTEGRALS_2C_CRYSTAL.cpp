@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cstdlib>
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"

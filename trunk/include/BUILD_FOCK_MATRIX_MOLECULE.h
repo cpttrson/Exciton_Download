@@ -17,7 +17,7 @@ void fock_matrix_molecule_compute_integrals_no_sym(double *Fock_2c, double *Fock
 
 void fock_matrix_molecule_read_integrals_no_sym(double *Fock_2c, double *Fock_2e, double *F, PAIR_TRAN *pair_p, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file);
 
-void contract_integrals_molecule_ijkl(double *Fock_2c_buffer, double *Fock_2e_buffer, INTEGRAL_LIST *integral_list_molecule, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file);
+void contract_integrals_molecule_ijkl(double*, double*, INTEGRAL_LIST*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
 void shell_screen_molecule_compute_integrals(double*, PAIR_TRAN*, REAL_LATTICE*, RECIPROCAL_LATTICE*, ATOM*, SHELL*, GAUSSIAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
 
@@ -27,9 +27,13 @@ void shell_screen1(int*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, JOB_PAR
 
 void shell_screen_direct(int*, double*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
-void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file);
+void print_Fock_matrix(double*, PAIR_TRAN*, ATOM*, JOB_PARAM*, FILES);
 
-void read_write_SCF_eigenvectors(FERMI*, ATOM*, JOB_PARAM*, FILES);
+void print_density_matrix_molecule(double*, PAIR_TRAN*, ATOM*, JOB_PARAM*, FILES);
+
+void read_write_SCF_eigenvectors(FERMI*, ComplexMatrix*, ATOM*, JOB_PARAM*, FILES);
+
+//void read_write_SCF_eigenvectors(FERMI*, ATOM*, JOB_PARAM*, FILES);
 
 //void coulomb_matrix_crystal_compute_integrals(double *Fock_2c, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file);
 

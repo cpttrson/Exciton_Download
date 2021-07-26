@@ -247,9 +247,10 @@ GAUSSIAN gaussians, gaussians_ax;
     if (!strcmp(jobname, "SGS_OFF")) {
 
       job.sgs = 0;
+      job.sym_adapt = 0;
 
   if (job.taskid == 0)
-      fprintf(file.out,"SPACE GROUP SYMMETRY SWITCHED OFF\n\n");
+      fprintf(file.out,"SPACE GROUP SYMMETRY AND SYMMETRY ADAPTATION SWITCHED OFF\n\n");
 
     }
 

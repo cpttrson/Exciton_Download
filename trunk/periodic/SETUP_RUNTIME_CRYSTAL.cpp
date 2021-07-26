@@ -28,6 +28,7 @@
 */
 #include <mpi.h>
 #include <cstring>
+#include <cstdlib>
 #include "conversion_factors.h"
 #include "myconstants.h"
 #include "mylogical.h"

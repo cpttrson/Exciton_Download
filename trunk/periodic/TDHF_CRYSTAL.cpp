@@ -42,6 +42,7 @@
 #define MKL_Complex16 Complex
 #define MKL_INT16 short int
 #include <cstring>
+#include <cstdlib>
 #include "mycomplex.h"
 #include "myconstants.h"
 #include "conversion_factors.h"

@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cstdlib>
 #include <mpi.h>
 #include "myconstants.h"
 #include "USER_DATA.h"

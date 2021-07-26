@@ -1752,9 +1752,9 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
         //else if (job->bse_spk == 1) {
         bse_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
         symmetry,R,R_tables,G,job,file);
-        //optical_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
+        optical_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
         crystal,symmetry,R,R_tables,G,job,file);
-        electroabsorption_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
+        //electroabsorption_spectrum_molecule(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax, \
         crystal,symmetry,R,R_tables,G,job,file);
         //BSE_molecule_spk(&fermi,atoms,atom_p,&numfrag,natoms,nat,shells,gaussians,atoms_ax,shells_ax,gaussians_ax,crystal, \
         symmetry,R,R_tables,G,job,file);

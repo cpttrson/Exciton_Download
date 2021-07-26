@@ -239,6 +239,9 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
   else if (job->taskid == 0 && job->scf_direct == 1)
   total_energy_direct(one_ints, Fock, P, pair_p, atoms,job,file);
 
+  //print_Fock_matrix(Fock, pair_p, atoms, job, file);
+  //print_density_matrix_molecule(delta_F, pair_p, atoms, job, file);
+
   DestroyDoubleArray(&Fock_2c,&dimp_spin,job);
   DestroyDoubleArray(&Fock_2e,&dimp_spin,job);
   DestroyDoubleArray(&Kohn_2e,&dimp_spin,job);
@@ -1413,6 +1416,7 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
+/*
 void read_write_SCF_eigenvectors(FERMI *fermi, ATOM *atoms, JOB_PARAM *job, FILES file)
 
 {
@@ -1457,6 +1461,61 @@ FILE *scf_evectors;
      }
     }
   DestroyComplexMatrix(&scf_eigenvectors,job);
+  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+  MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  DestroyDoubleMatrix(&eigvec,job);
+ }
+  MPI_File_close(&fh);
+  time2 = MPI_Wtime() - time1;
+  //if (job->taskid == 0) printf("end read/write evecs %3d %f\n",job->taskid,time2);
+
+}
+*/
+
+void read_write_SCF_eigenvectors(FERMI *fermi, ComplexMatrix *scf_eigenvectors, ATOM *atoms, JOB_PARAM *job, FILES file)
+
+{
+
+  // ******************************************************************************************
+  // * Read in SCF eigenvectors from disk and write to MPI file scf_evec_spk                  *
+  // ******************************************************************************************
+
+int i, j;
+int vector_size;
+int dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell;
+int nbands = fermi->bands[1] - fermi->bands[0] + 1;
+DoubleMatrix *eigvec;
+//ComplexMatrix *scf_eigenvectors;
+double time1, time2;
+//char zz2[24] = "scf_evectors";
+//FILE *scf_evectors;
+
+  time1 = MPI_Wtime();
+  MPI_File fh;
+  char buf2[110], xy[14] = "/scf_evec_spk";
+  strcpy(buf2,file.scf_eigvec);
+  strcat(buf2,xy);
+  fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
+
+  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
+  if (job->taskid == 0) {
+  dimk = job->spin_dim * dim1;
+  ////dimk = job->spin_dim * nbands;
+  vector_size = dimk * dim1;
+  //AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
+  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
+  //scf_evectors = fopen(zz2, "rb");
+  //fseek(scf_evectors, 0, SEEK_SET);
+  ////fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
+  //size_t result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
+  //fclose(scf_evectors);
+  for (i = 0; i < nbands; i++) {
+    for (j = 0; j < dim1; j++) {
+      eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
+      //fprintf(file.out,"read write eigvec %3d %3d %10.4lf\n",i,j,eigvec->a[i][j]);
+     }
+    }
+  //DestroyComplexMatrix(&scf_eigenvectors,job);
   MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
   MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
   DestroyDoubleMatrix(&eigvec,job);
@@ -1940,7 +1999,8 @@ int count;
     fprintf(file.out,"Pair %3d   %3d %3d   %3d\n",p,pair_p->cell1[q],pair_p->cell2[q],pair_p->latt2[q]);
     for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
       for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-        fprintf(file.out,"%10.6f ",Fock[count]);
+        fprintf(file.out,"%6.2f ",Fock[count]);
+        //fprintf(file.out,"%10.6f ",Fock[count]);
         count++;
        }
       fprintf(file.out,"\n");
@@ -1950,6 +2010,38 @@ int count;
   fprintf(file.out,"\n\n");
  }
  fflush(file.out);
+
+}
+
+void print_density_matrix_molecule(double *F, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
+
+{
+
+int i, j, p, q, s;
+int count;
+
+  fprintf(file.out,"full density matrix\n");
+  count = 0;
+  for (s = 0; s < job->spin_dim; s++) {
+    for (p = 0; p < pair_p->nump; p++) {
+      q = pair_p->posn[p];
+      for (int r = 0; r < pair_p->numb[p]; r++) {
+        fprintf(file.out,"pair %d [%3d %3d] gj %d \n",p,pair_p->cell1[q + r],pair_p->cell2[q + r],pair_p->latt2[q + r]);
+        //fprintf(file.out,"pair %d spin %d \n",p,s);
+        for (int i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+          for (int j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+            fprintf(file.out,"%6.2lf ",F[count]);
+            //fprintf(file.out,"%9.2e ",F[count]);
+            //fprintf(file.out,"%10.3e ",F[count]);
+            count++;
+           }
+          fprintf(file.out,"\n");
+         }
+        fprintf(file.out,"\n");
+       }
+      }
+     fprintf(file.out,"\n");
+    }
 
 }
 

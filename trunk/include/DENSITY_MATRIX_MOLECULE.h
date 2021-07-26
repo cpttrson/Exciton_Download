@@ -1,4 +1,6 @@
 
+void initial_density_matrix_crystal3(double*, double*, PAIR_TRAN*, FERMI*, ATOM*, ATOM_TRAN*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
+
 void initial_density_matrix(double*, double*, PAIR_TRAN*, FERMI*, ATOM*, ATOM_TRAN*, SHELL*, GAUSSIAN*, CRYSTAL*, SYMMETRY*, REAL_LATTICE*, REAL_LATTICE_TABLES*, RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
 
 void read_density_matrix(FERMI*,double**,int*,int*,ATOM*,JOB_PARAM*,FILES);
@@ -12,6 +14,8 @@ void density_matrix_molecule2(FERMI*, double*, double*, KPOINT_TRAN*, int*, REAL
 void reduced_density_matrix_molecule2(FERMI*, double*, KPOINT_TRAN*, int*, REAL_LATTICE*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
 void reduced_density_matrix_molecule3(int*, double*, FERMI*, double*, KPOINT_TRAN*, int*, REAL_LATTICE*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
+
+void reduced_density_matrix_molecule(int*, double*, ComplexMatrix*, FERMI*, double*, KPOINT_TRAN*, int*, REAL_LATTICE*, PAIR_TRAN*, ATOM_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
 void expand_density_matrix(double*, double*, PAIR_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 

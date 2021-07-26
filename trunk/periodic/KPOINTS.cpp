@@ -8,6 +8,7 @@
 #include <fstream>
 #include <mpi.h>
 */
+#include <cstdlib>
 #include "myconstants.h"
 #include "conversion_factors.h"
 #include "USER_DATA.h"

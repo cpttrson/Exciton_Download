@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <cstdlib>
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "CARTESIAN_TO_SH.h"
