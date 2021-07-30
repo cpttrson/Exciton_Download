@@ -2088,7 +2088,7 @@ FILE *scf_evectors;
 
   time1 = MPI_Wtime();
   MPI_File fh;
-  char buf2[110], xy[14] = "/scf_evec_spk";
+  char buf2[110], xy[14] = "/scf_evec_sp";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
 
@@ -5097,7 +5097,7 @@ TRIPLE_TRAN triple;
 INTEGRAL_LIST integral_list;
 MPI_File fh;
 
-char buf2[110], xy[14] = "/scf_evec_spk";
+//char buf2[110], xy[14] = "/scf_evec_spk";
 char xx[4], yy[24] = "integrals_3c.", bc[4] = "bc_", yz[24] = "integrals_", zz[24] = "integrals_";
 char xo[5] = "ov1.", xv[5] = "ov2.";
 
@@ -5333,7 +5333,7 @@ double time3, time4;
 double *temp1a_buffer, *temp1b_buffer, *temp1c_buffer;
 double *temp2a_buffer, *temp2b_buffer;
 double *eigvec;
-char buf2[110], xy[14] = "/scf_evec_spk";
+////char buf2[110], xy[14] = "/scf_evec_spk";
 char xx[4], yy[24] = "integrals_3c.", bc[4] = "bc_", yz[24] = "integrals_", zz[24] = "integrals_";
 char xo[4] = "oo.", xv[4] = "vv.";
 FILE *integrals, *integrals_temp2a, *integrals_temp2b;
@@ -5593,7 +5593,7 @@ INTEGRAL_LIST integral_list;
   //printf("mpA %3d nqA %3d %3d %3d %3d %3d  %3d %8d\n",mpA,nqA,myrow,mycol,nprow,npcol,nbands,ntransitions);
 
   MPI_File fh;
-  char buf2[110], xy[14] = "/scf_evec_spk";
+  ////char buf2[110], xy[14] = "/scf_evec_spk";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
   FILE *integrals, *integrals_occvir;
@@ -5744,7 +5744,7 @@ double *three_centre_integrals, *reduced_three_centre_integrals;
 double time1, time2, time3, time4;
 double *temp1_buffer;
 double *eigvec;
-char buf2[110], xy[14] = "/scf_evec_spk";
+////char buf2[110], xy[14] = "/scf_evec_spk";
 TRIPLE_TRAN triple;
 
   time1 = MPI_Wtime();
@@ -5883,7 +5883,7 @@ double time1, time2, time3, time4;
 double time5, time6, time7, time8, time9, time10;
 double *integral_buffer, *integral_buffer1, *integral_buffer2, *Hamiltonian_buffer;
 double *integrals1, *integrals2;
-char buf2[110], xy[14] = "/scf_evec_spk";
+////char buf2[110], xy[14] = "/scf_evec_spk";
 DoubleMatrix *V_inv;
 MPI_File fh;
 
@@ -7864,7 +7864,7 @@ FILE *scf_evectors;
 
   time1 = MPI_Wtime();
   MPI_File fh;
-  char buf2[110], xy[14] = "/scf_evec_spk";
+  ////char buf2[110], xy[14] = "/scf_evec_spk";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
 

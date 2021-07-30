@@ -48,7 +48,8 @@ int offset, offset1, dim3;
 int num_proc = job->numtasks < dim1 ? job->numtasks : dim1;
 double time1, time2, time3, time4;
 double *integral_buffer;
-char buf2[110], xy[14] = "/scf_evec_spk";
+char buf2[110], xy[14] = "/scf_evec";
+//char buf2[110], xy[14] = "/scf_evec_spk";
 DoubleMatrix *V_inv;
 MPI_File fh;
 

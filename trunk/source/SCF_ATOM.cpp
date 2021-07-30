@@ -526,7 +526,8 @@ double *p_occupation, *p_occupation_up, *p_occupation_down, total_electron_count
         break;
 
       case 4:      // sp shell
-        if (shells->nele[atoms->shelposn[*atm] + j] <= k_one) {
+        //if (shells->nele[atoms->shelposn[*atm] + j] <= k_one) {
+        if (shells->nele[atoms->shelposn[*atm] + j] <= two) {
           *p_occupation_up   = shells->nele[atoms->shelposn[*atm] + j];
           *p_occupation_down = k_zero;
            p_occupation_up++;
@@ -712,7 +713,7 @@ double *p_occupation, *p_occupation_up, *p_occupation_down, total_electron_count
     count = 0;
     for (j = 0; j < atoms->nshel[*atm]; j++) {
      for (k = 0; k < shells->type1[atoms->shelposn[*atm] + j]; k++) {
-       fprintf(file.out,"Occupation %d %d %lf %lf\n",j,k,*(occupation + count),*(occupation + atoms->bfnnumb_sh[*atm] + count));
+       fprintf(file.out,"Occupation %d %d %d %lf %lf\n",*atm,j,k,*(occupation + count),*(occupation + atoms->bfnnumb_sh[*atm] + count));
          count++;
         }
        }
@@ -736,6 +737,8 @@ double *p_occupation, *p_occupation_up, *p_occupation_down, total_electron_count
  occupied[1] = int(electron_count_down + 0.00001);
 
  if (occupied[0] - occupied[1] != abs(atoms->spin[*atm])) {
+ fprintf(file.out," %3d %3d  %3d  %3d\n",\
+ occupied[0], occupied[1],atoms->spin[*atm],*atm);
  fprintf(file.out,"Difference in number of up/down occupied states %3d incompatible with assigned spin %3d for atom %3d\n",\
  occupied[0] - occupied[1],atoms->spin[*atm],*atm);
  MPI_Finalize();

@@ -77,7 +77,7 @@ typedef struct {
   int iter ;            //!< Current iteration in SCF calculation
   int sym_adapt ;       //!< Symmetry adapt basis (= 1) Default is symmetry adaptation on
   int guess_type ;      //!< Type of guess used to start/restart SCF calculation
-  int mpi_io ;          //!< IO switch (= 0) use multiple local files (= 1) use single MPI files
+  //int mpi_io ;          //!< IO switch (= 0) use multiple local files (= 1) use single MPI files
   int mpp ;             //!< MPP switch (= 0) write eigenvectors to disk for density matrix, 1 node max (= 1) no eigenvector write use for >1 node 
   int scf_direct ;      //!< Set to 1 if SCF integrals are recalculated each cycle, set to 0 if they are stored on disk
   int scf_denfit ;      //!< Set to 1 if SCF integrals are calculated by density fitting

@@ -724,12 +724,14 @@ MPI_Win win;
       unique_quads++;
       nshells = atoms->nshel_sh[Quad.cell1[0]] * atoms->nshel_sh[Quad.cell2[0]] * atoms->nshel_sh[Quad.cell3[0]] * atoms->nshel_sh[Quad.cell4[0]];
       int start_index[nshells];
-      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;
-      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;
+      //for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 1;   // force calculation of all integrals
+      for (i1 = 0; i1 < nshells; i1++) start_index[i1] = 0;     // allowing screening to determine which integrals to calculate
       if (job->scf_direct == 0 || job->iter == 1) 
       integrals_molecule_screen_ijkl(start_index,S1,pair_p,&Quad,atoms,shells,job,file);
-      else if (job->scf_direct == 1 && job->iter > 1) 
+      else if (job->scf_direct == 1 && job->iter > 1) {
       integrals_molecule_screen_direct_ijkl(start_index,S1,F,pair_p,&Quad,atoms,shells,symmetry,job,file);
+      }
+      //for (i1 = 0; i1 < nshells; i1++) fprintf(file.out,"%3d %3d\n", i1,start_index[i1]); fflush(file.out);
       time5 += MPI_Wtime() - time6;
 
       time8 = MPI_Wtime();
@@ -1437,7 +1439,7 @@ FILE *scf_evectors;
 
   time1 = MPI_Wtime();
   MPI_File fh;
-  char buf2[110], xy[14] = "/scf_evec_spk";
+  //char buf2[110], xy[14] = "/scf_evec_spk";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
   fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
@@ -1492,7 +1494,8 @@ double time1, time2;
 
   time1 = MPI_Wtime();
   MPI_File fh;
-  char buf2[110], xy[14] = "/scf_evec_spk";
+  char buf2[110], xy[14] = "/scf_evec";
+  //char buf2[110], xy[14] = "/scf_evec_spk";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
   fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
@@ -1635,9 +1638,10 @@ int Fock_temp_offset, Density_matrix_offset;
 int F_ptr, D_ptr;
 int molecule_ints_num;
 int *p_coulomb_ints_i, *p_coulomb_ints_j, *p_coulomb_ints_k, *p_coulomb_ints_l;
+int *p_coulomb_init_i, *p_coulomb_init_j, *p_coulomb_init_k, *p_coulomb_init_l;
 int *p_exchange_ints_i, *p_exchange_ints_j, *p_exchange_ints_k, *p_exchange_ints_l;
 double *Fock_2c, *Fock_2e, *Fock_2c_temp, *Fock_2e_temp;
-double *p_coulomb_ints_value, *p_exchange_ints_value;
+double *p_coulomb_ints_value, *p_coulomb_init_value, *p_exchange_ints_value;
 double *p_molecule_ints_value;
 double largest_integral, testint, integral_rejection_threshold_sqrd;
 INTEGRAL_LIST integral_list_molecule;
@@ -1887,6 +1891,11 @@ INTEGRAL_LIST integral_list_molecule;
               molecule_ints_num     = integral_list_molecule.num;
               p_coulomb_ints_value  = integral_list_molecule.value;
               p_exchange_ints_value = integral_list_molecule.value;
+              p_coulomb_init_value = p_coulomb_ints_value;
+              p_coulomb_init_i = p_coulomb_ints_i;
+              p_coulomb_init_j = p_coulomb_ints_j;
+              p_coulomb_init_k = p_coulomb_ints_k;
+              p_coulomb_init_l = p_coulomb_ints_l;
              
               if (job->scf_coulomb == 1 && pair_p->uniq[ip * dim1 + jp] == -1) {
               //AllocateDoubleArray(&Fock_2c,&dimc,job);
@@ -1903,7 +1912,6 @@ INTEGRAL_LIST integral_list_molecule;
               if (fabs(*p_coulomb_ints_value * F[Density_matrix_offset]) > 1e-10) {
                 start_index[shell_count] = 1; 
                 flag = 1;
-                //break;
                }
               if (flag == 1) break;
               p_coulomb_ints_value++;
@@ -1912,26 +1920,20 @@ INTEGRAL_LIST integral_list_molecule;
               p_coulomb_ints_k++;
               p_coulomb_ints_l++;
               }
-              //rotate_sum_block(Fock_2c_temp,Fock_2c,ip,jp,op,atoms,shells,symmetry,job,file);
-              //for (i1 = 0; i1 < dimc; i1++) {
-                //if (fabs(Fock_2c[i1]) > 1e-10) {
-                //if (fabs(Fock_2c_temp[i1]) > 1e-10) {
-                //start_index[shell_count] = 1; 
-                //flag = 1;
-                //break;
-               //}
-                //if (flag == 1) break;
-              //}
-              p_coulomb_ints_value -= molecule_ints_num;
-              p_coulomb_ints_i     -= molecule_ints_num;
-              p_coulomb_ints_j     -= molecule_ints_num;
-              p_coulomb_ints_k     -= molecule_ints_num;
-              p_coulomb_ints_l     -= molecule_ints_num;
+              p_coulomb_ints_value = p_coulomb_init_value;
+              p_coulomb_ints_i = p_coulomb_init_i;
+              p_coulomb_ints_j = p_coulomb_init_j;
+              p_coulomb_ints_k = p_coulomb_init_k;
+              p_coulomb_ints_l = p_coulomb_init_l;
+              //p_coulomb_ints_value -= molecule_ints_num;
+              //p_coulomb_ints_i     -= molecule_ints_num;
+              //p_coulomb_ints_j     -= molecule_ints_num;
+              //p_coulomb_ints_k     -= molecule_ints_num;
+              //p_coulomb_ints_l     -= molecule_ints_num;
              }
               //DestroyDoubleArray(&Fock_2c,&dimc,job);
               //DestroyDoubleArray(&Fock_2c_temp,&dimc,job);
              }
-
               if (job->scf_exchange == 1 && job->xc_hfx == 1 && pair_p->uniq[ip * dim1 + kp] == -1 && start_index[shell_count] == 0) {
               flag = 0;
               //AllocateDoubleArray(&Fock_2e,&dime,job);
@@ -1984,19 +1986,20 @@ INTEGRAL_LIST integral_list_molecule;
 
 }
 
-void print_Fock_matrix(double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
+void print_Fock_matrix_molecule(int full, double *Fock, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
 
 {
 
-int i, j, p, q, s;
+int i, j, p, q, r, s;
 int count;
 
-  fprintf(file.out,"Fock matrix unique pairs [%d]\n",pair_p->nump);
+  if (full == 0) {
+  fprintf(file.out,"\nReduced Fock Matrix\n\n");
   count = 0;
   for (s = 0; s < job->spin_dim; s++) {
    for (p = 0; p < pair_p->nump; p++) {
     q = pair_p->posn[p];
-    fprintf(file.out,"Pair %3d   %3d %3d   %3d\n",p,pair_p->cell1[q],pair_p->cell2[q],pair_p->latt2[q]);
+    fprintf(file.out,"Pair %3d   %3d %3d\n\n",p,pair_p->cell1[q],pair_p->cell2[q]);
     for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
       for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
         fprintf(file.out,"%6.2f ",Fock[count]);
@@ -2007,41 +2010,34 @@ int count;
      }
     fprintf(file.out,"\n\n");
    }
-  fprintf(file.out,"\n\n");
+  fprintf(file.out,"\n");
  }
- fflush(file.out);
-
 }
 
-void print_density_matrix_molecule(double *F, PAIR_TRAN *pair_p, ATOM *atoms, JOB_PARAM *job, FILES file)
-
-{
-
-int i, j, p, q, s;
-int count;
-
-  fprintf(file.out,"full density matrix\n");
+  if (full == 1) {
+  fprintf(file.out,"\nFull Fock Matrix\n\n");
   count = 0;
   for (s = 0; s < job->spin_dim; s++) {
-    for (p = 0; p < pair_p->nump; p++) {
-      q = pair_p->posn[p];
-      for (int r = 0; r < pair_p->numb[p]; r++) {
-        fprintf(file.out,"pair %d [%3d %3d] gj %d \n",p,pair_p->cell1[q + r],pair_p->cell2[q + r],pair_p->latt2[q + r]);
-        //fprintf(file.out,"pair %d spin %d \n",p,s);
-        for (int i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
-          for (int j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-            fprintf(file.out,"%6.2lf ",F[count]);
-            //fprintf(file.out,"%9.2e ",F[count]);
-            //fprintf(file.out,"%10.3e ",F[count]);
-            count++;
-           }
-          fprintf(file.out,"\n");
+   for (p = 0; p < pair_p->nump; p++) {
+    q = pair_p->posn[p];
+    for (r = 0; r < pair_p->numb[p]; r++) {
+      fprintf(file.out,"Pair %3d   %3d %3d\n\n",p,pair_p->cell1[q],pair_p->cell2[q]);
+      for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
+        for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
+          fprintf(file.out,"%6.2f ",Fock[count]);
+          //fprintf(file.out,"%10.6f ",Fock[count]);
+          count++;
          }
         fprintf(file.out,"\n");
        }
-      }
-     fprintf(file.out,"\n");
+      fprintf(file.out,"\n\n");
+     }
     }
+   fprintf(file.out,"\n");
+  }
+ }
+
+  fflush(file.out);
 
 }
 

@@ -695,24 +695,24 @@ DoubleMatrix *projection_operator, *vector_new;
         salc->total_coef = total_atom_coef;
         //fprintf(file.out,"needed %3d\n",total_atom_coef);
 
-       bfposi = 0;
-       total_atom_coef = 0;
-       shelposi = atoms->shelposn_sh[ip1];
-       if (job->verbosity > 1)
-       for (j = 0; j < salc->num_irp[s]; j++) {
-         for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip1]; index_i++) {
-           for (i2 = 0; i2 < shells->shar[index_i]; i2++) {
-             for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
-               fprintf(file.out,"class %3d atm %3d shell %3d xyz %3d atmp %3d salc %3d coeff %14.8f %3d\n",\
-      	       s,atm,index_i,i2,i1,j,salc->coeff->a[i1][total_atom_coef],total_atom_coef);
-              }
-               total_atom_coef++;
-              }
-             fprintf(file.out,"\n");
-             bfposi += shells->shar[index_i];
-            }
-             fprintf(file.out,"\n");
-            }
+    //   bfposi = 0;
+    //   total_atom_coef = 0;
+    //   shelposi = atoms->shelposn_sh[ip1];
+    //   if (job->verbosity > 1)
+    //   for (j = 0; j < salc->num_irp[s]; j++) {
+    //     for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip1]; index_i++) {
+    //       for (i2 = 0; i2 < shells->shar[index_i]; i2++) {
+    //         for (i1 = 0; i1 < atom_p->numb[atm]; i1++) {
+    //           fprintf(file.out,"class %3d atm %3d shell %3d xyz %3d atmp %3d salc %3d coeff %14.8f %3d\n",\
+    //  	       s,atm,index_i,i2,i1,j,salc->coeff->a[i1][total_atom_coef],total_atom_coef);
+    //          }
+    //           total_atom_coef++;
+    //          }
+    //         fprintf(file.out,"\n");
+    //         bfposi += shells->shar[index_i];
+    //        }
+    //         fprintf(file.out,"\n");
+    //        }
 
        int count_j = 0;
        if (job->verbosity > 1)

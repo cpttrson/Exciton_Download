@@ -165,7 +165,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       int nexc, ncor;
       char exch_type[20];
       char ham_dft1[10], ham_dft2[10], ham_type[7];
-      char hamiltonian[7], spin_pol[4], x_functional[15], c_functional[12], dft_grid[9], integrals[10], direct[4];
+      char hamiltonian[7], spin_pol[6], x_functional[15], c_functional[12], dft_grid[9], integrals[10], direct[4];
       char guess[13], intexist[13], monkhorst_pack[9];
       double w[2];
       FERMI fermi;
@@ -176,8 +176,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       read_line(file.job, title, 99);
       sscanf(title, "%s", file.scf_eigvec);
 
-      job->mpi_io = 0;          // Default is to use local disk
-      job->mpp = 0;             // Default is to use cores on maximum 1 node 
+      //job->mpi_io = 0;          // Default is to use local disk
+      job->mpp = 0;             // Default is to write SCF eigenvectors to disk
 
       job->type = 0;
 
@@ -190,7 +190,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       job->xc_num  = 0;          // Default is no DFT functionals
       job->xc_typ[0] = -1;          
       job->xc_typ[1] = -1;          
-      sprintf(hamiltonian,"%s","HF");
+      //sprintf(hamiltonian,"%s","HF");
       sprintf(x_functional,"%s","HF");
       sprintf(c_functional,"%s","None");
       sprintf(dft_grid,"%s","None");
@@ -286,25 +286,26 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
           sscanf(title, "%lf %lf %lf %lf %lf", &job->itol1, &job->itol2, &job->itol3, &job->itol4, &job->itol5);
          }
 
-        if (!strcmp(jobname1, "MPI_IO")) {
-          job->mpi_io = 1; 
-         }
+        //if (!strcmp(jobname1, "MPI_IO")) {
+          //job->mpi_io = 1; 
+         //}
 
         if (!strcmp(jobname1, "MPP")) {
-          job->mpp = 1; 
+          job->mpp = 1;  // write eigenvectors to disk at end of SCF only in scf_evec MPI File
          }
 
         if (!strcmp(jobname1, "DIIS_ON")) {
           job->diis = 1; 
          }
 
-        if (!strcmp(jobname1, "HF")) {
-          job->xc_num = 0; 
-          job->xc_hfx    =  1;          
-          sprintf(hamiltonian,"%s","HFT");
-          sprintf(x_functional,"%s","HF");
-          sprintf(c_functional,"%s","None");
-         }
+        //if (!strcmp(jobname1, "HF")) {
+          //job->xc_num = 0; 
+          //job->xc_hfx    =  1;          
+          //printf("%s","RHF");
+          //sprintf(hamiltonian,"%s","RHF");
+          //sprintf(x_functional,"%s","HF");
+          //sprintf(c_functional,"%s","None");
+         //}
 
         else if (!strcmp(jobname1, "DFT")) {
 
@@ -312,6 +313,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
           job->xc_lmx = 13;
           job->xc_rad = 64;
           sprintf(dft_grid,"%s","Standard");
+          printf("%s","DFT");
           sprintf(hamiltonian,"%s","DFT");
 
             read_line(file.job, title, 99);
@@ -815,7 +817,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
            job->spin_fac = 1;
            job->spin_pol = 1;
            job->spin_polarisation = 1;
-           sprintf(spin_pol,"%s","On");
+           sprintf(hamiltonian,"%s","UHF");
+           //sprintf(spin_pol,"%s","ON");
           }
 
 
@@ -1310,7 +1313,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       int npoints;
       double energy_range[2];
       char optical_type = 'O';
-      char hamiltonian[9], monkhorst_pack[9], mpi_io[80], spectrum[14], fermi_homo[9], fermi_bands[17], field[80];
+      char hamiltonian[9], monkhorst_pack[9], spectrum[14], fermi_homo[9], fermi_bands[17], field[80];
+      //char hamiltonian[9], monkhorst_pack[9], mpi_io[80], spectrum[14], fermi_homo[9], fermi_bands[17], field[80];
       char tamm_dancoff[9],spin_state[9],linear_algebra[10];
       char scissor_shift[9],scale_factor[9];
       int numfrag = 2, max_atoms = 40;
@@ -1337,7 +1341,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
       //sprintf(file.directory1,"."); // Default for MPI file IO is current directory
 
-      job->mpi_io = 0;          // Default is to use local disk
+      //job->mpi_io = 0;          // Default is to use local disk
 
       job->type = 1;
 
@@ -1536,9 +1540,9 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
      }
     }
 
-      if (!strcmp(jobname1, "MPI_IO")) {
-        job->mpi_io = 1; 
-       }
+      //if (!strcmp(jobname1, "MPI_IO")) {
+        //job->mpi_io = 1; 
+       //}
 
       if (!strcmp(jobname1, "MONKHORST_PACK_NET")) {
       read_line(file.job, title, 99);

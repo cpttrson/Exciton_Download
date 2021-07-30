@@ -27,9 +27,7 @@ void shell_screen1(int*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, JOB_PAR
 
 void shell_screen_direct(int*, double*, double*, PAIR_TRAN*, QUAD_TRAN*, ATOM*, SHELL*, SYMMETRY*, JOB_PARAM*, FILES);
 
-void print_Fock_matrix(double*, PAIR_TRAN*, ATOM*, JOB_PARAM*, FILES);
-
-void print_density_matrix_molecule(double*, PAIR_TRAN*, ATOM*, JOB_PARAM*, FILES);
+void print_Fock_matrix_molecule(int, double*, PAIR_TRAN*, ATOM*, JOB_PARAM*, FILES);
 
 void read_write_SCF_eigenvectors(FERMI*, ComplexMatrix*, ATOM*, JOB_PARAM*, FILES);
 

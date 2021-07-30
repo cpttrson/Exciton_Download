@@ -360,6 +360,8 @@ GAUSSIAN gaussians, gaussians_ax;
     symmetry.number_of_operators = 1;
    }
 
+  if (job.sym_adapt == 0) symmetry.number_of_classes = 1;
+
   PAIR_TRAN pair_p;
   count_pairs4(&pair_p,&atoms,&atom_p,&symmetry,&R,&job,file);
 
