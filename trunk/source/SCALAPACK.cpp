@@ -22,7 +22,6 @@ extern "C" int   Cblacs_pnum(int, int, int);
 extern "C" void  Cblacs_get( int context, int request, int* value);
 extern "C" int   Cblacs_gridinit( int* context, char * order, int np_row, int np_col);
 extern "C" void  Cblacs_gridinfo( int context, int*  np_row, int* np_col, int*  my_row, int*  my_col);
-
 //extern "C" void  Cblacs_pinfo( int*, int*);
 //extern "C" int   Cblacs_gridmap( int* context, int *imap, int ldimap , int np_row, int np_col);
 //extern "C" void  Cblacs_gridexit( int context);
@@ -40,13 +39,33 @@ void initialise_spk_grid(int *gridsize, int *ictxt, int *nbsize, JOB_PARAM *job,
   // * Initialise scalapack processor grid                                                    *
   // ******************************************************************************************
   
+int i, j;
 int info = 0, izero = 0, ione = 1;
 int cblacs_taskid, itemp, nprow, npcol, myrow, mycol, mpA, nqA;
 int descA[9];
+double ratio;
 char row[2] = "R";
 
+  nprow = 1; 
+  npcol = job->numtasks;
+  ratio = (double) job->numtasks;
+
+  for (i = 1; i < job->numtasks; i++) {
+    if (i * (job->numtasks / i) == job->numtasks) { 
+      //printf("%3d %3d %10.4f %10.4f\n",i,job->numtasks / i,(double) i / (double) (job->numtasks / i), ratio);
+      if (fabs((double) i / (double) (job->numtasks / i) - k_one) < ratio) {
+        j = job->numtasks / i; // i and j are factors of job->numtasks
+        ratio = fabs((double) i / (double) j - k_one);
+       } 
+      } 
+     } 
+
+  nprow = job->numtasks / j;
+  npcol = j;
+
   if (job->numtasks == 1) { nprow = 1; npcol = 1; }
-  else if (job->numtasks > 1) { npcol = min(job->numtasks, 14); nprow = job->numtasks / npcol; }
+
+  //else if (job->numtasks > 1) { npcol = min(job->numtasks, 14); nprow = job->numtasks / npcol; } // set npcol up to 14 
   //*nbsize = min(1 + ((*gridsize - 1)/ npcol), 256);
   *nbsize = min(1 + ((*gridsize - 1)/ npcol), 64);
 
@@ -292,7 +311,6 @@ int I1, I2, il, jl, j1;
 int blocksize;
 int mpA, nqA, nprow, npcol, myrow, mycol, izero = 0;
 long long local_pointer, global_pointer, myrow_pointer, mycol_pointer;
-//int local_pointer, myrow_pointer, mycol_pointer, global_pointer, blocksize;
 
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
   mpA = numroc_(nt, nbsize, &myrow, &izero, &nprow);

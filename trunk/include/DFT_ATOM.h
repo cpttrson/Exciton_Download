@@ -1,11 +1,13 @@
-//void pseudo_1e_atm(DoubleMatrix*, PSEUDO*, int*, ATOM*, SHELL*, GAUSSIAN*, JOB_PARAM*, FILES);
-//void orbital_grid(double *, double *, double *, double *, double *, int *, int, int, ATOM *, SHELL *, GAUSSIAN *, JOB_PARAM *, FILES);
-//void orbital_gradient_grid(double*, double*, double*, double*, VECTOR_DOUBLE*, int*, int, int, ATOM*, SHELL*, GAUSSIAN*, JOB_PARAM*, FILES);
-//void kohn_sham_2e_matrix(int *, DoubleMatrix *, INTEGRAL_LIST*, DoubleMatrix *, ATOM *, SHELL *, GAUSSIAN *, JOB_PARAM *, FILES);
-//void pseudopotential_1e_matrix(DoubleMatrix *, int *, PSEUDO *, ATOM *, SHELL *, GAUSSIAN *, JOB_PARAM *, FILES);
-//void coulomb_kohn_sham_2e_matrix(int *, DoubleMatrix *, DoubleMatrix*, DoubleMatrix *, ATOM *, SHELL *, GAUSSIAN *, JOB_PARAM *, FILES);
-//double e(int , int , int , double , double , double );
-//void f000m(double *, double , double , int );
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 void Gauss_Chebyshev_weights_abscissa(int , double *, double *, JOB_PARAM*, FILES);
 

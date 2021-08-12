@@ -26,7 +26,7 @@
 #include "PRINT_MOLECULE.h"
 #include "BUILD_FOCK_MATRIX_MOLECULE.h"
 #include "LINEAR_ALGEBRA_UTIL.h"
-#include "ROTATION_OPERATORS.h"
+#include "ROTATIONS_MOLECULE.h"
 #include "FOURIER_TRANSFORM.h"
 #include "INTEGRALS_2C_MOLECULE.h"
 #include "SCF_MOLECULE.h"
@@ -41,7 +41,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
 {
 
-  //int begin_p[job->numtasks], end_p[job->numtasks], receive_p[job->numtasks], offset_p[job->numtasks];
   int begin_k, end_k;
   int i, j, k, l, n, p, q, s, ii, iii, jjj;
   int dim1, dim2, dim3;
@@ -74,11 +73,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   char xx[10] = "/evalfile", yy[10] = "/scf_evec", zz[20] = "/new_density_matrix";
   char zz2[24] = "scf_evectors";
   FILE *scf_evectors; 
-  //char filename[15] = "/scf_evec";
-  //FILE *scf_evectors, *scf_evalues; 
-  //char xx1[4];
-  //char zz4[24] = "scf_evalues";
-  //char zz1[24] = "scf_evectors.";
   Complex alpha = Complex(k_one, k_zero);
   Complex beta = Complex(k_zero, k_zero);
   PAIR_TRAN pair_p;
@@ -109,9 +103,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   generate_density_pairs4(&pair_p,atoms,atom_p,symmetry,R,R_tables,job,file);
   if (job->taskid == 0 && job->verbosity > 1) 
   print_pairs(&pair_p,atoms,R,job,file);
-  //int begin_p[job->numtasks], end_p[job->numtasks], receive_p[job->numtasks], offset_p[job->numtasks];
-  //mpi_begin_end(begin_p,end_p,pair_p.nump,job->numtasks,job,file);
-  //mpi_receive_offset_pairs(begin_p,end_p,receive_p,offset_p,&pair_p,atoms,job,file);
   sh_array_dimensions(&dimp,&dimf,&pair_p,atoms,job,file); 
 
   // ******************************************************************************************
@@ -141,8 +132,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   AllocateDoubleArray(&P1,&dimp_spin,job);
   AllocateDoubleArray(&F1,&dimf_spin,job);
   AllocateDoubleArray(&P2,&dimp_spin,job);
-  //if (job->scf_direct == 1) {
-  //AllocateDoubleArray(&P1,&dimp_spin,job);
 
   // ******************************************************************************************
   // * Initial wave function guess                                                            *
@@ -170,7 +159,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     if (job->taskid == 0 || job->verbosity > 1)
     fprintf(file.out,"Reduced density matrix read from disk.\nReduced/Full density matrices have sizes %d/%d.\n\n",dimp,dimf);
     ksize = 1;
-    //knet_size(&ksize,fermi->is,crystal);
     fermi->nktot = ksize;
     allocate_fermi(fermi,atoms,job,file);
     AllocateDoubleArray(&P0,&dimp_read_spin,job);
@@ -195,10 +183,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
     knet.ibz[0] = 0;
     knet.opr[0] = 0;
     knet.num[0] = 1;
-    //kvec[0].comp1 = 0;
-    //kvec[0].comp2 = 0;
-    //kvec[0].comp3 = 0;
-    //print_knet(&knet, fermi->is, crystal, job, file);
     allocate_fermi(fermi,atoms,job,file);
    }
 
@@ -208,7 +192,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
 
     if (job->guess_type == 0) {
     initial_density_matrix(P0,F0,&pair_p,fermi,atoms,atom_p,shells,gaussians,crystal,symmetry,R,R_tables,G,job,file);
-    //initial_density_matrix_crystal3(P0,F0,&pair_p,fermi,atoms,atom_p,shells,gaussians,crystal,symmetry,R,R_tables,G,job,file);
     ResetDoubleArray(F0,&dimf_spin);
     expand_density_matrix(P0,F0,&pair_p,atoms,shells,symmetry,job,file);
    }
@@ -361,7 +344,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   num_irrep_in_basis[0] = 1;
   count1 = 0;
   for (jjj = 0; jjj < job->spin_dim * job->mixing_order; jjj++) {
-  //for (jjj = 0; jjj < job->mixing_order; jjj++) {
     AllocateComplexMatrix(&Residual[count1],&dim11,&dim11,job);
     AllocateComplexMatrix(&FockHist[count1],&dim1,&dim1,job);
     //AllocateComplexMatrix(&FockHist[count1],&dim11,&dim11,job);
@@ -375,7 +357,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   count_basis_irrep(num_irrep_in_basis,atoms,atom_p,shells,symmetry,job,file);
   count1 = 0;
   for (jjj = 0; jjj < job->spin_dim * job->mixing_order; jjj++) {
-  //for (jjj = 0; jjj < job->mixing_order; jjj++) {
     for (iii = 0; iii < symmetry->number_of_classes; iii++) {
       dim_salc = symmetry->irp_dim_k[iii] * num_irrep_in_basis[iii];
       if (dim_salc == 0) dim_salc = 1;
@@ -1103,7 +1084,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   // * Pulay mixing                                                                           *
   // ******************************************************************************************
 
-     //else if (job->iter > 1) {
      else if (job->iter > 1 && (job->diis == 0 || fabs(job->energy_change) > 1e-02)) {
 
      init_mix(C_i, C_o, D, P0, P1);
@@ -1189,7 +1169,6 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   DestroyDoubleMatrix(&D,job);
   if (job->sym_adapt == 1) {
   for (iii = 0; iii < job->spin_dim * job->mixing_order * symmetry->number_of_classes; iii++) {
-  //for (iii = 0; iii < job->mixing_order * symmetry->number_of_classes; iii++) {
   DestroyComplexMatrix(&Residual[iii],job);
   DestroyComplexMatrix(&FockHist[iii],job);
  }
@@ -1322,7 +1301,7 @@ ComplexMatrix *Residual_tmp, *xtmp_salc, *xtmp_salc1, *C_element;
       if (end < 0) end = 0;
       fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
       fprintf(file.out,"| SIIS MIXING COEFFS");
-      for (kk = 0; kk < nmix; kk++) fprintf(file.out," %10.6f",B[kk]);
+      for (kk = 0; kk < nmix; kk++) fprintf(file.out," %8.3f",B[kk]);
       for (kk = 0; kk < end; kk++)  fprintf(file.out,"          ");
       fprintf(file.out,"|\n");
       fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
@@ -1445,7 +1424,7 @@ Complex gamma = Complex(-k_one, k_zero);
       if (end < 0) end = 0;
       fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
       fprintf(file.out,"| DIIS MIXING COEFFS");
-      for (kk = 0; kk < nmix; kk++) fprintf(file.out," %10.6f",B[kk]);
+      for (kk = 0; kk < nmix; kk++) fprintf(file.out," %8.3f",B[kk]);
       for (kk = 0; kk < end; kk++)  fprintf(file.out,"          ");
       fprintf(file.out,"|\n");
       fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");

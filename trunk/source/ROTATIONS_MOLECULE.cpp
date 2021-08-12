@@ -221,11 +221,6 @@ void rotate_permute_expand_pair_complex(int p, PAIR_TRAN *pair_p, Complex *F_red
     nd2 = atoms->bfnnumb_sh[jp];
 
     for (i = 0; i < nd1 * nd2; i++) F_rotate[i] = Complex(k_zero, k_zero);
-    //p_F_rotate = F_rotate;
-    //for (i = 0; i < nd1 * nd2; i++) {
-      //*p_F_rotate = k_zero;
-        //p_F_rotate++;
-       //}
  
       switch (pm) {
 
@@ -310,19 +305,6 @@ void rotate_permute_expand_pair_complex(int p, PAIR_TRAN *pair_p, Complex *F_red
     // Put rotated pairs in consecutive order. Place in proper order only in FT'd arrays
     for (i = 0; i < nd1 *nd2; i++) F[nd1 * nd2 * k + i] = F_rotate[i];
 
-    //p_F_rotate = F_rotate;
-    //p_F = F + nd1 * nd2 * k; // Put rotated pairs in consecutive order. Place in proper order only in FT'd arrays
-    //fprintf(file.out,"p %3d ip %3d jp %3d gj %3d op %3d pm %3d\n",p,ip,jp,gj,op,pm) ;
-    //for (i = 0; i < nd1; i++) {
-      //for (j = 0; j < nd2; j++) {
-        //*p_F = *p_F_rotate;
-        //fprintf(file.out,"%10.4lf ",*p_F) ;
-        //p_F++;
-        //p_F_rotate++;
-      //}
-     //fprintf(file.out,"\n");
-     //}
-
   } // close loop on k
 
   free(F_rotate);
@@ -365,11 +347,6 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
   nd2 = atoms->bfnnumb_sh[jp];
 
   for (i = 0; i < 3 * nd1 * nd2; i++) F_rotate[i] = k_zero;
-      //p_F_rotate = F_rotate;
-      //for (i = 0; i < 3 * nd1 * nd2; i++) {
-        //*p_F_rotate = k_zero;
-         //p_F_rotate++;
-        //}
 
     switch (pm) {
 
@@ -479,20 +456,6 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
     // Put rotated pairs in consecutive order. Place in proper order only in FT'd arrays
     for (i = 0; i < 3 * nd1 *nd2; i++) F[3 * nd1 * nd2 * k + i] = F_rotate[i];
 
-   //p_F_rotate = F_rotate;
-   //p_F = F + 3 * nd1 * nd2 * k; // Put rotated pairs in consecutive order. Place in proper order only in FT'd arrays
-   //for (t = 0; t < 3; t++) {
-    //for (i = 0; i < nd1; i++) {
-      //for (j = 0; j < nd2; j++) {
-        //*p_F = *p_F_rotate;
-        //fprintf(file.out,"p latt2 i j *p_rotate%3d %3d %3d %3d %12.6lf\n",p,pair_p->latt2[k],i,j,*p_F_rotate) ;
-        //p_F++;
-        //p_F_rotate++;
-      //}
-      //fprintf(file.out,"\n") ;
-    //} // close loop on t
-    //}
-
   } // close loop on k
 
   free(F_rotate);
@@ -500,7 +463,6 @@ double *p_rot1, *p_rot2, *p_rot3, *p_F, *p_F_reduced, *F_rotate, *p_F_rotate ;
 }
 
 void rotate_permute_triple_ija(int *ip, int *jp, int *kp, int *op, int *pm, double *F_reduced, double *F, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, ATOM *atoms_ax, SHELL *shells_ax, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-//void rotate_permute_triple_ij_alpha(int *ip, int *jp, int *alpha, int *op, int *pm, double *F_reduced, double *F, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, ATOM *atoms_ax, SHELL *shells_ax, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
 

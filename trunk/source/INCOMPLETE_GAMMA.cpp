@@ -10,23 +10,8 @@
   //                                                                                          *
   // ******************************************************************************************
 
-/*
-#include <cstdio>
 #include <cstdlib>
-#include <iostream>
-#include <fstream>
 #include <cstring>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-//#include <xc.h>
-#include <sys/types.h>
-#include "mylogical.h"
-#include "mycomplex.h"
-#include "conversion_factors.h"
-*/
-#include <cstdlib>
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "INCOMPLETE_GAMMA.h"

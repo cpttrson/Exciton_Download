@@ -2,7 +2,7 @@
 
   // ******************************************************************************************
   //                                                                                          *
-  //                           Copyright (C) 2021 A.-M. Elena                                 *
+  //                           Copyright (C) 2021 Alin-Marin Elena                            *
   //                                                                                          *
   //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
   //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
@@ -10,18 +10,8 @@
   //                                                                                          *
   // ******************************************************************************************
 
-/*
-#include <cstdio>
-#include <cmath>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
-#include <mpi.h>
-#include "mylogical.h"
-#include "conversion_factors.h"
-*/
 #include <cstdlib>
+#include <cstring>
 #include "myconstants.h"
 #include "mycomplex.h"
 #include "USER_DATA.h"
@@ -59,7 +49,7 @@ void DoubleDotProd(double *c, const int *n, double **a, const int *inca, double 
 
 #ifdef ISOF2003
 
-// ADD LATER DoubleDotProdv1(c, n, a, inca, b, incb );
+// DoubleDotProdv1(c, n, a, inca, b, incb );
 
 #else
 
@@ -160,39 +150,36 @@ void ComplexGEMM2(const char *ta, const char *tb, int *m, int *n, int *k, const 
 
 #else
 
-/*
-  if (*ta=='N' && *tb =='N'){
-   *m = (**mb).iCols;
-   *n = (**ma).iRows;
-   *k = (**mb).iRows;
-   *lda=*m;
-   *ldb=*k;
-   *ldc=*m;
-  }
-
-  if (*ta=='T' && *tb =='N'){
-   *m=(**mb).iCols;
-   *n= (**ma).iCols;
-   *k=(**mb).iRows;
-   *lda=*m;
-   *ldb=*n;
-   *ldc=*m;
-  }
-
- if (*ta=='N' && *tb =='T'){
-   *m=(**mb).iRows;
-   *n=(**ma).iRows;
-   *k=(**mb).iCols;
-   *lda=*k;
-   *ldb=*k;
-   *ldc=*m;
-  }
-*/
+//  if (*ta=='N' && *tb =='N'){
+//   *m = (**mb).iCols;
+//   *n = (**ma).iRows;
+//   *k = (**mb).iRows;
+//   *lda=*m;
+//   *ldb=*k;
+//   *ldc=*m;
+// }
+//
+// if (*ta=='T' && *tb =='N'){
+//  *m=(**mb).iCols;
+//  *n= (**ma).iCols;
+//  *k=(**mb).iRows;
+//  *lda=*m;
+//  *ldb=*n;
+//  *ldc=*m;
+// }
+//
+//if (*ta=='N' && *tb =='T'){
+//  *m=(**mb).iRows;
+//  *n=(**ma).iRows;
+//  *k=(**mb).iCols;
+//  *lda=*k;
+//  *ldb=*k;
+//  *ldc=*m;
+// }
 
 //printf("ta tb %c %c %d %d %d %d %d %d\n",*ta,*tb,*m,*n,*k,*lda,*ldb,*ldc);
 
    zgemm_(tb, ta, n, m, k, alpha, *((**mb).a), ldb, *((**ma).a), lda, beta, *((**mc).a), ldc, &ione, &ione);
- //zgemm_(tb, ta, m, n, k, alpha, *((**mb).a), lda, *((**ma).a), ldb, beta, *((**mc).a), ldc, &ione, &ione);
 
 #endif
 
@@ -247,7 +234,6 @@ void ComplexGEMM1(const char *ta, const char *tb, const Complex *alpha, ComplexM
   }
 
   if (((*ta =='T')||(*ta=='C')) && (*tb =='N')){
-  //if (*ta=='T' && *tb =='N'){
    m=(**mb).iCols;
    n= (**ma).iCols;
    k=(**mb).iRows;
@@ -257,7 +243,6 @@ void ComplexGEMM1(const char *ta, const char *tb, const Complex *alpha, ComplexM
   }
 
   if ((*ta=='N') && ((*tb =='T')||(*tb=='C'))){
- //if (*ta=='N' && *tb =='T'){
    m=(**mb).iRows;
    n=(**ma).iRows;
    k=(**mb).iCols;
@@ -266,10 +251,8 @@ void ComplexGEMM1(const char *ta, const char *tb, const Complex *alpha, ComplexM
    ldc=m;
   }
 
-  //printf("ta tb %c %c %d %d %d %d %d %d\n",*ta,*tb,m,n,k,lda,ldb,ldc);
-  //zgemm_(&ta, &tb, &(**mb).iCols, &(**ma).iRows, &(**mb).iRows, alpha, *((**mb).a), &(**mb).iCols, *((**ma).a), &(**ma).iCols, beta, *((**mc).a), &(**mc).iCols,&ione,&ione);
-   //zgemm_(tb, ta, &m, &n, &k, alpha, *((**mb).a), &lda, *((**ma).a), &ldb, beta, *((**mc).a), &ldc);
    zgemm_(tb, ta, &m, &n, &k, alpha, *((**mb).a), &lda, *((**ma).a), &ldb, beta, *((**mc).a), &ldc, &ione, &ione);
+
 //printf("ta tb %d %d %d %d %d %d\n",m,n,k,lda,ldb,ldc);
 
 #endif
@@ -289,7 +272,6 @@ void ComplexGEMM(const Complex *alpha, ComplexMatrix **ma, ComplexMatrix **mb, c
 
 #else
 
-  //zgemm_(&ta, &tb, &(**mb).iCols, &(**ma).iRows, &(**mb).iRows, alpha, *((**mb).a), &(**mb).iCols, *((**ma).a), &(**ma).iCols, beta, *((**mc).a), &(**mc).iCols);
   zgemm_(&ta, &tb, &(**mb).iCols, &(**ma).iRows, &(**mb).iRows, alpha, *((**mb).a), &(**mb).iCols, *((**ma).a), &(**ma).iCols, beta, *((**mc).a), &(**mc).iCols,&ione,&ione);
 
 #endif
@@ -318,8 +300,6 @@ void SVD_DGESDD(DoubleMatrix **a, double **w, DoubleMatrix **eig_left, DoubleMat
 
    dgesdd_(job, &(**a).iRows, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig_right).a), &(**eig_right).iCols, \
    *((**eig_left).a), &(**eig_left).iCols, tmp, &lwork, itmp, info);
-   //dgesdd_(job, &(**a).iRows, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig_right).a), &(**eig_right).iCols, \
-   *((**eig_left).a), &(**eig_left).iCols, tmp, &lwork, info);
 
    lwork  = (int)tmp[0];
    liwork = itmp[0];
@@ -333,10 +313,7 @@ printf("lwork %3d    %3d %3d %3d %3d\n",lwork,(**a).iRows,(**a).iCols,(**eig_lef
     return;
   }
 
-   //    SUBROUTINE DGESVD( JOBU, JOBVT, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, INFO )
-
   iwork = (int *) malloc(8 * (**eig_right).iCols * sizeof(int));
-  //iwork = (int *) malloc(liwork * sizeof(int));
   if (iwork == NULL) {
     *info = -404;
     return;
@@ -344,73 +321,11 @@ printf("lwork %3d    %3d %3d %3d %3d\n",lwork,(**a).iRows,(**a).iCols,(**eig_lef
 
    dgesdd_(job, &(**a).iRows, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig_right).a), &(**eig_right).iCols, \
    *((**eig_left).a), &(**eig_left).iCols, work, &lwork, iwork, info);
-   //dgesdd_(job, &(**a).iRows, &(**a).iCols, *((**a).a), &(**a).iCols, *w, *((**eig_right).a), &(**eig_right).iCols, \
-   *((**eig_left).a), &(**eig_left).iCols, work, &lwork, info);
 
   free(work);
   free(iwork);
 
-//#endif
-
 }
-
-//void CholeskySymmetric(DoubleMatrix **a, char *uplo, int *info)
-
-//{
-
-//#ifndef ISOF2003
-
- //double tmp[1], *work,vl,vu,abstol;
- //int lwork, liwork,il,iu, itmp[1],m, *iwork, *issupz;
- //char rnge='A';
- //int ione=1;
-
-//#endif
-
-//#ifdef ISOF2003
-
-   //DiagonaliseSymmetricalv1(a,w,eig,job,uplo,info);
-
-//SUBROUTINE DPOTRF( UPLO, N, A, LDA, INFO )
-
-//#else
-
-  //abstol = k_tol;
-  //issupz = (int *) malloc(2*(**a).iCols * sizeof(int));
-  //if (issupz == NULL) {
-    //*info = -402;
-    //return;
-  //}
-
-//   lwork=-1;
-   //liwork=-1;
-   //dpotrf_(uplo, &(**a).iCols, *((**a).a), &(**a).iCols,info);
-
-   //lwork=(int)tmp[0];
-   //liwork=itmp[0];
-   //work = (double *) malloc(lwork * sizeof(double));
-
-  //if (work == NULL) {
-    //*info = -400;
-    //return;
-  //}
-
-  //iwork = (int *) malloc(liwork * sizeof(int));
-  //if (iwork == NULL) {
-    //*info = -404;
-    //return;
-  //}
-
-  //dsyevr_(job,&rnge, uplo, &(**a).iCols, *((**a).a), &(**a).iCols,&vl,&vu,&il,&iu,&abstol,&m, *w,\
-     *((**eig).a),&(**eig).iCols,issupz,work, &lwork,iwork,&liwork, info,&ione,&ione,&ione);
-
-  //free(work);
-  //free(iwork);
-  //free(issupz);
-
-//#endif
-
-//}
 
 void DiagonaliseSymmetrical(DoubleMatrix **a, double **w, DoubleMatrix **eig, char *job, char *uplo, int *info)
 
@@ -432,7 +347,6 @@ void DiagonaliseSymmetrical(DoubleMatrix **a, double **w, DoubleMatrix **eig, ch
 #else
 
   abstol = k_tol;
-  //abstol = ktol;
   issupz = (int *) malloc(2*(**a).iCols * sizeof(int));
   if (issupz == NULL) {
     *info = -402;
@@ -606,10 +520,6 @@ void DiagonaliseHermitianX(ComplexMatrix **a, double **w, ComplexMatrix **eig, c
   zheevx_(job,&rnge, uplo, &(**a).iCols, *((**a).a),&(**a).iCols,&vl,&vu,&il,&iu,&abstol,&m,*w,\
         *((**eig).a),&(**eig).iCols,work,&lwork,rwork,iwork,ifail,info);
 
-printf("info %d %c %c ifail ",*info,*job,*uplo);
-for (i=0;i<(**a).iCols;i++)
-printf("%d ",ifail[i]);
-printf("\n");
   free(work);
   free(iwork);
   free(rwork);

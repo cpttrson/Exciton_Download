@@ -17,7 +17,7 @@
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"
 #include "PRINT_UTIL.h"
-#include "ROTATION_OPERATORS.h"
+#include "ROTATIONS_MOLECULE.h"
 #include "SYMMETRY_ADAPTATION.h"
 #include "ALLOCATE_MEMORY_MOLECULE.h"
 
@@ -83,11 +83,10 @@ double character[symmetry->number_of_classes][atoms->number_of_unique_atoms];
             i,atm,num_irrep_in_atom->a[i][atm],dot_product / (double) symmetry->grp_dim);
           }
          }
-            //if (job->taskid > 0)
-            //fprintf(file.out,"\n");
          
 }
 
+/*
 void count_atom_irrep_crystal(IntMatrix *num_irrep_in_atom, ATOM *atoms, ATOM_TRAN *atom_p, REAL_LATTICE_TABLES *R_tables, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -163,6 +162,7 @@ for (latt = 1; latt < 13; latt++) {
             fprintf(file.out,"\n");
          
 }
+*/
 
 void count_basis_irrep(int *num_irrep_in_basis, ATOM *atoms, ATOM_TRAN *atom_p, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -182,7 +182,6 @@ double character[symmetry->number_of_classes];
   for (atm = 0; atm < atoms->number_of_unique_atoms; atm++) {
     ip = atom_p->posn[atm];
     shelposi = atoms->shelposn_sh[ip];
-    ////shelposi = atoms->shelposn[ip];
     for (ipp = 0; ipp < atom_p->numb[atm]; ipp++) {
       for (index_i = shelposi; index_i < shelposi + atoms->nshel_sh[ip]; index_i++) {
         for (i1 = 0; i1 < shells->shar[index_i]; i1++) {
@@ -227,6 +226,7 @@ double character[symmetry->number_of_classes];
          
 }
 
+/*
 void count_basis_irrep_crystal(int *num_irrep_in_basis, ATOM *atoms, ATOM_TRAN *atom_p, REAL_LATTICE_TABLES *R_tables, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -298,6 +298,7 @@ for (latt = 1; latt < 13; latt++) {
             fprintf(file.out,"\n");
          
 }
+*/
 
 void count_atom_salc(int s, int ip, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -306,7 +307,6 @@ void count_atom_salc(int s, int ip, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, 
 int num_salc;
 int num_irp;
 int i1, i2, i3, i4;
-//int num_coef, total_coef;
 int num_coef, total_atom_coef;
 int i, j, k, l, m, op;
 int oppshift1, sheli1;
@@ -319,7 +319,6 @@ DoubleMatrix *projection_operator1, *vector_new1;
 double *vector_rot, *vector;
 int dimp1, dimp2;
 
-  //total_coef = 0;
   total_atom_coef = 0;
   num_salc = 0;
   atm = atoms->uniq[ip];
@@ -428,6 +427,7 @@ int dimp1, dimp2;
 
 }
 
+/*
 void count_atom_salc_crystal(int s, IntMatrix *lattice_tran, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, REAL_LATTICE_TABLES *R_tables, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -558,6 +558,7 @@ int ip = 0; //FIX
        fprintf(file.out,"s %3d num_salc %3d total_coef %3d\n",s,num_salc,total_coef);
 
 }
+*/
 
 void generate_atom_salc(int s, int ip, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
@@ -728,6 +729,7 @@ DoubleMatrix *projection_operator, *vector_new;
          }
 }
 
+/*
 void generate_atom_salc_crystal(int s, IntMatrix *lattice_tran, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, REAL_LATTICE_TABLES *R_tables, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
@@ -748,7 +750,7 @@ double *vector_rot, *vector;
 int dimp1, dimp2;
 
 int ip, latt, latt_rot, O_temp, latt_temp;
-/*
+//
 if (pair == 0) {
 ip = pair_p->cell1[posn];
 latt = pair_p->latt1[posn];
@@ -789,7 +791,7 @@ if (latt_tran[i2][op] == array[i1]) { latt_rotd[i2][op] = i1; } //fprintf(file.o
 }
 }
 }
-*/
+//
 
   //fprintf(file.out,"s %3d pair %3d posn %3d natoms %3d\n",s,pair,posn,count_atoms);
   //for (i2 = 0; i2 < count_atoms; i2++) 
@@ -914,6 +916,7 @@ if (latt_tran[i2][op] == array[i1]) { latt_rotd[i2][op] = i1; } //fprintf(file.o
           salc->total_coef = total_coef;
 
 }
+*/
 
 void count_shell_salc(int index_i, int s, int atm, SALC *salc, ATOM *atoms, ATOM_TRAN *atom_p, PAIR_TRAN *pair_p, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 

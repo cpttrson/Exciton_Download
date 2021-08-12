@@ -1,7 +1,7 @@
 
   // ******************************************************************************************
   //                                                                                          *
-  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                           Copyright (C) 2021 C. H. Patterson and Alin-Marin Elena        *
   //                                                                                          *
   //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
   //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
@@ -9,18 +9,11 @@
   //                                                                                          *
   // ******************************************************************************************
 
-#include <cstdio>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <cstring>
-#include <fstream>
 #include <mpi.h>
-
+#include <cstdlib>
+#include <cstring>
 #include "myconstants.h"
 #include "USER_DATA.h"
-//#include "KPOINTS.h"
 #include "ALLOCATE_MEMORY_MOLECULE.h"
 
 using namespace std;
@@ -644,14 +637,10 @@ void allocate_SALC(SALC *salc, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   exit(1);
   }
 
-  //int dim = 5 * salc->num_atom * salc->num_salc;
-  //AllocateDoubleMatrix(&salc->coeff,&dim,&salc->total_coef,job);
   AllocateDoubleMatrix(&salc->coeff,&salc->num_atom,&salc->total_coef,job);
   AllocateIntMatrix(&salc->bfn_posn,&salc->num_atom,&salc->total_coef,job);
   salc->memory +=  salc->num_atom * salc->total_coef * sizeof(double);
   salc->memory +=  salc->num_atom * salc->total_coef * sizeof(int);
-  //AllocateIntMatrix(&salc->bfn_posn,&dim,&salc->total_coef,job);
-  //salc->memory +=  dim * salc->total_coef * sizeof(int);
 
 }
 
@@ -1523,10 +1512,7 @@ void AllocateDoubleMatrix(DoubleMatrix** g, int *iRows, int *iCols, JOB_PARAM *j
 {
 
   int i;
-  
-  //CHP2018
   long long memsize;
-  //CHP2018
 
   *g=(DoubleMatrix *)malloc(sizeof(DoubleMatrix));
   if (*g==NULL){
@@ -1540,11 +1526,8 @@ void AllocateDoubleMatrix(DoubleMatrix** g, int *iRows, int *iCols, JOB_PARAM *j
     exit(1);
   }
 
-  //CHP2018
   memsize = *iRows * (*iCols * sizeof(double));
-  //CHP2018
 
-  //(*g)->a[0]=(double *) malloc(*iRows * *iCols*sizeof(double));
   (*g)->a[0]=(double *) malloc(memsize);
   if ((*g)->a[0]==NULL){
     fprintf(stderr,"out of memory for columns %d %d %lld\n",*iRows,*iCols,memsize);
@@ -1557,10 +1540,7 @@ void AllocateDoubleMatrix(DoubleMatrix** g, int *iRows, int *iCols, JOB_PARAM *j
   (*g)->iRows=*iRows;
   (*g)->iCols=*iCols;
 
-  //CHP2018
   (*g)->memory = memsize;
-  //(*g)->memory = *iRows * *iCols * sizeof(double);
-  //CHP2018
 
   job->memory[job->taskid] += (*g)->memory;
 
@@ -1728,7 +1708,6 @@ void sh_array_dimensions(int *dim, int *dim1, PAIR_TRAN *pair_p, ATOM *atoms, JO
     tmp = atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]] ;
     *dim  += tmp ;
     *dim1 += tmp * pair_p->numb[i] ;
-    //fprintf(file.out,"%3d %3d %3d %3d\n",tmp,tmp*pair_p->numb[i],*dim,*dim1);
    }
 
     job->dimp = *dim;
@@ -1772,7 +1751,6 @@ void sh_triple_array_dimensions(int *dim, int *dim1, TRIPLE_TRAN *triple, ATOM *
     tmp = atoms->bfnnumb_sh[triple->cell1[q]] * atoms->bfnnumb_sh[triple->cell2[q]] * atoms->bfnnumb_sh[triple->cell3[q]] ;
     *dim  += tmp ;
     *dim1 += tmp * triple->numb[i] ;
-    //fprintf(file.out,"%3d %3d  %3d %3d %3d  %3d %3d %3d\n",q,tmp,triple->cell1[q],triple->cell2[q],triple->cell3[q],tmp*triple->numb[i],*dim,*dim1);
    }
 
    if (job->taskid == 0 && job->verbosity > 1)

@@ -17,7 +17,6 @@
 using namespace std;
 
 void mcmurchie_davidson_ij(double *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_2c(double *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -37,9 +36,6 @@ double c1fac[15][15][15];
 
   sheli = shells->cart[index_i];
   shelj = shells->cart[index_j];
-  //for (i = 0; i < sheli * shelj; i++) {
-    //F_cart[i] = k_zero;
-   //}
   imax   = shells->imax_sh[index_i];
   jmax   = shells->imax_sh[index_j];
   off2 = shells->ng_sh[index_i];
@@ -116,7 +112,6 @@ double c1fac[15][15][15];
 }
 
 void mcmurchie_davidson_ij_complex(Complex *F_cart, Complex *fgtuv, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, SHELL *shells, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_2c_complex(Complex *F_cart, Complex *fgtuv, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -136,9 +131,6 @@ Complex c1fac[15][15][15];
 
   sheli = shells->cart[index_i];
   shelj = shells->cart[index_j];
-  //for (i = 0; i < sheli * shelj; i++) {
-    //F_cart[i] = Complex(k_zero, k_zero);
-   //}
   imax   = shells->imax_sh[index_i];
   jmax   = shells->imax_sh[index_j];
   off2 = shells->ng_sh[index_i];
@@ -215,7 +207,6 @@ Complex c1fac[15][15][15];
 }
 
 void mcmurchie_davidson_ija(double *F_cart, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int nd2, int nd3, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_3c_reversed(double *F_cart, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int nd2, int nd3, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
 
 {
 
@@ -235,7 +226,6 @@ double c1fac[15][15][15];
   sheli = shells->cart[index_i];
   shelj = shells->cart[index_j];
   shelk = shells_ax->cart[index_k];
-  //for (i = 0; i < sheli * shelj * shelk; i++) F_cart[i] = k_zero;
   imax   = shells->imax_sh[index_i];
   jmax   = shells->imax_sh[index_j];
   kmax   = shells_ax->imax_sh[index_k];
@@ -319,7 +309,6 @@ double c1fac[15][15][15];
 }
 
 void mcmurchie_davidson_ija_complex(Complex *F_cart, Complex *fgtuv, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int nd2, int nd3, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_3c_reversed_complex(Complex *F_cart, Complex *fgtuv, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int nd2, int nd3, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
 
 {
 
@@ -422,7 +411,6 @@ Complex c1fac[15][15][15];
 }
 
 void mcmurchie_davidson_ijkl(double *F_cart, int index_i, int index_j, int index_k, int index_l, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson(double *F_cart, int index_i, int index_j, int index_k, int index_l, double *C1x, double *C1y, double *C1z, double *C2x, double *C2y, double *C2z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -538,7 +526,6 @@ void mcmurchie_davidson_ijkl(double *F_cart, int index_i, int index_j, int index
 }
 
 void mcmurchie_davidson_ijij(double *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_screen(double *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, double *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -641,11 +628,6 @@ void mcmurchie_davidson_ijij(double *F_cart, int index_i, int index_j, int bfpos
                      for (t = 0; t <= tmax; t++) {
                        for (u = 0; u <= umax; u++) {
                          for (v = 0; v <= vmax; v++) {
-                           //p_F_cart = F_cart + (bfposi + i) * nd2 + bfposj + j;
-                           //p_F_cart = F_cart + dim2 * i + dim3 * j + dim4 * k + l ;
-                          //*p_F_cart += c1fac[t][u][v] * C1x[n1 * off1 + n4 * off2 + t * off3 + i4] * \
-                           C1y[n2 * off1 + n5 * off2 + u * off3 + i4] * C1z[n3 * off1 + n6 * off2 + v * off3 + i4];
-                           //p_F_cart = F_cart + dim2 * i + dim3 * j + dim4 * k + l ;
                            F_cart[dim2 * i + dim3 * j + dim4 * k + l] += c1fac[t][u][v] * \
 			   C1x[n1 * off1 + n4 * off2 + t * off3 + i4] * \
                            C1y[n2 * off1 + n5 * off2 + u * off3 + i4] * \
@@ -662,7 +644,6 @@ void mcmurchie_davidson_ijij(double *F_cart, int index_i, int index_j, int bfpos
 }
 
 void mcmurchie_davidson_ijij_complex(Complex *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, Complex *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
-//void mcmurchie_davidson_screen_complex(Complex *F_cart, int index_i, int index_j, int bfposi, int bfposj, int nd2, double *C1x, double *C1y, double *C1z, Complex *fgtuv, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -766,11 +747,6 @@ void mcmurchie_davidson_ijij_complex(Complex *F_cart, int index_i, int index_j, 
                      for (t = 0; t <= tmax; t++) {
                        for (u = 0; u <= umax; u++) {
                          for (v = 0; v <= vmax; v++) {
-                           //p_F_cart = F_cart + (bfposi + i) * nd2 + bfposj + j;
-                           //p_F_cart = F_cart + dim2 * i + dim3 * j + dim4 * k + l ;
-                          //*p_F_cart += c1fac[t][u][v] * C1x[n1 * off1 + n4 * off2 + t * off3 + i4] * \
-                           C1y[n2 * off1 + n5 * off2 + u * off3 + i4] * C1z[n3 * off1 + n6 * off2 + v * off3 + i4];
-                           //p_F_cart = F_cart + dim2 * i + dim3 * j + dim4 * k + l ;
                            F_cart[dim2 * i + dim3 * j + dim4 * k + l] += c1fac[t][u][v] * \
 			   C1x[n1 * off1 + n4 * off2 + t * off3 + i4] * \
                            C1y[n2 * off1 + n5 * off2 + u * off3 + i4] * \

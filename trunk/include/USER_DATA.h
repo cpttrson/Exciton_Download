@@ -1,3 +1,14 @@
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
+
 #include "mpi.h"
 #include "mycomplex.h"
 
@@ -77,7 +88,6 @@ typedef struct {
   int iter ;            //!< Current iteration in SCF calculation
   int sym_adapt ;       //!< Symmetry adapt basis (= 1) Default is symmetry adaptation on
   int guess_type ;      //!< Type of guess used to start/restart SCF calculation
-  //int mpi_io ;          //!< IO switch (= 0) use multiple local files (= 1) use single MPI files
   int mpp ;             //!< MPP switch (= 0) write eigenvectors to disk for density matrix, 1 node max (= 1) no eigenvector write use for >1 node 
   int scf_direct ;      //!< Set to 1 if SCF integrals are recalculated each cycle, set to 0 if they are stored on disk
   int scf_denfit ;      //!< Set to 1 if SCF integrals are calculated by density fitting
@@ -100,8 +110,6 @@ typedef struct {
   int bse_exc ;         //!< BSE calculation: calculate SCF HF exchange to test q != 0 integrals 
   int band_dim ;        //!< Number of Bloch function product arrays in density fitting integrals
   int rpa_lim ;         //!< RPA calculation: number of RPA eigenvectors to write to disc and use in screened interaction calculation
-  int gw_spk ;          //!< GW calculation type: 0 = LAPACK (default), 1 = SCALAPACK linear algebra in GW Casida calculation
-  int gw_int ;          //!< GW calculation type: 0 = calculate integrals, 1 = integrals exist on disc, 2 = calculate in core
   int bse_denfit ;      //!< Set to 1 if BSE integrals are calculated by density fitting (must be 1 for screened exchange)
   int bse_screxc ;      //!< Set to 1 if BSE screened exchange integrals are calculated by density fitting
   int vectors ;         //!< eigenvectors to be read from disk if set to 1 to be read or written if set to 2
@@ -259,11 +267,6 @@ typedef struct {
   int margin_vector;        //!< Last_vector plus a margin guaranteed to allow for addition or subtraction of pairs of O_temp vectors to/from last_vector
   int last_ewald_vector;    //!< Number of lattice vectors for density matrix
   int memory;               //!< Memory allocated to this array
-  //int last_overlap_vector;  //!< Number of lattice vectors for density matrix
-  //double cutoff;
-  //double ewald_cutoff;
-  //double margin;
-  //double aspect_ratio;
 
 } REAL_LATTICE_TABLES;      //!< Tables for addition, subtraction and rotation of real lattice vectors
 
@@ -342,7 +345,6 @@ typedef struct {
   int *ind_j;
   int *num_ij;
   int tuv[5][15][3] ; 
-  //CHANGES2015 int tuv[8][6][3] ; 
   int memory;               //!< Memory allocated to this array
   double *nele; // initial number of electrons
   double *pop_sh ;
@@ -358,14 +360,11 @@ typedef struct {
   int num_salc ;                             //!< Number of symmetry adapted linear combinations in an atom star
   int num_atom ;                             //!< Number of atoms in an atom star
   int total_coef ;                           //!< Number of coefficients in all symmetry adapted linear combinations
-  //int total_atom_coef ;                      //!< Number of atoms in star * number of coefficients in all symmetry adapted linear combinations
   int memory ;                               //!< Number of bytes allocated to SALC array
   int *atm ;                                 //!< Pointer to atom position for each salc coefficient
-  //int *ind_i ;                               //!< Pointer to atom basis function position for each salc coefficient
   int *irp ;                                 //!< Irreducible representation of each symmetry adapted linear combination
   int *num_irp ;                             //!< Number of irreducible representation in each class for a given atom
   int *num_coef ;                            //!< Number of non-zero coefficients in a symmetry adapted linear combination
-  //double *coef ;                             //!< Coefficients of symmetry adapted linear combinations of basis functions in a shell
   IntMatrix *bfn_posn ;                      //!< Pointer to atom basis function position for each salc/atom
   DoubleMatrix *coeff ;                      //!< Coefficients of symmetry adapted linear combinations of basis functions in a shell
 
@@ -373,13 +372,10 @@ typedef struct {
 
 #define MXSH 40
 #define MXGF 20
-//#define MXPR 6000
-//#define MXP  10000
 #define MXP  120000
-//#define MXP  70000
-//#define MXP  130000
-//#define MXT  10000
 #define MXT  25000
+//#define MXP  10000
+//#define MXT  10000
 
 typedef struct {
 
@@ -468,23 +464,6 @@ typedef struct {
   int cell2[MXP];
   int latt1[MXP];
   int latt2[MXP];
-/*
-  int ptr[MXP];
-  int P[MXP];
-  int numb;
-  int orc;
-  int ord;
-  double rc1;
-  double rc2;
-  double rsq;
-  double rs1;
-  double rs2;
-  double sab;
-  double scd;
-  double sac;
-  double sbd;
-  double ovp;
-*/
 
 } PAIR_TMP;                                  //!< Temporary array similar to PAIR_TRAN used to count pairs before allocation
 
@@ -500,7 +479,6 @@ typedef struct {
   int *O;                  //!< Lattice vector which translates *cell1 for a pair to the zeroth cell after a symmetry operation
   int *P;                  //!< Set to 1 if a pair transforms to itself modulo a lattice vector (is fixed) under a symmetry operation
   int *posn;               //!< Index for beginning of nth set of pairs which are equivalent by symmetry
-  //int *posi;               //!< Index for beginning of nth set of fixed pairs
   int *off;                //!< Offset in full density matrix at which nth pair begins
   int *Off;                //!< Offset in reduced density matrix at which n'th pair begins
   int *ptr;                //!< Index of a particular pair in a list of pairs i.e. (i,j,g) stored at *ptr
@@ -509,19 +487,11 @@ typedef struct {
   int *rot;                //!< Transformation of unique pairs under each permutation and space group operation
   int *numb;               //!< Number of pairs equivalent by symmetry to the nth unique pair
   int *K;                  //!< Symmetry operator which generates nth fixed pair
-  //int *Q;                  //!< Permutation operator which generates nth fixed pair
-  //int *I;                  //!< Lattice vector which translates *cell1 for nth **fixed** pair to the zeroth cell after a symmetry operation
-  //int *numi;               //!< Number of pairs equivalent by symmetry to nth fixed pair
-  //int *limit;              //!< Maximum lattice vector for each pair of unique atoms
   int nump;                //!< Number of unique pairs in this structure
-  //int numq;                //!< Number of quads in this structure
-  //int numt;                //!< Number of triples in this structure
   int tot;                 //!< Total number of pairs or triples in this structure
   int memory;              //!< Memory allocated to this array
-  //int maxl;                //!< Maximum real space lattice vector in this structure
   double *dist;            //!< Distance between atoms in nth pair
   double cutoff;           //!< Cutoff distance between atoms for range selected pairs
-  //double *ovp;             //!< Overlap between gaussians with smallest exponents in nth pair
 
 } PAIR_TRAN;               //!< Structure containing atom/lattice indices for ion pairs and their transformations under symmetry operations
 
@@ -571,22 +541,6 @@ typedef struct {
 
 } TRIPLE_TMP;              //!< Structure containing atom/lattice indices for ion triples and their transformations under symmetry operations
 
-/*
-typedef struct {
-
-  int ibz;
-  int fbz;
-  int opr;
-  int num;
-  int elem;
-  int uniq;
-  int fbzo;
-  double wght;
-  double kwgt;
-
-} KPT_TRAN ;
-*/
-
 typedef struct {
 
   int unique;              //!< Number of nkunique k points
@@ -630,39 +584,9 @@ typedef struct {
   int *opr;                //!< Operator taking unique k point to point in full Brillouin zone
   int *num;                //!< Number of kpoints equivalent to each unique k point
   int *posn;               //!< Positions in bz lists at which sets of equivalent k point pairs begin
-  //int *trs;                //!< trs = 1(0) point (not) generated by time reversal symmetry
   int memory;              //!< Memory allocated to this array
-  //double *weight;          //!< Weight of each unique k point for Brillouin zone integration
-  //VECTOR_INT *oblique1;    //!< Coordinates of ksize k points in integer, oblique coordinates
-  //VECTOR_INT *oblique2;    //!< Coordinates of ksize k points in integer, oblique coordinates
-  //VECTOR_DOUBLE *cart1;    //!< Coordinates of ksize k points in Cartesian coordinates
-  //VECTOR_DOUBLE *cart2;    //!< Coordinates of ksize k points in Cartesian coordinates
 
 } KPOINT_PAIR_TRAN ;       //<! Structure containing k point pair coordinates and transformations
-
-/*
-typedef struct {
-
-  int pt1[48];
-  int pt2[48];
-  int numb;
-  double wght;
-
-} KPAIR_TMP;
-*/
-
-/*
-typedef struct {
-
-  int *pt1;
-  int *pt2;
-  int *k;
-  int numb;
-  int uniq;
-  double wght;
-
-} KPAIR_TRAN;
-*/
 
 typedef struct {
 
@@ -706,8 +630,6 @@ typedef struct {
   int bands[4];
   int plot_bands[10];          //!< List of bands for plotting
   int homo[2];
-  //int homo_up;
-  //int homo_dn;
   int nkunique;
   int nktot;
   int ksize;
@@ -717,7 +639,6 @@ typedef struct {
   int *occupied;
   double *occupation;
   KPOINT_TRAN *knet;
-  //VECTOR_KNET *knet_unique;
   VECTOR_KNET *knet_list;
 
 } FERMI;

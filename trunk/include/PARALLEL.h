@@ -1,5 +1,13 @@
-#ifndef PARALLELH
-#define PARALLELH
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                    Copyright (C) 2021 C. H. Patterson and A.-M. Elena                    *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 void mpi_begin_end(int*, int*, int, int, JOB_PARAM*, FILES );
 
@@ -27,4 +35,3 @@ long GetLongCounter(int, long, MPI_Win*);
 
 void DestroyLongCounter(int, int, MPI_Win*, long*);
 
-#endif

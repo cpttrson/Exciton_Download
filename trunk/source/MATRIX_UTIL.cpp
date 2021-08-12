@@ -9,20 +9,8 @@
   //                                                                                          *
   // ******************************************************************************************
 
-/*
-#include <cstdio>
-#include <cmath>
 #include <cstdlib>
-#include <ctime>
-#include <iostream>
 #include <cstring>
-#include <fstream>
-#include <mpi.h>
-#include "mycomplex.h"
-#include "mylogical.h"
-#include "conversion_factors.h"
-*/
-#include <cstdlib>
 #include "myconstants.h"
 #include "USER_DATA.h"
 #include "MATRIX_UTIL.h"
@@ -206,40 +194,6 @@ void map_to_brillouin(CRYSTAL *crystal, VECTOR_DOUBLE *vec, VECTOR_DOUBLE *mappe
 
 }
 
-
-/*
-void double_vec_sum(VECTOR_DOUBLE *vec1, VECTOR_DOUBLE *vec2, VECTOR_DOUBLE *vec3)
-
-{
-
-  vec3->comp1 = vec1->comp1 + vec2->comp1;
-  vec3->comp2 = vec1->comp2 + vec2->comp2;
-  vec3->comp3 = vec1->comp3 + vec2->comp3;
-
-}
-
-void rotate_vector2(int *symmoperator, VECTOR_DOUBLE *vector_in, VECTOR_DOUBLE *vectorR)
-
-{
-
-  int *p_irr;
-
-  p_irr = symmoperator;
-  vectorR->comp1 = (*p_irr) * vector_in->comp1 + (*(p_irr + 1)) * vector_in->comp2 +\
- (*(p_irr + 2))
-      * vector_in->comp3;
-  vectorR->comp2 = (*(p_irr + 3)) * vector_in->comp1 + (*(p_irr + 4)) * vector_in->comp2 +\
- (*(p_irr + 5))
-      * vector_in->comp3;
-  vectorR->comp3 = (*(p_irr + 6)) * vector_in->comp1 + (*(p_irr + 7)) * vector_in->comp2 +\
- (*(p_irr + 8))
-      * vector_in->comp3;
-
-  return;
-
-}
-
-*/
 
 void getcart(VECTOR_INT *vec, VECTOR_DOUBLE *vec2, int *is, CRYSTAL *crystal)
 
@@ -452,29 +406,6 @@ void rotate_vector_int_latt_C(int *symmoperator, int is[3], int trs, VECTOR_INT 
 
 }
 
-/*
-void rotate_vector_int_transpose(int *symmoperator, VECTOR_INT *vector_in, VECTOR_INT *vectorR)
-
-{
-
-  int *p_irr;
-
-  p_irr = symmoperator;
-  vectorR->comp1 = (*p_irr) * vector_in->comp1 + (*(p_irr + 3)) * vector_in->comp2 +\
- (*(p_irr + 6))
-      * vector_in->comp3;
-  vectorR->comp2 = (*(p_irr + 1)) * vector_in->comp1 + (*(p_irr + 4)) * vector_in->comp2 +\
- (*(p_irr + 7))
-      * vector_in->comp3;
-  vectorR->comp3 = (*(p_irr + 2)) * vector_in->comp1 + (*(p_irr + 5)) * vector_in->comp2 +\
- (*(p_irr + 8))
-      * vector_in->comp3;
-
-  return;
-}
-
-*/
-
 int check_vec(VECTOR_DOUBLE *Rvec_tmp, VECTOR_DOUBLE *Rvec_ai)
 
 {
@@ -491,48 +422,4 @@ int check_vec(VECTOR_DOUBLE *Rvec_tmp, VECTOR_DOUBLE *Rvec_ai)
     return 0;
 
 }
-
-/*
-int check_kvec(VECTOR_DOUBLE *Rvec_tmp, VECTOR_DOUBLE *Rvec_ai)
-
-{
-  double mag = 0.001;
-
-  if (fabs((*Rvec_tmp).comp1 - (*Rvec_ai).comp1) < mag && fabs((*Rvec_tmp).comp2 - (*Rvec_ai).comp2) < mag && fabs(
-      (*Rvec_tmp).comp3 - (*Rvec_ai).comp3) < mag) 
-
-    return 1;
-
-  else
-
-    return 0;
-}
-
-int check_product(int *p_irr, int *q_irr, int *r_irr)
-
-{
-
-  double A[3][3], eps = 0.0000001;
-  int n = 0;
-
-  A[0][0] = *(p_irr) * *(q_irr) + *(p_irr + 1) * *(q_irr + 3) + *(p_irr + 2) * *(q_irr + 6);
-  A[0][1] = *(p_irr + 3) * *(q_irr) + *(p_irr + 4) * *(q_irr + 3) + *(p_irr + 5) * *(q_irr + 6);
-  A[0][2] = *(p_irr + 6) * *(q_irr) + *(p_irr + 7) * *(q_irr + 3) + *(p_irr + 8) * *(q_irr + 6);
-  A[1][0] = *(p_irr) * *(q_irr + 1) + *(p_irr + 1) * *(q_irr + 4) + *(p_irr + 2) * *(q_irr + 7);
-  A[1][1] = *(p_irr + 3) * *(q_irr + 1) + *(p_irr + 4) * *(q_irr + 4) + *(p_irr + 5) * *(q_irr + 7);
-  A[1][2] = *(p_irr + 6) * *(q_irr + 1) + *(p_irr + 7) * *(q_irr + 4) + *(p_irr + 8) * *(q_irr + 7);
-  A[2][0] = *(p_irr) * *(q_irr + 2) + *(p_irr + 1) * *(q_irr + 5) + *(p_irr + 2) * *(q_irr + 8);
-  A[2][1] = *(p_irr + 3) * *(q_irr + 2) + *(p_irr + 4) * *(q_irr + 5) + *(p_irr + 5) * *(q_irr + 8);
-  A[2][2] = *(p_irr + 6) * *(q_irr + 2) + *(p_irr + 7) * *(q_irr + 5) + *(p_irr + 8) * *(q_irr + 8);
-
-  if (fabs(A[0][0] - *(r_irr)) < eps && fabs(A[0][1] - *(r_irr + 1)) < eps && fabs(A[0][2] - *(r_irr + 2)) < eps
-      && fabs(A[1][0] - *(r_irr + 3)) < eps && fabs(A[1][1] - *(r_irr + 4)) < eps && fabs(A[1][2] - *(r_irr + 5)) < eps
-      && fabs(A[2][0] - *(r_irr + 6)) < eps && fabs(A[2][1] - *(r_irr + 7)) < eps && fabs(A[2][2] - *(r_irr + 8)) < eps) 
-
-      n = 1;
-
-  return n;
-
-}
-*/
 

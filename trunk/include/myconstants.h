@@ -1,5 +1,14 @@
-#ifndef MYCONSTANTSH
-#define MYCONSTANTSH
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
+
 /* Fundamental constants in MKS units
 
  hbar = Planck constant /2 / pi
@@ -26,11 +35,7 @@
 
 #define a0 (double)(5.2917720859E-11)
 
-//#define zero           (double) 0.00000000000000000000
-//#define one            (double) 1.00000000000000000000
 #define k_tol          (double) 0.000000000000001000000000
-//#define k_tol          (double) 0.00000000001000000000
-//#define ktol           (double) 0.00000000010000000000
 #define k_zero         (double) 0.00000000000000000000
 #define k_one          (double) 1.00000000000000000000
 #define two            (double) 2.00000000000000000000
@@ -71,4 +76,3 @@
 
 #define INT_BCC (double)(43.198066515915080)
 
-#endif

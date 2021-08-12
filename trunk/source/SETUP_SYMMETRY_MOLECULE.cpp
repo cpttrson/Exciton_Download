@@ -1337,52 +1337,6 @@ void generate_cartesian_symmetry_operators(CRYSTAL *crystal, SYMMETRY *symmetry,
    generate_permutation_group_table(symmetry,job,file);
    print_symmetry_operators(symmetry,job,file);
 
-/*
-   if (job->C09 != 1) { // reorder operators by conjugacy classes and recompute group multiplication table and inverses
-
-   int new_operator_order[symmetry->number_of_operators];
-   int inr_temp[symmetry->number_of_operators][9];
-   int count1 = 0;
-   double irr_temp[symmetry->number_of_operators][9];
-   VECTOR_DOUBLE tau_temp[symmetry->number_of_operators];
-   for (i = 0; i < symmetry->number_of_operators; i++) {
-     for (j = 0; j < 9; j++) {
-     irr_temp[i][j] = symmetry->irr[i * 9 + j];
-     tau_temp[i].comp1 = symmetry->taur[i].comp1;
-     tau_temp[i].comp2 = symmetry->taur[i].comp2;
-     tau_temp[i].comp3 = symmetry->taur[i].comp3;
-     inr_temp[i][j] = symmetry->inr[i * 9 + j];
-    }
-   }
-   for (i = 0; i < symmetry->number_of_classes; i++) {
-     for (j = 0; j < symmetry->cls_num_k[i]; j++)  {
-       new_operator_order[count1 + j] = symmetry->cls_k[symmetry->cls_pos_k[i] + j];
-      }
-       count1 += symmetry->cls_num_k[i];
-      }
-   for (i = 0; i < symmetry->number_of_operators; i++) {
-     for (j = 0; j < 9; j++) {
-       symmetry->irr[i * 9 + j] = irr_temp[new_operator_order[i]][j];
-       symmetry->taur[i].comp1 = tau_temp[new_operator_order[i]].comp1;
-       symmetry->taur[i].comp2 = tau_temp[new_operator_order[i]].comp2;
-       symmetry->taur[i].comp3 = tau_temp[new_operator_order[i]].comp3;
-       symmetry->inr[i * 9 + j] = inr_temp[new_operator_order[i]][j];
-      }
-     }
-
-   print = 1;
-   if (job->taskid == 0) print = 1;
-   generate_operator_inverses(symmetry, job, file);
-   generate_group_multiplication_table(symmetry, print, file);
-   generate_group_conjugacy_classes(symmetry, print, file);
-
-  } // end if (job->C09
-
-   generate_Dirac_characters(symmetry,job,file);
-   generate_permutation_group_table(symmetry,job,file);
-   print_symmetry_operators(symmetry,job,file);
-*/
-
 }
 
 void reorder_symmetry_operators_by_class(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
@@ -1483,7 +1437,6 @@ VECTOR_INT kvec[3];
 }
 
 void generate_little_k_group_operators(int k, SYMMETRY *symmetry_little_k_group, SYMMETRY *symmetry, CRYSTAL *crystal,KPOINT_TRAN *knet, FERMI *fermi, JOB_PARAM *job, FILES file)
-//void generate_little_k_group_operators(int k, SYMMETRY *symmetry_little_k_group, SYMMETRY *symmetry, KPOINT_TRAN *knet, FERMI *fermi, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1662,11 +1615,7 @@ void generate_Dirac_characters(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
     degeneracy[i] = 0;
     for (j = 0; j < symmetry->number_of_classes; j++) { 
       for (k = 0; k < symmetry->number_of_classes; k++) { 
-        //matrix->a[j][k] = (double) class_constants[i][j][k];
         matrix->a[j][k] += sqrt (i + 3.4) * (double) class_constants[i][j][k];
-        //matrix1[i]->a[j][k] += 0.277 * sqrt(i + 1) * (double) class_constants[i][j][k];
-        //matrix->a[j][k] += class_constants[i][j][k] / two;
-        //matrix->a[k][j] += class_constants[i][j][k] / two;
         ResetDoubleMatrix(eigenvectors);
        }
       }
@@ -1755,9 +1704,6 @@ void generate_Dirac_characters(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   for (i = 0; i < symmetry->number_of_classes; i++) { 
   fprintf(file.out,"|  %2d   |    %2d     |",i + 1, symmetry->irp_dim_k[i]);
   for (j = 0; j < symmetry->number_of_classes; j++) { 
-  ////symmetry->character_table[i * symmetry->number_of_classes + j] = (double) symmetry->irp_dim_k[i] / \
-  (double) symmetry->cls_num_k[j] * eigval->a[j][i];
-  //fprintf(file.out,"%3d %3d %f\n",symmetry->irp_dim_k[i] , symmetry->cls_num_k[j] , eigval->a[j][i]);
   fprintf(file.out,"%4.0lf  |",symmetry->character_table[i * symmetry->number_of_classes + j]);
    }
   fprintf(file.out,"\n");
@@ -1766,7 +1712,6 @@ void generate_Dirac_characters(SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
   for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
   fprintf(file.out,"\n");
   fprintf(file.out,"\n\n");
-  //fflush(file.out);
  }
 
   DestroyDoubleMatrix(&matrix,job);
@@ -1801,7 +1746,6 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
   char trans = 'T', no_trans = 'N', conj_trans = 'C';
   char uplo = 'U';
   char jobz = 'V';
-  //HERE double *eigenvalues_imag;
   double alpha = k_one, beta = k_zero;
   double sum[symmetry->number_of_classes];
   DoubleMatrix *eigenvalues_real, *eigenvalues_imag, *eigval, *tmp, *tmp1;
@@ -1822,7 +1766,6 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
   AllocateDoubleMatrix(&eigenvalues_real,&dim,&dim,job);
   AllocateDoubleMatrix(&eigenvalues_imag,&dim,&dim,job);
   AllocateDoubleMatrix(&eigval,&dim,&dim,job);
-  //HERE AllocateDoubleArray(&eigenvalues_imag,&dim,job);
   AllocateDoubleMatrix(&eigenvectors,&dim,&dim,job);
   AllocateDoubleMatrix(&eigvec,&dim,&dim,job);
   AllocateDoubleMatrix(&tmp,&dim,&dim,job);
@@ -1848,7 +1791,6 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
       for (k = 0; k < symmetry->cls_num_k[i]; k++) { 
         for (l = 0; l < symmetry->cls_num_k[j]; l++) { 
           (character_product[symmetry->inverse[symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]]])++;
-          //HERE (character_product[symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]])++;
           //fprintf(file.out,"%3d %3d  %3d %3d   %3d\n",\
           i+1,j+1,k,l,symmetry->grp_k[symmetry->cls_k[pos_i + k] * symmetry->number_of_operators + inv_cls_k[pos_j + l]]);
          }
@@ -2030,9 +1972,6 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
   for (i = 0; i < symmetry->number_of_classes; i++) { 
   fprintf(file.out,"|  %2d   |    %2d     |",i + 1, symmetry->irp_dim_k[i]);
   for (j = 0; j < symmetry->number_of_classes; j++) { 
-  ////symmetry->character_table[i * symmetry->number_of_classes + j] = (double) symmetry->irp_dim_k[i] / \
-  (double) symmetry->cls_num_k[j] * eigval->a[j][i];
-  //fprintf(file.out,"%3d %3d %f\n",symmetry->irp_dim_k[i] , symmetry->cls_num_k[j] , eigval->a[j][i]);
   fprintf(file.out,"%4.0lf  |",symmetry->character_table[i * symmetry->number_of_classes + j]);
    }
   fprintf(file.out,"\n");
@@ -2041,13 +1980,11 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
   for (i = 0; i < symmetry->number_of_classes; i++) fprintf(file.out,"-------");
   fprintf(file.out,"\n");
   fprintf(file.out,"\n\n");
-  //fflush(file.out);
  }
 
   DestroyDoubleMatrix(&matrix,job);
   DestroyDoubleMatrix(&eigenvalues_real,job);
   DestroyDoubleMatrix(&eigenvalues_imag,job);
-  //DestroyDoubleArray(&eigenvalues_imag,&dim,job);
   DestroyDoubleMatrix(&eigval,job);
   DestroyDoubleMatrix(&eigenvectors,job);
   DestroyDoubleMatrix(&eigvec,job);
@@ -2148,7 +2085,6 @@ double irr1[9];
     if (print) fprintf(file.out,"GROUP MULTIPLICATION TABLE\n\n");
     if (print) fprintf(file.out,"      ");
     for (i = 0; i < symmetry->number_of_operators * symmetry->number_of_operators; i++) 
-    //for (i = 0; i < symmetry->number_of_operators * 9; i++) 
     symmetry->grp_k[i] = -1;
     for (i = 0; i < symmetry->number_of_operators; i++) 
     if (print) fprintf(file.out,"%2d ",i);
@@ -2201,7 +2137,6 @@ print = 1;
           (taken[k])++; 
            total_taken++;
          }
-           //fprintf(file.out,"%2d %2d %2d %2d\n",i, j, k,total_taken);
          } // close loop on j
           if (symmetry->cls_num_k[symmetry->number_of_classes] > 0) symmetry->number_of_classes++;
         } // close loop on i
@@ -2237,7 +2172,6 @@ double *p_irr, *q_irr;
       p_irr = symmetry->irr + i * 9;
       q_irr = symmetry->irr + j * 9;
       k = check_inverse1(p_irr, q_irr);
-      //if (k == 1 && debug == 1) {
       if (job->taskid == 0 && k == 1 && job->verbosity > 1) {
         fprintf(file.out, "%5d %6d \n", i + 1, j + 1);
       }

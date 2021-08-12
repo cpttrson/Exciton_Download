@@ -78,8 +78,6 @@ double *p_irr, *p_rot;
    *p_ind_i = 0;
    *p_ind_j = 0;
    *p_rot = k_one;
-    //fprintf(file.out,"S %3d %3d\n",*symmetry->op_shift,count);
-    //fprintf(file.out,"s rrk %3d %3d %3d %3d %3d\n",k,*p_num,*p_ind_i,*p_ind_j,*p_ost) ;
     p_ind_i++;
     p_ind_j++;
     p_rot++;
@@ -208,8 +206,6 @@ double *p_irr, *p_rot;
     }
     //fprintf(file.out,"\n");
    *p_ost = count;
-    //fprintf(file.out,"DFG %3d %3d\n",*symmetry->op_shift,count);
-    //fprintf(file.out,"l %3d count %3d *p_num %3d\n",l,count,*p_num) ;
     count += *p_num;
     p_num++;
     p_ost++;
@@ -379,8 +375,6 @@ int offset, row_index, col_index;
 
   if (abs(m) > l || abs(n) > l) return k_zero;
   else {
-  //printf("M offset %3d lmn %3d %3d %3d row col %3d %3d tot %3d %10.4lf\n",offset,l,m,n,row_index,col_index,\
-  offset + row_index * (2 * l + 1) + col_index,S[offset + row_index * (2 * l + 1) + col_index]);
   return S[offset + row_index * (2 * l + 1) + col_index];
  }
 
@@ -402,9 +396,6 @@ int offset, row_index, col_index;
 
   row_index = (l - m);
   col_index = (l - n);
-
-  //printf("M offset %3d lmn %3d %3d %3d row col %3d %3d tot %3d\n",offset,l,m,n,row_index,col_index,\
-  offset + row_index * (2 * l + 1) + col_index);
 
   return offset + row_index * (2 * l + 1) + col_index;
 
@@ -482,28 +473,6 @@ void test_rotation_operators(ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB
   int index_i, shelposi;
   int *p_i, *p_i1, *p_j, *p_j1;
   double *p_rot1, *p_rot2, *p_F_unit_matrix, *F_rotate, *p_F_rotate, *F_unit_matrix;;
-
-  //for (l = 1; l < 6; l+=2) {
-
-/*
-  for (i = 0; i < atoms->number_of_atoms_in_unit_cell; i++) {
-    shelposi = atoms->shelposn[i];
-    for (index_i = shelposi; index_i < shelposi + atoms->nshel[i]; index_i++) {
-    fprintf(file.out,"atom %3d shell %3d order %3d\n",i,index_i,shells->ord[index_i]);
-    for (op = 0; op < symmetry->number_of_operators; op++) {
-    oppshift1 = *(symmetry->op_shift + op * 5 + shells->ord[index_i]);
-    sheli1 = *(symmetry->num_ij + op * 5 + shells->ord[index_i]);
-    p_i1 = symmetry->ind_i + oppshift1;
-    p_i = symmetry->ind_j + oppshift1;
-    p_rot1 = symmetry->rot + oppshift1;
-    for (j = 0; j < sheli1; j++) {
-    fprintf(file.out,"op %3d op_shift %5d i %3d   i1,i  %3d %3d  rot1 %10.4lf\n",op,oppshift1,j,*p_i1,*p_i,*p_rot1);
-   }
-  }
-  fprintf(file.out,"\n");
- }
-}
-*/
 
   l = 2 * job->l_max + 1;
 

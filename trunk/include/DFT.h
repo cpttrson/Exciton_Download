@@ -1,5 +1,13 @@
-#ifndef DFTH
-#define DFTH
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 void count_dft_savin_grid(int*, PAIR_TRAN*, ATOM*, CRYSTAL*, REAL_LATTICE*, SYMMETRY*, JOB_PARAM*, FILES);
 
@@ -15,4 +23,3 @@ void exchange_matrix_dft(double*, double*, DFT_GRID*, double*, double*, TRIPLE_T
 
 void dft_grid_parameters(int *L_range, double *r_range, JOB_PARAM *job, FILES file);
 
-#endif

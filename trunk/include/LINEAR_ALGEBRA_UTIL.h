@@ -1,12 +1,13 @@
-#ifndef LINALGUTILH
-#define LINALGUTILH
 
-/*
-extern "C" {
-
-  #include "mycomplex.h"
-}
-*/
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson and A.-M. Elena             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 extern "C" {
 
@@ -50,15 +51,11 @@ void DiagonaliseRealGeneral(DoubleMatrix **, double **, double **, DoubleMatrix 
 
 void DiagonaliseComplexGeneral(ComplexMatrix**, Complex**, ComplexMatrix**, int*);
 
-#ifdef ISOF2003
-
 void ComplexDotProdv1(Complex *, const int *, Complex **, const int *, Complex **, const int *);
 
 void DiagonaliseSymmetricalv1(DoubleMatrix **,double **, DoubleMatrix **, const char *,const char *,int *);
 
 void DiagonaliseHermitianv1(ComplexMatrix **,double **, ComplexMatrix **, const char *,const char *,int *);
-
-#else
 
 void zdotc_(Complex *, const int *, Complex *, const int *, Complex *, const int *);
 
@@ -76,13 +73,11 @@ void dtrmm_(const char *, const char *, const char *, const char *, const int *,
 
 void dsyevr_(const char *, const char *,const char *,const int *, double *,const int *,const double *, const double *, const int *, const int *, const double *,int *, double *, double *,const int *, int *, double *, int*,int *, const int *, int *, int *, int *, int *);
 
-//void dgesdd_(const char *, const int *, const int *, double *, const int *, const double *, const double *, const int *, const double *, const int *, double *, const int *, int *);
 void dgesdd_(const char *, const int *, const int *, double *, const int *, const double *, const double *, const int *, const double *, const int *, double *, const int *, int *, int *);
 
 void zheevr_(const char *, const char *, const char *,const int *, Complex *, const int *, const double *, const double *, const int *, const int *, const double *, int *,double *, Complex *, const int *, const int *, Complex *, const int *, double *, const int *,int *, const int *, int *, int *,int *, int *);
 
 void zheevx_(const char *, const char *, const char *,const int *, Complex *, const int *, const double *, const double *, const int *, const int *, const double *, int *,double *, Complex *, const int *, Complex *, const int *, double *, int *,int *, int *);
-//void zheevx_(const char *, const char *, const char *,const int *, Complex *, const int *, const double *, const double *, const int *, const int *, const double *, int *,double *, Complex *, const int *, Complex *, const int *, double *, int *, int *, int *, int *,int *, int *);
 
 void dgesv_(const int*, const int*, double*, const int*, int*, double*, const int*, int*);
 
@@ -112,8 +107,5 @@ void CholeskyInverseHermitian(ComplexMatrix**, ComplexMatrix**, int*);
 
 void CholeskyPermuteHermitian(ComplexMatrix**, int*, int, JOB_PARAM*);
 
-#endif
-
 }
 
-#endif

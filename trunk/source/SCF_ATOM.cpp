@@ -21,7 +21,7 @@
 
 using namespace std;
 
-void atom_scf(ATOM *atoms, int atm, DoubleMatrix *eigvec, double *eigval, double *occupation, int occupied[2], SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
+void scf_atom(ATOM *atoms, int atm, DoubleMatrix *eigvec, double *eigval, double *occupation, int occupied[2], SHELL *shells, GAUSSIAN *gaussians, JOB_PARAM *job, FILES file)
 
 {
 
@@ -126,11 +126,11 @@ void atom_scf(ATOM *atoms, int atm, DoubleMatrix *eigvec, double *eigval, double
     if (job->xc_num == 0) 
     fock_2e_matrix(F_2e, &integral_list, P_red, atm, atoms, job, file);
 
-    if (job->xc_num > 0) 
-    ////kohn_sham_2e_matrix(&atm, F_2e, &integral_list, P_red, atoms, shells, gaussians, job, file);
+    //if (job->xc_num > 0) 
+    //kohn_sham_2e_matrix(&atm, F_2e, &integral_list, P_red, atoms, shells, gaussians, job, file);
 
     //CHANGES2017 THIS ROUTINE IS CAUSING PROBELMS IN INITIAL DENSITY (CALC OF TOTAL ENEGY AND TOTAL ENERGY CHANGE
-    ////total_energy_atom(F_1e, F_2e, P_red, atm, &total_energy, &total_energy_change, atoms, job, file);
+    //total_energy_atom(F_1e, F_2e, P_red, atm, &total_energy, &total_energy_change, atoms, job, file);
 
     ResetDoubleMatrix(P_rd1);
 
@@ -187,8 +187,8 @@ void atom_scf(ATOM *atoms, int atm, DoubleMatrix *eigvec, double *eigval, double
     
     if (fabs(total_energy_change) < tol) {
       ResetDoubleMatrix(F_2e);
-      ////if (job->xc_num > 0) 
-        ////kohn_sham_2e_matrix(&atm, F_2e, &integral_list, P_red, atoms, shells, gaussians, job, file);
+      //if (job->xc_num > 0) 
+        //kohn_sham_2e_matrix(&atm, F_2e, &integral_list, P_red, atoms, shells, gaussians, job, file);
       if (job->xc_num == 0) 
         fock_2e_matrix(F_2e, &integral_list, P_red, atm, atoms, job, file);
           if (job->taskid == 0)

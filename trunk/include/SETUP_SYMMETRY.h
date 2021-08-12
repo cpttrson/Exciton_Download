@@ -1,5 +1,13 @@
-#ifndef SETUP_SYMMETRYH
-#define SETUP_SYMMETRYH
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 void read_symmetry_group(CRYSTAL*, SYMMETRY*, int, JOB_PARAM*, FILES);
 
@@ -22,12 +30,8 @@ void generate_permutation_group_table(SYMMETRY*, JOB_PARAM*, FILES);
 void print_symmetry_operators(SYMMETRY*, JOB_PARAM*, FILES);
 
 void count_little_k_group_operators(int, SYMMETRY*, SYMMETRY*, CRYSTAL*, KPOINT_TRAN*, FERMI*, JOB_PARAM*, FILES);
-//void count_little_k_group_operators(int, SYMMETRY*, SYMMETRY*, KPOINT_TRAN*, FERMI*, JOB_PARAM*, FILES);
 
 void generate_little_k_group_operstors(int, SYMMETRY*, SYMMETRY*, CRYSTAL*, KPOINT_TRAN*, FERMI*, JOB_PARAM*, FILES);
-//void generate_little_k_group_operstors(int, SYMMETRY*, SYMMETRY*, KPOINT_TRAN*, FERMI*, JOB_PARAM*, FILES);
 
 void generate_little_k_group(int, SYMMETRY*, FERMI*, KPOINT_TRAN*, SYMMETRY*, CRYSTAL*, JOB_PARAM*, FILES);
-//void generate_little_k_group(int, SYMMETRY*, FERMI*, KPOINT_TRAN*, SYMMETRY*, JOB_PARAM*, FILES);
 
-#endif

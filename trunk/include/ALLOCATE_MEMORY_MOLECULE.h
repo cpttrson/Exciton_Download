@@ -1,5 +1,13 @@
-#ifndef ALLOCATE_MEMORYH
-#define ALLOCATE_MEMORYH
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
 
 void allocate_JOB_PARAM(JOB_PARAM*, FILES);
 
@@ -8,16 +16,6 @@ void free_JOB_PARAM(JOB_PARAM*, FILES);
 void allocate_SYMMETRY(SYMMETRY*, JOB_PARAM*, FILES);
 
 void free_SYMMETRY(SYMMETRY*, JOB_PARAM*);
-
-/*
-void allocate_Q_LATTICE(Q_LATTICE*, JOB_PARAM*, FILES);
-
-void free_Q_LATTICE(Q_LATTICE*, JOB_PARAM*);
-
-void allocate_RECIPROCAL_LATTICE(RECIPROCAL_LATTICE*, JOB_PARAM*, FILES);
-
-void free_RECIPROCAL_LATTICE(RECIPROCAL_LATTICE*, JOB_PARAM*);
-*/
 
 void allocate_REAL_LATTICE(REAL_LATTICE*, JOB_PARAM*, FILES);
 
@@ -133,4 +131,3 @@ void triple_array_dimensions(int*, int*, TRIPLE_TRAN*, ATOM*, JOB_PARAM*, FILES)
 
 void sh_triple_array_dimensions(int*, int*, TRIPLE_TRAN*, ATOM*, JOB_PARAM*, FILES);
 
-#endif

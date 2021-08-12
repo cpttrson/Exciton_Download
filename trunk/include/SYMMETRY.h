@@ -1,9 +1,19 @@
+
+  // ******************************************************************************************
+  //                                                                                          *
+  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                                                                                          *
+  //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
+  //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
+  //  http://mozilla.org/MPL/2.0/.                                                            *
+  //                                                                                          *
+  // ******************************************************************************************
+
 void read_symmetry_group(CRYSTAL *crystal, SYMMETRY *symmetry, int, JOB_PARAM *job, FILES file);
 
 void conventional_unit_cell(CRYSTAL *crystal, FILES file);
 
 void primitive_unit_cell(CRYSTAL*, SYMMETRY*, JOB_PARAM*, FILES);
-//void primitive_unit_cell(CRYSTAL *crystal, SYMMETRY *symmetry, FILES file);
 
 void generate_cartesian_symmetry_operators(CRYSTAL *crystal, SYMMETRY *symmetry, JOB_PARAM *job, FILES file);
 
@@ -40,13 +50,10 @@ void read_basis_sets(CRYSTAL crystal, ATOM *atoms, ATOMTYPE *iratom, JOB_PARAM *
 void count_all_atoms(CRYSTAL crystal, ATOM *atoms, ATOMTYPE *iratom, SYMMETRY symmetry, JOB_PARAM *job, FILES file);
 
 void count_all_crystal_atoms(CRYSTAL, ATOM*, ATOMTYPE*, SYMMETRY, JOB_PARAM*, FILES);
-//void count_all_crystal_atoms(CRYSTAL crystal, ATOM *atoms, ATOMTYPE *iratom, SYMMETRY symmetry, FILES file);
 
 void generate_all_crystal_atoms(CRYSTAL , REAL_LATTICE , SYMMETRY *, ATOMTYPE *, ATOMTYPE *, ATOM *, ATOM_TRAN *, ATOM_TRAN *, JOB_PARAM *, FILES );
-//void generate_all_crystal_atoms(CRYSTAL , REAL_LATTICE , SYMMETRY *, ATOMTYPE *, ATOM *, ATOM_TRAN *, ATOM_TRAN *, JOB_PARAM *, FILES );
 
 void generate_all_atoms(CRYSTAL , REAL_LATTICE , SYMMETRY , ATOMTYPE *, ATOMTYPE *, ATOM *, ATOM_TRAN *, ATOM_TRAN *, JOB_PARAM *, FILES );
-//void generate_all_atoms(CRYSTAL , REAL_LATTICE , SYMMETRY , ATOMTYPE *, ATOM *, ATOM_TRAN *, ATOM_TRAN *, JOB_PARAM *, FILES );
 
 void generate_runtime_arrays(ATOM *, ATOM_TRAN *, ATOMTYPE *, SHELL *, GAUSSIAN *, JOB_PARAM *, FILES );
 
@@ -95,8 +102,6 @@ void free_REAL_LATTICE_TABLES(REAL_LATTICE_TABLES *R_tables);
 void allocate_pairs(PAIR_TRAN *pair_p, int pair_count, int max_pairs, SYMMETRY *symmetry, FILES file);
 
 void allocate_pairs1(PAIR_TRAN*, ATOM*, SYMMETRY*, REAL_LATTICE_TABLES*, FILES);
-
-//void allocate_pairs_all(PAIR_TRAN*, ATOM*, SYMMETRY*, FILES);
 
 void allocate_density_pairs(PAIR_TRAN *pair_p, int pair_count, int max_pairs, SYMMETRY *symmetry, ATOM *atoms, REAL_LATTICE_TABLES *, FILES file);
 

@@ -21,7 +21,6 @@
 #include "ALLOCATE_MEMORY_MOLECULE.h"
 #include "SETUP_SYMMETRY.h"
 #include "SETUP_ATOMS.h"
-//#include "SETUP_REAL_LATTICE.h"
 #include "IVANIC_RUEDENBERG.h"
 #include "INPUT_MOLECULE.h"
 #include "PAIRS_QUADS.h"

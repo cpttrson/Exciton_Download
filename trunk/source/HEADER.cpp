@@ -10,14 +10,8 @@
   //                                                                                          *
   // ******************************************************************************************
 
-/*
-#include <cstdio>
 #include <cstdlib>
-#include <ctime>
 #include <cstring>
-#include <fstream>
-*/
-#include <cstdlib>
 #include "USER_DATA.h"
 #include "HEADER.h"
 
@@ -37,11 +31,11 @@ void print_header(FILES file)
   fprintf(file.out,"|                                                                                                         |\n");
   fprintf(file.out,"|        CONTRIBUTORS                                                                                     |\n");
   fprintf(file.out,"|        Alin-Marin Elena                                                                                 |\n");
-  fprintf(file.out,"|        Svjetlana Gamaic-Mulaomerovic                                                                    |\n");
+  fprintf(file.out,"|        Svjetlana Galamic-Mulaomerovic                                                                   |\n");
   fprintf(file.out,"|                                                                                                         |\n");
   fprintf(file.out,"|        School of Physics                                                                                |\n");
   fprintf(file.out,"|        University of Dublin, Trinity College, Dublin 2, Ireland                                         |\n");
-  fprintf(file.out,"|        Last modified July 22nd 2021                                                                    |\n");
+  fprintf(file.out,"|        Last modified August 3rd 2021                                                                    |\n");
   fprintf(file.out,"|                                                                                                         |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n\n");
 

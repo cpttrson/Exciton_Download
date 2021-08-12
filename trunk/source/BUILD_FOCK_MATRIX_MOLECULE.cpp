@@ -10,18 +10,10 @@
   //                                                                                          *
   // ******************************************************************************************
 
-#include <cstdio>
-#include <cmath>
 #include <cstdlib>
-#include <ctime>
-#include <iostream>
 #include <cstring>
-#include <fstream>
-#include <mpi.h>
 //#include <xc.h>
-#include <unistd.h>
 #include <stdlib.h>
-
 #include "mycomplex.h"
 #include "myconstants.h"
 #include "conversion_factors.h"
@@ -31,10 +23,8 @@
 #include "PARALLEL.h"
 #include "PAIRS_QUADS.h"
 #include "ROTATIONS_MOLECULE.h"
-//#include "ROTATION_OPERATORS.h"
 #include "MATRIX_UTIL.h"
 #include "PRINT_UTIL.h"
-//#include "INTEGRALS_TWO_CENTRE.h"
 #include "DFT.h"
 #include "DENSITY_MATRIX_MOLECULE.h"
 #include "INTEGRALS_4C_MOLECULE.h"
@@ -68,100 +58,11 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
   ResetDoubleArray(Kohn_2e, &dimp_spin);
 
   PAIR_TRAN pair_q;
-  //count_density_pairs4(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
-  //allocate_PAIR_TRAN(&pair_q,atoms,symmetry,R_tables,job,file);
-  //generate_density_pairs4(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
-  //pair_q.cutoff = (job->itol1 > job->itol2) ? job->itol1 : job->itol2;
   pair_q.cutoff = R->cutoff;
   count_range_selected_pairs(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
   allocate_PAIR_TRAN(&pair_q,atoms,symmetry,R_tables,job,file);
   generate_range_selected_pairs(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
   if (job->iter == 1) print_pairs(&pair_q,atoms,R,job,file);
-
-  /*
-  switch (crystal->type[0]) {
-
-  case 'C':
-  case 'S':
-  case 'P':
-
-  if (job->scf_coulomb == 1) {
-
-  if (job->scf_direct == 0) {
-
-    AllocateDoubleArray(&F_up_down,&job->dimf,job);
-    if (job->spin_dim == 1) {
-      for (m = 0; m < job->dimf; m++) F_up_down[m] = F[m];
-     }
-    else if (job->spin_dim == 2) {
-      ResetDoubleArray(F_up_down,&job->dimf);
-      for (s = 0; s < job->spin_dim; s++) {
-        for (m = 0; m < job->dimf; m++) F_up_down[m] += F[s * job->dimf + m];
-        }
-       }
-
-  if (job->int_exist == 0)
-
-    coulomb_matrix_crystal_compute_integrals(Fock_2c,S1,F_up_down,pair_p,&pair_q,atom_p,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,G,job,file);
-
-  else
-
-    coulomb_matrix_crystal_read_integrals(Fock_2c,F_up_down,pair_p,atoms,shells,symmetry,R_tables,job,file);
-
-  }
-
-  else if (job->scf_direct == 1) {
-
-    AllocateDoubleArray(&F_up_down,&job->dimf,job);
-    if (job->spin_dim == 1) {
-      for (m = 0; m < job->dimf; m++) F_up_down[m] = delta_F[m];
-     }
-    else if (job->spin_dim == 2) {
-      ResetDoubleArray(F_up_down,&job->dimf);
-      for (s = 0; s < job->spin_dim; s++) {
-        for (m = 0; m < job->dimf; m++) F_up_down[m] += delta_F[s * job->dimf + m];
-        }
-       }
-
-  if (job->int_exist == 0)
-
-    coulomb_matrix_crystal_compute_integrals(Fock_2c,S1,F_up_down,pair_p,&pair_q,atom_p,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,G,job,file);
-
-  else
-
-    coulomb_matrix_crystal_read_integrals(Fock_2c,F_up_down,pair_p,atoms,shells,symmetry,R_tables,job,file);
-
-  }
-
-    DestroyDoubleArray(&F_up_down,&job->dimf,job);
-
- } // close if (job->scf_coulomb == 1)
-
- 
-  if (job->scf_exchange == 1) {
-
-  if (job->scf_direct == 0) {
-
-    exchange_matrix_crystal_compute_integrals(Fock_2e,S2,F,pair_p,&pair_q,atom_p,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,G,job,file);
- 
-  } 
-
-  else if (job->scf_direct == 1) {
-
-    exchange_matrix_crystal_compute_integrals(Fock_2e,S2,delta_F,pair_p,&pair_q,atom_p,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,G,job,file);
-
-  } 
-
- } // close if (job->scf_exchange == 1)
- 
-  break;
-
-  case 'M':
-  */
 
   if (job->scf_coulomb == 1 || job->scf_exchange == 1) {
 
@@ -187,22 +88,6 @@ double *Fock_2c, *Fock_2e, *Kohn_2e, *F_up_down;
 
  } // close if (job->scf_coulomb == 1 || job->scf_exchange == 1)
 
-  /*
-  break;
-
- }
- */
-
-  ////double *Fock_EN;
-  ////AllocateDoubleArray(&Fock_EN,&dimp_spin,job);
-  ////ResetDoubleArray(Fock_EN, &dimp_spin);
-  //fock_element_elecnuc(Fock_2c,&pair_q,R,G,atoms,shells,gaussians,crystal,job,file);
-  ////fock_element_elecnuc(Fock_EN,pair_p,R,G,atoms,shells,gaussians,crystal,job,file);
-  //DestroyDoubleArray(&Fock_EN,&dimp_spin,job);
-
-  //for (i = 0; i < dimp; i++) { //fprintf(file.out,"EN %3d %10.4f %10.4f\n",i,Fock_EN[i],one_ints->ElecNuc[i]);
-  //if (fabs(Fock_EN[i]-one_ints->ElecNuc[i]) > k_zero) fprintf(file.out,"diff "); }
-    
   if (job->scf_direct == 0) {
   ResetDoubleArray(Fock, &dimp_spin);
   count = 0;
@@ -275,42 +160,8 @@ double *Fock_2c, *Fock_2e, *Kohn_2e;
   count_range_selected_pairs(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
   allocate_PAIR_TRAN(&pair_q,atoms,symmetry,R_tables,job,file);
   generate_range_selected_pairs(&pair_q,atoms,atom_p,symmetry,R,R_tables,job,file);
-  //if (job->iter == 1) print_pairs(&pair_q,atoms,R,job,file);
-/*
-  switch (crystal->type[0]) {
+  if (job->iter == 1) print_pairs(&pair_q,atoms,R,job,file);
 
-  case 'C':
-  case 'S':
-  case 'P':
-
-//job->int_exist_no_sym = 1;
-
-  if (job->scf_coulomb == 1) {
-
-  if (job->int_exist_no_sym == 0 || job->scf_direct == 1)
-
-    coulomb_matrix_crystal_compute_integrals_no_sym(Fock_2c,S1,F,pair_p,&pair_q,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,G,job,file);
-
-  else
-
-    coulomb_matrix_crystal_read_integrals_no_sym(Fock_2c,F,pair_p,atoms,job,file);
-
- } // close if (job->scf_coulomb == 1)
-
- 
-  if (job->scf_exchange == 1) {
-
-    exchange_matrix_crystal_compute_integrals_no_sym(Fock_2e,S2,F,pair_p,&pair_q,atoms,shells,gaussians,crystal,symmetry,R,\
-    R_tables,job,file);
-
- } // close if (job->scf_exchange == 1)
- 
-  break;
-
-  case 'M':
-
-  */
   if (job->scf_coulomb == 1 || job->scf_exchange == 1) {
 
   if (job->int_exist_no_sym == 0 || job->scf_direct == 1) 
@@ -323,28 +174,18 @@ double *Fock_2c, *Fock_2e, *Kohn_2e;
    fock_matrix_molecule_read_integrals_no_sym(Fock_2c,Fock_2e,F,pair_p,atoms,shells,symmetry,job,file);
 
  } // close if (job->scf_coulomb == 1 || job->scf_exchange == 1)
-/*
-  break;
-
- }
- */
 
   count = 0;
   ResetDoubleArray(Fock, &dimp_spin);
   for (s = 0; s < job->spin_dim; s++) {
     for (i = 0; i < dimp; i++) {
-      //16/09/20 Fock[count] += one_ints->Fock[count] + Fock_2c[count] + Fock_2e[count] + two * Kohn_2e[count];
       Fock[count] += one_ints->Fock[i] + Fock_2c[count] + (double)job->spin_dim * Fock_2e[count] + two * Kohn_2e[count];
       count++;
      }
     }
 
-  //double total_energy = job->total_energy;
   if (job->taskid == 0)
   total_energy_final(one_ints, Fock_2c, Fock_2e, Kohn_2e, P, pair_p, atoms,job,file);
-  //job->total_energy = total_energy;
-
-  //print_Fock_matrix(Fock, pair_p, atoms, job, file);
 
   DestroyDoubleArray(&Fock_2c,&dimp_spin,job);
   DestroyDoubleArray(&Fock_2e,&dimp_spin,job);
@@ -368,23 +209,12 @@ double total_energy = k_zero;
       for (p = 0; p < pair_p->nump; p++) {
 	q = pair_p->posn[p];
 	for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell1[q]] * atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
-	  //total_energy += (one_ints->Kinetic[count1] + one_ints->ElecNuc[count1]) * P[count] * pair_p->numb[p];
 	  total_energy += (Fock[count1] + one_ints->Kinetic[count1] + one_ints->ElecNuc[count1]) * P[count] * pair_p->numb[p];
 	  count++;
 	  count1++;
 	 }
 	}
        }
-
-//May2013
-    ////job->energy_change = total_energy / two + job->nuc_nuc - current_total_energy;
-    ////job->total_energy  = total_energy / two + job->nuc_nuc;
-//May2013
-    //job->total_energy  = total_energy ;
-
-    //if (job->taskid == 0) 
-    //fprintf(file.out, "Total Energy %17.9e Total Energy Change %17.9e\n\n", job->total_energy,job->energy_change);
-    //if (job->taskid == 0) 
 
 }
 
@@ -594,7 +424,6 @@ double elecnuc_energy  = k_zero;
 	}
        }
 
-    //twoelec_energy = coulomb_energy + exchange_energy + two * exc_corr_energy;
     twoelec_energy = job->twoe_energy;
 
     job->energy_change = (oneelec_energy + twoelec_energy / two) + job->nuc_nuc - current_total_energy;
@@ -763,8 +592,6 @@ MPI_Win win;
       DestroyDoubleArray(&Fock_2e_buffer,&dimp_spin,job);
 
       if (job->scf_direct == 0 && (job->taskid > 0 || job->numtasks == 1)) { fclose(integrals_2m); job->int_exist == 1; }
-      //if (job->taskid > 0 || job->numtasks == 1) fclose(integrals_2m); 
-      //job->int_exist = 1;
 
       if (job->taskid == 0 && job->iter == 1) \
       printf("%2d m_quads uniq %4d tot %5d int %8li quad %8.2e scrn %8.2e comp %8.2e contr %8.2e write %8.2e tot %8.2e\n",\
@@ -1325,7 +1152,6 @@ double *Fock_2c_temp, *Fock_2e_temp;
 }
 
 void fock_matrix_molecule_compute_screening_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
-//void shell_screen_molecule_compute_integrals(double *S1, PAIR_TRAN *pair_p, REAL_LATTICE *R, RECIPROCAL_LATTICE *G, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, SYMMETRY *symmetry, CRYSTAL *crystal, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1334,7 +1160,6 @@ int ip, jp, gi, gj;
 int nd1, nd2, nd3, nd4, nd12, nd34;
 int dim;
 int count;
-
 double *S0;
 
   dim = 0;
@@ -1418,62 +1243,6 @@ int dim1, dim2, count, i, j, p, q, r, s;
 
 }
 
-/*
-void read_write_SCF_eigenvectors(FERMI *fermi, ATOM *atoms, JOB_PARAM *job, FILES file)
-
-{
-
-  // ******************************************************************************************
-  // * Read in SCF eigenvectors from disk and write to MPI file scf_evec_spk                  *
-  // ******************************************************************************************
-
-int i, j;
-int vector_size;
-int dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell;
-int nbands = fermi->bands[1] - fermi->bands[0] + 1;
-DoubleMatrix *eigvec;
-ComplexMatrix *scf_eigenvectors;
-double time1, time2;
-char zz2[24] = "scf_evectors";
-FILE *scf_evectors;
-
-  time1 = MPI_Wtime();
-  MPI_File fh;
-  //char buf2[110], xy[14] = "/scf_evec_spk";
-  strcpy(buf2,file.scf_eigvec);
-  strcat(buf2,xy);
-  fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
-
-  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
-  if (job->taskid == 0) {
-  dimk = job->spin_dim * dim1;
-  ////dimk = job->spin_dim * nbands;
-  vector_size = dimk * dim1;
-  AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
-  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
-  scf_evectors = fopen(zz2, "rb");
-  fseek(scf_evectors, 0, SEEK_SET);
-  ////fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
-  size_t result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
-  fclose(scf_evectors);
-  for (i = 0; i < nbands; i++) {
-    for (j = 0; j < dim1; j++) {
-      eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
-      //fprintf(file.out,"read write eigvec %3d %3d %10.4lf\n",i,j,eigvec->a[i][j]);
-     }
-    }
-  DestroyComplexMatrix(&scf_eigenvectors,job);
-  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
-  MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
-  DestroyDoubleMatrix(&eigvec,job);
- }
-  MPI_File_close(&fh);
-  time2 = MPI_Wtime() - time1;
-  //if (job->taskid == 0) printf("end read/write evecs %3d %f\n",job->taskid,time2);
-
-}
-*/
-
 void read_write_SCF_eigenvectors(FERMI *fermi, ComplexMatrix *scf_eigenvectors, ATOM *atoms, JOB_PARAM *job, FILES file)
 
 {
@@ -1487,51 +1256,36 @@ int vector_size;
 int dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
 DoubleMatrix *eigvec;
-//ComplexMatrix *scf_eigenvectors;
 double time1, time2;
-//char zz2[24] = "scf_evectors";
-//FILE *scf_evectors;
 
   time1 = MPI_Wtime();
   MPI_File fh;
   char buf2[110], xy[14] = "/scf_evec";
-  //char buf2[110], xy[14] = "/scf_evec_spk";
   strcpy(buf2,file.scf_eigvec);
   strcat(buf2,xy);
-  fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
+  //fprintf(file.out,"Writing eigenvectors to %s\n",buf2);
 
   MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
   if (job->taskid == 0) {
   dimk = job->spin_dim * dim1;
-  ////dimk = job->spin_dim * nbands;
   vector_size = dimk * dim1;
-  //AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
   AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
-  //scf_evectors = fopen(zz2, "rb");
-  //fseek(scf_evectors, 0, SEEK_SET);
-  ////fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
-  //size_t result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
-  //fclose(scf_evectors);
   for (i = 0; i < nbands; i++) {
     for (j = 0; j < dim1; j++) {
       eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
       //fprintf(file.out,"read write eigvec %3d %3d %10.4lf\n",i,j,eigvec->a[i][j]);
      }
     }
-  //DestroyComplexMatrix(&scf_eigenvectors,job);
   MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
   MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
   DestroyDoubleMatrix(&eigvec,job);
  }
   MPI_File_close(&fh);
   time2 = MPI_Wtime() - time1;
-  //if (job->taskid == 0) printf("end read/write evecs %3d %f\n",job->taskid,time2);
 
 }
 
-//void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 void integrals_molecule_screen_ijkl(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
-//void shell_screen1(int *start_index, double *S1, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1617,7 +1371,6 @@ double integral_rejection_threshold_sqrd;
 }
 
 void integrals_molecule_screen_direct_ijkl(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
-//void shell_screen_direct(int *start_index, double *S1, double *F, PAIR_TRAN *pair_p, QUAD_TRAN *quad, ATOM *atoms, SHELL *shells, SYMMETRY *symmetry, JOB_PARAM *job, FILES file)
 
 {
 
@@ -1647,7 +1400,6 @@ double largest_integral, testint, integral_rejection_threshold_sqrd;
 INTEGRAL_LIST integral_list_molecule;
 
   integral_rejection_threshold_sqrd = integral_rejection_threshold * integral_rejection_threshold;
-  //integral_rejection_threshold_sqrd = 1e-16;
 
   ip1 = quad->cell1[0];
   jp1 = quad->cell2[0];
@@ -1716,14 +1468,11 @@ INTEGRAL_LIST integral_list_molecule;
             continue; 
            }
 
-            //start_index[shell_count] = 1;
-
           for (p = 0; p < quad->tot; p++) {
 
             if (start_index[shell_count] == 1) break;
 
             pm = quad->p[p];
-            //op = quad->k[p];
 
             for (s = 0; s < job->spin_dim; s++) {
 
@@ -1885,9 +1634,6 @@ INTEGRAL_LIST integral_list_molecule;
               nd3 = atoms->bfnnumb_sh[kp];
               nd4 = atoms->bfnnumb_sh[lp0];
 
-              //dimc = nd1 * nd2;
-              //dime = nd1 * nd3;
-
               molecule_ints_num     = integral_list_molecule.num;
               p_coulomb_ints_value  = integral_list_molecule.value;
               p_exchange_ints_value = integral_list_molecule.value;
@@ -1898,17 +1644,11 @@ INTEGRAL_LIST integral_list_molecule;
               p_coulomb_init_l = p_coulomb_ints_l;
              
               if (job->scf_coulomb == 1 && pair_p->uniq[ip * dim1 + jp] == -1) {
-              //AllocateDoubleArray(&Fock_2c,&dimc,job);
-              //AllocateDoubleArray(&Fock_2c_temp,&dimc,job);
               for (s1 = 0; s1 < job->spin_dim; s1++) {
               flag = 0;
-              //ResetDoubleArray(Fock_2c,&dimc);
-              //ResetDoubleArray(Fock_2c_temp,&dimc);
               D_ptr = s1 * job->dimf + pair_p->off[pair_p->ptr[kp0 * dim1 + lp0]];
               for (m = 0; m < molecule_ints_num; m++) {
-              //Fock_temp_offset      =         nd2 * *p_coulomb_ints_i + *p_coulomb_ints_j;
               Density_matrix_offset = D_ptr + nd4 * *p_coulomb_ints_k + *p_coulomb_ints_l;
-              //Fock_2c_temp[Fock_temp_offset] += *p_coulomb_ints_value * F[Density_matrix_offset];
               if (fabs(*p_coulomb_ints_value * F[Density_matrix_offset]) > 1e-10) {
                 start_index[shell_count] = 1; 
                 flag = 1;
@@ -1925,26 +1665,13 @@ INTEGRAL_LIST integral_list_molecule;
               p_coulomb_ints_j = p_coulomb_init_j;
               p_coulomb_ints_k = p_coulomb_init_k;
               p_coulomb_ints_l = p_coulomb_init_l;
-              //p_coulomb_ints_value -= molecule_ints_num;
-              //p_coulomb_ints_i     -= molecule_ints_num;
-              //p_coulomb_ints_j     -= molecule_ints_num;
-              //p_coulomb_ints_k     -= molecule_ints_num;
-              //p_coulomb_ints_l     -= molecule_ints_num;
              }
-              //DestroyDoubleArray(&Fock_2c,&dimc,job);
-              //DestroyDoubleArray(&Fock_2c_temp,&dimc,job);
              }
               if (job->scf_exchange == 1 && job->xc_hfx == 1 && pair_p->uniq[ip * dim1 + kp] == -1 && start_index[shell_count] == 0) {
               flag = 0;
-              //AllocateDoubleArray(&Fock_2e,&dime,job);
-              //AllocateDoubleArray(&Fock_2e_temp,&dime,job);
-              //ResetDoubleArray(Fock_2e,&dime);
-              //ResetDoubleArray(Fock_2e_temp,&dime);
               D_ptr = s * job->dimf + pair_p->off[pair_p->ptr[jp0 * dim1 + lp0]];
               for (m = 0; m < molecule_ints_num; m++) {
-              //Fock_temp_offset      =         nd3 * *p_exchange_ints_i + *p_exchange_ints_k;
               Density_matrix_offset = D_ptr + nd4 * *p_exchange_ints_j + *p_exchange_ints_l;
-              //Fock_2e_temp[Fock_temp_offset] -= *p_exchange_ints_value * F[Density_matrix_offset] / two;
               if (fabs(*p_exchange_ints_value * F[Density_matrix_offset] / two) > 1e-10) {
               start_index[shell_count] = 1; 
               flag = 1;
@@ -1956,18 +1683,6 @@ INTEGRAL_LIST integral_list_molecule;
               p_exchange_ints_k++;
               p_exchange_ints_l++;
               }
-              //rotate_sum_block(Fock_2e_temp,Fock_2e,ip,kp,op,atoms,shells,symmetry,job,file);
-              //for (i1 = 0; i1 < dime; i1++) {
-                //if (fabs(Fock_2e[i1]) > 1e-10) {
-                //if (fabs(Fock_2e_temp[i1]) > 1e-10) {
-                //start_index[shell_count] = 1; 
-                //flag = 1;
-                //break;
-               //}
-                //if (flag == 1) break;
-              //}
-              //DestroyDoubleArray(&Fock_2e,&dime,job);
-              //DestroyDoubleArray(&Fock_2e_temp,&dime,job);
              }
 
             } // close loop on s
@@ -2003,7 +1718,6 @@ int count;
     for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
       for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
         fprintf(file.out,"%6.2f ",Fock[count]);
-        //fprintf(file.out,"%10.6f ",Fock[count]);
         count++;
        }
       fprintf(file.out,"\n");
@@ -2025,7 +1739,6 @@ int count;
       for (i = 0; i < atoms->bfnnumb_sh[pair_p->cell1[q]]; i++) {
         for (j = 0; j < atoms->bfnnumb_sh[pair_p->cell2[q]]; j++) {
           fprintf(file.out,"%6.2f ",Fock[count]);
-          //fprintf(file.out,"%10.6f ",Fock[count]);
           count++;
          }
         fprintf(file.out,"\n");
@@ -2040,6 +1753,62 @@ int count;
   fflush(file.out);
 
 }
+
+/*
+void read_write_SCF_eigenvectors(FERMI *fermi, ATOM *atoms, JOB_PARAM *job, FILES file)
+
+{
+
+  // ******************************************************************************************
+  // * Read in SCF eigenvectors from disk and write to MPI file scf_evec_spk                  *
+  // ******************************************************************************************
+
+int i, j;
+int vector_size;
+int dimk, dim1 = atoms->number_of_sh_bfns_in_unit_cell;
+int nbands = fermi->bands[1] - fermi->bands[0] + 1;
+DoubleMatrix *eigvec;
+ComplexMatrix *scf_eigenvectors;
+double time1, time2;
+char zz2[24] = "scf_evectors";
+FILE *scf_evectors;
+
+  time1 = MPI_Wtime();
+  MPI_File fh;
+  //char buf2[110], xy[14] = "/scf_evec_spk";
+  strcpy(buf2,file.scf_eigvec);
+  strcat(buf2,xy);
+  fprintf(file.out,"Writing %3d eigenvectors to %s\n",fermi->bands[0]-1,buf2);
+
+  MPI_File_open(MPI_COMM_WORLD,buf2,MPI_MODE_RDWR | MPI_MODE_CREATE,MPI_INFO_NULL,&fh) ;
+  if (job->taskid == 0) {
+  dimk = job->spin_dim * dim1;
+  ////dimk = job->spin_dim * nbands;
+  vector_size = dimk * dim1;
+  AllocateComplexMatrix(&scf_eigenvectors,&dimk,&dim1,job);
+  AllocateDoubleMatrix(&eigvec,&nbands,&atoms->number_of_sh_bfns_in_unit_cell,job);
+  scf_evectors = fopen(zz2, "rb");
+  fseek(scf_evectors, 0, SEEK_SET);
+  ////fseek(scf_evectors, dim1 * (fermi->bands[0] - 1) * sizeof(Complex),SEEK_SET);
+  size_t result = fread(&scf_eigenvectors->a[0][0],sizeof(Complex),vector_size,scf_evectors);
+  fclose(scf_evectors);
+  for (i = 0; i < nbands; i++) {
+    for (j = 0; j < dim1; j++) {
+      eigvec->a[i][j] = (scf_eigenvectors->a[i][j]).real();
+      //fprintf(file.out,"read write eigvec %3d %3d %10.4lf\n",i,j,eigvec->a[i][j]);
+     }
+    }
+  DestroyComplexMatrix(&scf_eigenvectors,job);
+  MPI_File_seek(fh, 0, MPI_SEEK_SET) ;
+  MPI_File_write(fh, &eigvec->a[0][0], vector_size, MPI_DOUBLE, MPI_STATUS_IGNORE);
+  DestroyDoubleMatrix(&eigvec,job);
+ }
+  MPI_File_close(&fh);
+  time2 = MPI_Wtime() - time1;
+  //if (job->taskid == 0) printf("end read/write evecs %3d %f\n",job->taskid,time2);
+
+}
+*/
 
 /*
 void coulomb_matrix_crystal_compute_integrals(double *Fock_2c, double *S1, double *F, PAIR_TRAN *pair_p, PAIR_TRAN *pair_q, ATOM_TRAN *atom_p, ATOM *atoms, SHELL *shells, GAUSSIAN *gaussians, CRYSTAL *crystal, SYMMETRY *symmetry, REAL_LATTICE *R, REAL_LATTICE_TABLES *R_tables, RECIPROCAL_LATTICE *G, JOB_PARAM *job, FILES file)

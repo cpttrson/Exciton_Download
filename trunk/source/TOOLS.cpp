@@ -1,7 +1,7 @@
 
   // ******************************************************************************************
   //                                                                                          *
-  //                           Copyright (C) 2021 C. H. Patterson                             *
+  //                           Copyright (C) 2021 Svjetlana Galamic-Mulaomerovic              *
   //                                                                                          *
   //  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.    *
   //  If a copy of the MPL was not distributed with this file, you can obtain one at          *
@@ -71,9 +71,11 @@ BOOLEAN read_line(FILE * ffile, char * line, int MAXIMUM_LEN_FILE_LINE) {
 
       break;
     }
+
     if (len >= MAXIMUM_LEN_FILE_LINE) {
 
       line_too_long = TRUE;
+
     } else {
 
       line[len] = c;
@@ -85,6 +87,7 @@ BOOLEAN read_line(FILE * ffile, char * line, int MAXIMUM_LEN_FILE_LINE) {
   if (line_too_long == TRUE) {
 
     fprintf(stderr, "ERROR: The line is too long. The limit is %d characters.\n", MAXIMUM_LEN_FILE_LINE);
+
   }
 
   return TRUE;

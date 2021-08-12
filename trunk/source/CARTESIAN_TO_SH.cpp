@@ -17,8 +17,6 @@
 using namespace std;
 
 void cartesian_to_sh_ij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void two_centre_cartesian_to_sh_ij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void two_centre_cartesian_to_sh_shell_ij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -55,7 +53,7 @@ double *p_Operator_cart;
 
 }
 
-void two_centre_cartesian_to_sh_ij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
+void cartesian_to_sh_ij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -91,8 +89,6 @@ Complex *p_Operator_cart;
 }
 
 void cartesian_to_sh_ij_vector(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd1, int nd2, int nd3, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void two_centre_cartesian_to_sh_ij_vector(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd1, int nd2, int nd3, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void two_centre_vector_cartesian_to_sh_shell_ij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd1, int nd2, int nd3, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -132,8 +128,6 @@ double *p_Operator_cart;
 }
 
 void cartesian_to_sh_ija(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
-//void three_centre_cartesian_to_sh_ija(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
-//void three_centre_cartesian_to_sh_shell_ax_reversed(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
 
 {
 
@@ -179,8 +173,7 @@ double *p_Operator_cart;
 
 }
 
-void three_centre_cartesian_to_sh_ija_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
-//void three_center_cartesian_to_sh_shell_ax_reversed_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
+void cartesian_to_sh_ija_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int index_k, int bfposi, int bfposj, int bfposk, int bfposi1, int bfposj1, int bfposk1, int nd2, int nd3, int nd5, int nd6, SHELL *shells, SHELL *shells_ax, JOB_PARAM *job, FILES file)
 
 {
 
@@ -227,8 +220,6 @@ Complex *p_Operator_cart;
 }
 
 void cartesian_to_sh_ijkl(double *F_cart, double *F_sh, int index_i, int index_j, int index_k, int index_l, SHELL *shells, JOB_PARAM *job, FILES file)
-//void four_centre_cartesian_to_sh_ijkl(double *F_cart, double *F_sh, int index_i, int index_j, int index_k, int index_l, SHELL *shells, JOB_PARAM *job, FILES file)
-//void four_centre_cartesian_to_sh_atom_ijkl(double *F_cart, double *F_sh, int index_i, int index_j, int index_k, int index_l, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -292,8 +283,6 @@ double *p_F_cart, *p_F_sh;
 }
 
 void cartesian_to_sh_ijij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void four_centre_cartesian_to_sh_ijij(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void four_centre_cartesian_to_sh_atom_ijkl_screen(double *Operator_cart, double *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 
@@ -352,8 +341,7 @@ double *p_Operator_cart;
 
 }
 
-void four_centre_cartesian_to_sh_ijij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
-//void two_centre_cartesian_to_sh_shell_ij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
+void cartesian_to_sh_ijij_complex(Complex *Operator_cart, Complex *Operator_sh, int index_i, int index_j, int bfposi, int bfposj, int bfposi1, int bfposj1, int nd2, int nd4, SHELL *shells, JOB_PARAM *job, FILES file)
 
 {
 

@@ -10,21 +10,8 @@
   //                                                                                          *
   // ******************************************************************************************
 
-/*
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
-#include <iostream>
-#include <fstream>
-#include <mpi.h>
-
-#include "mylogical.h"
-#include "mycomplex.h"
-#include "conversion_factors.h"
-#include "myconstants.h"
-*/
-#include <cstdlib>
 #include "USER_DATA.h"
 #include "ERRORS.h"
 
