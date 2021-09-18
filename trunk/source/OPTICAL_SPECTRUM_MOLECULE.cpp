@@ -33,9 +33,9 @@ void optical_spectrum_molecule(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, int
 
 {
 
-fermi->nkunique = 1;
-allocate_fermi(fermi,atoms,job,file);
-fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
+//fermi->nkunique = 1;
+//allocate_fermi(fermi,atoms,job,file);
+//fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
 
 int i, j, k, i1, j1, i3, j3, l, m, n, s, t;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
@@ -62,10 +62,10 @@ MPI_File fh;
   // ******************************************************************************************
  
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
-  ResetDoubleArray(scf_eigenvalues,&nbands);
-  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
   AllocateDoubleArray(&bse_eigenvalues,&ntransitions,job);
+  ResetDoubleArray(scf_eigenvalues,&nbands);
   ResetDoubleArray(bse_eigenvalues,&ntransitions);
+  read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
   read_SCF_GW_eigenvalues(bse_eigenvalues, 0, ntransitions, zz7, job, file);
 
   // ******************************************************************************************
@@ -73,8 +73,9 @@ MPI_File fh;
   // * Read eigenvectors from disk                                                            *
   // ******************************************************************************************
 
-  if (job->bse_lim == 0) job->bse_lim = ntransitions;
+  //if (job->bse_lim == 0) job->bse_lim = ntransitions;
   if (job->taskid == 0) printf("BSE vector limit %3d\n",job->bse_lim);
+
   if (job->taskid == 0)
   AllocateDoubleMatrix(&bse_eigenvectors,&job->bse_lim,&ntransitions,job);
   strcpy(buf2,file.scf_eigvec);
@@ -284,11 +285,13 @@ for (i = lim; i < job->bse_lim; i++) {
         }
        fflush(spect);
        fclose(spect);
-       DestroyDoubleArray(&bse_eigenvalues,&ntransitions,job);
-       DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
+       //DestroyDoubleArray(&bse_eigenvalues,&ntransitions,job);
+       //DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
        DestroyDoubleMatrix(&M_x,job);
        DestroyDoubleMatrix(&bse_eigenvectors,job);
       } // close if (job->taskid == 0)
+       DestroyDoubleArray(&bse_eigenvalues,&ntransitions,job);
+       DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
 
 }
 

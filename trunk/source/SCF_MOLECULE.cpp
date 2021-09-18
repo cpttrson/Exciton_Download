@@ -331,7 +331,8 @@ void scf_molecule(FERMI *fermi, ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, 
   // * Initialize density matrix mixing                                                       *
   // ******************************************************************************************
 
-  if (job->guess_type == 1) job->mixing_order = 1;
+  //if (job->guess_type == 1) job->mixing_order = 1;
+  if (job->guess_type == 1 && job->diis == 0) job->mixing_order = 1;
   AllocateDoubleMatrix(&C_i,&job->mixing_order,&dimp_spin,job);
   AllocateDoubleMatrix(&C_o,&job->mixing_order,&dimp_spin,job);
   AllocateDoubleMatrix(&D,&job->mixing_order,&dimp_spin,job);

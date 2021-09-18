@@ -38,10 +38,6 @@ void gw_molecule(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, SHELL* shells, GA
 
 {
 
-//fermi->nkunique = 1;
-//allocate_fermi(fermi,atoms,job,file);
-//fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
-
 int dim1 = atoms_ax->number_of_atoms_in_unit_cell;
 int dim1ax = atoms_ax->number_of_sh_bfns_in_unit_cell;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
@@ -144,10 +140,8 @@ DoubleMatrix *Sigma;
   atoms_ax,fermi,job,file);
   time4 = MPI_Wtime() - time3;
   if (job->taskid == 0) printf("self_energy                                %10.2f\n",time4);
-  //if (job->gw_int == 2) {
   DestroyDoubleArray(&integral_buffer1,&dim_send[job->taskid],job);
   DestroyDoubleArray(&integral_buffer2,&dim_send[job->taskid],job);
- //}
   DestroyIntArray(&offset_j,&dim1,job);
   DestroyDoubleMatrix(&V_inv,job);
   time2 = MPI_Wtime() - time1;
@@ -166,10 +160,6 @@ void bse_molecule(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, int *numfrag, in
   // ******************************************************************************************
   // * Allocate fermi structure                                                               *
   // ******************************************************************************************
-
-//fermi->nkunique = 1;
-//allocate_fermi(fermi,atoms,job,file);
-//fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
 
 int i, j;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
@@ -333,10 +323,6 @@ void rpa_molecule(FERMI* fermi, ATOM* atoms, ATOM_TRAN* atom_p, SHELL* shells, G
   // ******************************************************************************************
   // * Allocate fermi structure                                                               *
   // ******************************************************************************************
-
-//fermi->nkunique = 1;
-//allocate_fermi(fermi,atoms,job,file);
-//fermi->occupied[0] = fermi->homo[0] - fermi->bands[0] + 1;
 
 int i, j;
 int nbands = fermi->bands[1] - fermi->bands[0] + 1;
@@ -834,7 +820,8 @@ for (j = 0; j < ntransitions; j++) {
   time3 = MPI_Wtime();
 
   for (i = 0; i < buffer_size; i++) X2[i] += X1[i]; 
-  block_cyclic_to_linear(&nt,ictxt,nbsize,X2,xx,job,file);
+  //block_cyclic_to_linear(&nt,ictxt,nbsize,X2,xx,job,file);
+  block_cyclic_to_linear_limit(&nt,ictxt,nbsize,job->bse_lim,X2,xx,job,file);
 
   for (i = 0; i < ntransitions; i++) bse_eigenvalues[i] = eigenvalues[ntransitions - 1 - i];
   //for (i = 0; i < ntransitions; i++) bse_eigenvalues[i] = eigenvalues[i + nt - job->bse_lim];
@@ -1372,12 +1359,12 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   // * Generate temp4 array                                                                   *
   // ******************************************************************************************
   
-  if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
-  if (job->taskid == 0) printf("BSE vector limit %3d\n",job->bse_lim);
+  if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
+  if (job->taskid == 0) printf("RPA vector limit %3d\n",job->rpa_lim);
   dim4 = 0;
-  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->bse_lim * atoms_ax->bfnnumb_sh[j1]; }
-  itr = job->bse_lim / nvir;
-  rem = job->bse_lim - itr * nvir;
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->rpa_lim * atoms_ax->bfnnumb_sh[j1]; }
+  itr = job->rpa_lim / nvir;
+  rem = job->rpa_lim - itr * nvir;
   if (dim4 == 0) dim4 = 1;
   AllocateDoubleArray(&temp4,&dim4,job);
   ResetDoubleArray(temp4,&dim4);
@@ -1398,15 +1385,15 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
-  ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
+  AllocateDoubleArray(&cas_eigenvalues,&job->rpa_lim,job);
+  ResetDoubleArray(cas_eigenvalues,&job->rpa_lim);
   time3 = MPI_Wtime();
 
   char zz6[24] = "/evalfile";
   read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
 
   char zz7[24] = "/cas_evalues";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->rpa_lim, zz7, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -1425,13 +1412,11 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   time1 = MPI_Wtime();
   mdim = nbands * nbands * nvir;
-  //fprintf(file.out,"hamiltonian_in_core_screened_ij_ab  allocating nbands^2 %7d * nvir %7d = %7d\n", \
-  nbands*nbands,nvir, nbands*nbands*nvir); fflush(file.out);
   AllocateDoubleArray(&M_buffer,&mdim,job);
   ResetDoubleArray(M_buffer,&mdim);
   for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
     nd6 = atoms_ax->bfnnumb_sh[j1];
-    offset1 = job->bse_lim * offset_j1[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
     offset2 = offset_j[j1];
     for (l2 = 0; l2 < nvir; l2++) {
       for (m = 0; m < nbands; m++) {
@@ -1447,7 +1432,6 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   time2 += MPI_Wtime() - time1;
 
   AllocateDoubleArray(&M,&mdim,job);
-  //fprintf(file.out,"hamiltonian_in_core_screened_ij_ab  allocating mdim %7d\n", mdim); fflush(file.out);
   ResetDoubleArray(M,&mdim);
   time3 = MPI_Wtime();
   MPI_Allreduce(M_buffer,M,mdim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
@@ -1476,7 +1460,6 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
        }
       }
      }
-  //for (i = 0; i < nbands; i++) GW_eigenvalues[i] = scf_eigenvalues[i] + Sigma[i] / (k_one - dSigma_dE[i]);
   time6 += MPI_Wtime() - time5;
 
   time7 = MPI_Wtime();
@@ -1499,6 +1482,80 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
  } // close loop on l1
 
+  if (rem > 0) {
+
+  time1 = MPI_Wtime();
+  mdim = nbands * nbands * nvir;
+  AllocateDoubleArray(&M_buffer,&mdim,job);
+  ResetDoubleArray(M_buffer,&mdim);
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
+    nd6 = atoms_ax->bfnnumb_sh[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
+    offset2 = offset_j[j1];
+    for (l2 = 0; l2 < rem; l2++) {
+      for (m = 0; m < nbands; m++) {
+        for (r = 0; r < nbands; r++) {
+          for (a1 = 0; a1 < nd6; a1++) {
+            M_buffer[m * nbands * nvir + r * nvir + l2] += integral_buffer1[offset2 + m * nbands * nd6 + r * nd6 + a1] * \
+            temp4[(l1 * nvir + l2) * nd6 + offset1 + a1]; 
+           }
+          }
+         }
+        }
+       }
+  time2 += MPI_Wtime() - time1;
+
+  AllocateDoubleArray(&M,&mdim,job);
+  ResetDoubleArray(M,&mdim);
+  time3 = MPI_Wtime();
+  MPI_Allreduce(M_buffer,M,mdim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  time4 += MPI_Wtime() - time3;
+  DestroyDoubleArray(&M_buffer,&mdim,job);
+
+  time5 = MPI_Wtime();
+  for (i = 0; i < nbands; i++) {
+    for (k = 0; k < nocc; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+
+  for (i = 0; i < nbands; i++) {
+    for (k = nocc; k < nbands; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+  time6 += MPI_Wtime() - time5;
+
+  time7 = MPI_Wtime();
+  for (il = 0; il < mpA; il++) {
+    I1 = nprow * *nbsize * (il / *nbsize) + il % *nbsize + ((nprow + myrow) % nprow) * *nbsize;
+    m = I1 / nvir;
+    n = I1  - m  * nvir + nocc;
+    for (jl = 0; jl < nqA; jl++) {
+      I2 = npcol * *nbsize * (jl / *nbsize) + jl % *nbsize + ((npcol + mycol) % npcol) * *nbsize;
+      r = I2 / nvir;
+      s = I2  - r  * nvir + nocc;
+      for (l2 = 0; l2 < rem; l2++) {
+        Ham_buffer1[il + mpA * jl] += two * M[m * nbands * nvir + r * nvir + l2] * M[n * nbands * nvir + s * nvir + l2] / \
+        cas_eigenvalues[l1 * nvir + l2];
+       }
+      }
+     }
+  time8 += MPI_Wtime() - time7;
+  DestroyDoubleArray(&M,&mdim,job);
+
+ } // if (rem > 0)
+
   for (i = 0; i < nbands; i++) GW_eigenvalues[i] = scf_eigenvalues[i] + Sigma[i] / (k_one - dSigma_dE[i]);
 
   if (job->taskid == 0)  printf("Buffers                                    %10.2f\n",time2);
@@ -1508,7 +1565,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   if (job->taskid == 0) {
 
-  //fprintf(file.out,"GW Eigenvalues: %4d RPA states used\n",job->bse_lim);
+  //fprintf(file.out,"GW Eigenvalues: %4d RPA states used\n",job->rpa_lim);
   fprintf(file.out,"\n\n===========================================================================================================\n");
   fprintf(file.out,"|                                GW EIGENVALUES AND SELF-ENERGY (eV)                                      |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
@@ -1525,6 +1582,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
  }
 
+  DestroyIntArray(&offset_j1,&dim1,job);
   DestroyDoubleArray(&scf_eigenvalues,&nbands,job);
   DestroyDoubleArray(&cas_eigenvalues,&ntransitions,job);
   DestroyDoubleArray(&temp4,&dim4,job);
@@ -1561,12 +1619,12 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   // * Generate temp4 array                                                                   *
   // ******************************************************************************************
   
-  if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
-  if (job->taskid == 0) printf("BSE vector limit %3d\n",job->bse_lim);
+  if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
+  if (job->taskid == 0) printf("RPA vector limit %3d\n",job->rpa_lim);
   dim4 = 0;
-  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->bse_lim * atoms_ax->bfnnumb_sh[j1]; }
-  itr = job->bse_lim / nvir;
-  rem = job->bse_lim - itr * nvir;
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->rpa_lim * atoms_ax->bfnnumb_sh[j1]; }
+  itr = job->rpa_lim / nvir;
+  rem = job->rpa_lim - itr * nvir;
 
   if (dim4 == 0) dim4 = 1;
   AllocateDoubleArray(&temp4,&dim4,job);
@@ -1588,15 +1646,15 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
-  ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
+  AllocateDoubleArray(&cas_eigenvalues,&job->rpa_lim,job);
+  ResetDoubleArray(cas_eigenvalues,&job->rpa_lim);
   time3 = MPI_Wtime();
 
   char zz6[24] = "/evalfile";
   read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
 
   char zz7[24] = "/cas_evalues";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->rpa_lim, zz7, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -1621,7 +1679,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   ResetDoubleArray(M,&mdim);
   for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
     nd6 = atoms_ax->bfnnumb_sh[j1];
-    offset1 = job->bse_lim * offset_j1[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
     offset2 = offset_j[j1];
     for (l2 = 0; l2 < nvir; l2++) {
       for (m = 0; m < nbands; m++) {
@@ -1662,7 +1720,6 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
        }
       }
      }
-  //for (i = 0; i < nbands; i++) GW_eigenvalues[i] = scf_eigenvalues[i] + Sigma[i] / (k_one - dSigma_dE[i]);
   time6 += MPI_Wtime() - time5;
 
   time7 = MPI_Wtime();
@@ -1699,6 +1756,80 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
  } // close loop on l1
 
+  if (rem > 0) {
+
+  time1 = MPI_Wtime();
+  mdim = nbands * nbands * nvir;
+  AllocateDoubleArray(&M_buffer,&mdim,job);
+  ResetDoubleArray(M_buffer,&mdim);
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
+    nd6 = atoms_ax->bfnnumb_sh[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
+    offset2 = offset_j[j1];
+    for (l2 = 0; l2 < rem; l2++) {
+      for (m = 0; m < nbands; m++) {
+        for (r = 0; r < nbands; r++) {
+          for (a1 = 0; a1 < nd6; a1++) {
+            M_buffer[m * nbands * nvir + r * nvir + l2] += integral_buffer1[offset2 + m * nbands * nd6 + r * nd6 + a1] * \
+            temp4[(l1 * nvir + l2) * nd6 + offset1 + a1]; 
+           }
+          }
+         }
+        }
+       }
+  time2 += MPI_Wtime() - time1;
+
+  AllocateDoubleArray(&M,&mdim,job);
+  ResetDoubleArray(M,&mdim);
+  time3 = MPI_Wtime();
+  MPI_Allreduce(M_buffer,M,mdim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  time4 += MPI_Wtime() - time3;
+  DestroyDoubleArray(&M_buffer,&mdim,job);
+
+  time5 = MPI_Wtime();
+  for (i = 0; i < nbands; i++) {
+    for (k = 0; k < nocc; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+
+  for (i = 0; i < nbands; i++) {
+    for (k = nocc; k < nbands; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+  time6 += MPI_Wtime() - time5;
+
+  time7 = MPI_Wtime();
+  for (il = 0; il < mpA; il++) {
+    I1 = nprow * *nbsize * (il / *nbsize) + il % *nbsize + ((nprow + myrow) % nprow) * *nbsize;
+    m = I1 / nvir;
+    n = I1  - m  * nvir + nocc;
+    for (jl = 0; jl < nqA; jl++) {
+      I2 = npcol * *nbsize * (jl / *nbsize) + jl % *nbsize + ((npcol + mycol) % npcol) * *nbsize;
+      r = I2 / nvir;
+      s = I2  - r  * nvir + nocc;
+      for (l2 = 0; l2 < rem; l2++) {
+        Ham_buffer1[il + mpA * jl] += two * M[m * nbands * nvir + r * nvir + l2] * M[n * nbands * nvir + s * nvir + l2] / \
+        cas_eigenvalues[l1 * nvir + l2];
+       }
+      }
+     }
+  time8 += MPI_Wtime() - time7;
+  DestroyDoubleArray(&M,&mdim,job);
+
+ } // if (rem > 0)
+
   DestroyDoubleArray(&M_buffer,&mdim,job);
   DestroyDoubleArray(&M,&mdim,job);
 
@@ -1711,7 +1842,6 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   if (job->taskid == 0) {
 
-  //fprintf(file.out,"GW Eigenvalues: %4d RPA states used\n",job->bse_lim);
   fprintf(file.out,"\n\n===========================================================================================================\n");
   fprintf(file.out,"|                                GW EIGENVALUES AND SELF-ENERGY (eV)                                      |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
@@ -1785,19 +1915,24 @@ int nocc = fermi->occupied[0];
 int nvir = nbands - fermi->occupied[0];
 int ntransitions = nocc * nvir;
 int itr, rem;
+int ii, begin_j2, end_j2;
 double time1, time2, time3, time4, time5, time6, time7, time8;
 double *temp4;
 double *M, *M_buffer;
 double *cas_eigenvalues, *scf_eigenvalues, *GW_eigenvalues;
 double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
+double EE, start_energy, energy_increment;
+FILE *file_prt[job->nspectra];
+struct filename { char name[20]; };
+struct filename *filearray;
+DoubleMatrix *Sigma_plot_buffer, *Sigma_plot, *dSigma_dE_plot_buffer, *dSigma_dE_plot;
 
-
-/*
-  DoubleMatrix *Sigma_plot_buffer, *Sigma_plot, *dSigma_dE_plot_buffer, *dSigma_dE_plot;
-  int ii, begin_j2, end_j2;
-  double EE, start_energy, energy_increment;
   start_energy = job->energy_range[0];
   energy_increment = (job->energy_range[1] - job->energy_range[0]) / (double) job->npoints;
+
+  // ******************************************************************************************
+  // * Open files and allocate memory for self-energy diagonal matrix element plots           *
+  // ******************************************************************************************
 
   if (job->self_plot == 1) {
 
@@ -1810,86 +1945,32 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   ResetDoubleMatrix(dSigma_dE_plot);
   ResetDoubleMatrix(dSigma_dE_plot_buffer);
 
-  } // close if job->self_plot
+  filearray = (struct filename *) malloc(10 * sizeof(struct filename));
+  if (filearray == NULL) {
+    fprintf(file.out, "CANNOT OPEN MEMORY FOR FILEARRAY IN GW_self_energy\n");
+    exit(1);
+  }
 
+  strcpy(filearray[0].name, "self_energy_01.dat");
+  strcpy(filearray[1].name, "self_energy_02.dat");
+  strcpy(filearray[2].name, "self_energy_03.dat");
+  strcpy(filearray[3].name, "self_energy_04.dat");
+  strcpy(filearray[4].name, "self_energy_05.dat");
+  strcpy(filearray[5].name, "self_energy_06.dat");
+  strcpy(filearray[6].name, "self_energy_07.dat");
+  strcpy(filearray[7].name, "self_energy_08.dat");
+  strcpy(filearray[8].name, "self_energy_09.dat");
+  strcpy(filearray[9].name, "self_energy_10.dat");
 
-  // ******************************************************************************************
-  // * Self-energy diagonal matrix element plots                                              *
-  // ******************************************************************************************
+  for (k = 0; k < job->nspectra; k++) {
+    file_prt[k] = fopen(filearray[k].name, "w");
+    if (file_prt[k] == NULL) {
+      fprintf(file.out, "CANNOT OPEN FILES FOR PLOTTING IN GW_self_energy\n");
+      exit(1);
+    }
+   }
 
-  if (job->self_plot == 1) {
-
-      for (l = 0; l < end_j2 - begin_j2; l++) {
-        for (i = 0; i < job->nspectra; i++) {
-          for (k = 0; k < fermi->occupied[0]; k++) {
-            for (ii = 0; ii < job->npoints; ii++) {
-              EE = start_energy + ii * energy_increment;
-              denom = EE - scf_eigenvalues[k] + cas_eigenvalues[begin_j2 + l];
-              ///sigma_factor = two * M_buffer[l]->a[fermi->plot_bands[i]][k] * M_buffer[l]->a[k][fermi->plot_bands[i]];
-              Sigma_plot_buffer->a[i][ii] += sigma_factor * denom / (denom * denom + 1.0e-04);
-              dSigma_dE_plot_buffer->a[i][ii] -= sigma_factor / denom / denom;
-             }
-            }
-           }
-
-        for (i = 0; i < job->nspectra; i++) {
-          for (k = fermi->occupied[0]; k < nbands; k++) {
-            for (ii = 0; ii < job->npoints; ii++) {
-              EE = start_energy + ii * energy_increment;
-              denom = EE - scf_eigenvalues[k] - cas_eigenvalues[begin_j2 + l];
-              ////sigma_factor = two * M_buffer[l]->a[fermi->plot_bands[i]][k] * M_buffer[l]->a[k][fermi->plot_bands[i]];
-           Sigma_plot_buffer->a[i][ii] += sigma_factor * denom / (denom * denom + 1.0e-04);
-              dSigma_dE_plot_buffer->a[i][ii] -= sigma_factor / denom / denom;
-             }
-            }
-           }
-          } // close loop on l
-
-      } // close if (job->self_plot
-
-  if (job->self_plot == 1) {
-
-      struct filename { char name[20]; };
-      struct filename *filearray;
-      filearray = (struct filename *) malloc(10 * sizeof(struct filename));
-      if (filearray == NULL) {
-        fprintf(file.out, "CANNOT OPEN MEMORY FOR FILEARRAY IN GW_self_energy\n");
-        exit(1);
-      }
-      strcpy(filearray[0].name, "self_energy_01.dat");
-      strcpy(filearray[1].name, "self_energy_02.dat");
-      strcpy(filearray[2].name, "self_energy_03.dat");
-      strcpy(filearray[3].name, "self_energy_04.dat");
-      strcpy(filearray[4].name, "self_energy_05.dat");
-      strcpy(filearray[5].name, "self_energy_06.dat");
-      strcpy(filearray[6].name, "self_energy_07.dat");
-      strcpy(filearray[7].name, "self_energy_08.dat");
-      strcpy(filearray[8].name, "self_energy_09.dat");
-      strcpy(filearray[9].name, "self_energy_10.dat");
-      FILE *file_prt[job->nspectra];
-      for (k = 0; k < job->nspectra; k++) {
-        file_prt[k] = fopen(filearray[k].name, "w");
-        if (file_prt[k] == NULL) {
-          fprintf(file.out, "CANNOT OPEN FILES FOR PLOTTING IN GW_self_energy\n");
-          exit(1);
-        }
-       }
-      MPI_Reduce(&Sigma_plot_buffer->a[0][0],&Sigma_plot->a[0][0],job->nspectra*job->npoints,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
-      MPI_Reduce(&dSigma_dE_plot_buffer->a[0][0],&dSigma_dE_plot->a[0][0],job->nspectra*job->npoints,MPI_DOUBLE,MPI_SUM,0,\
-      MPI_COMM_WORLD);
-      if (job->taskid == 0)
-      for (i = 0; i < job->nspectra; i++) for (ii = 0; ii < job->npoints; ii++) fprintf(file_prt[i],"%10.4lf %10.4lf %10.4lf\n", \
-      (start_energy + ii * energy_increment) * au_to_eV, Sigma_plot->a[i][ii] * au_to_eV, \
-      Sigma_plot->a[i][ii] / (k_one - dSigma_dE_plot->a[i][ii]) * au_to_eV);
-      //DestroyDoubleMatrix(&Sigma_buffer,job);
-      DestroyDoubleMatrix(&dSigma_dE_plot_buffer,job);
-      DestroyDoubleMatrix(&Sigma_plot,job);
-
-    } // close if (job->self_plot
-  */
-
-
-
+  } // close if (job->self_plot
 
   Cblacs_gridinfo(*ictxt, &nprow, &npcol, &myrow, &mycol);
   mpA = numroc_(&ntransitions, nbsize, &myrow, &izero, &nprow);
@@ -1899,12 +1980,12 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   // * Generate temp4 array                                                                   *
   // ******************************************************************************************
   
-  if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
-  if (job->taskid == 0) printf("RPA vector limit %3d\n",job->bse_lim);
+  if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
+  if (job->taskid == 0) printf("RPA vector limit %3d\n",job->rpa_lim);
   dim4 = 0;
-  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->bse_lim * atoms_ax->bfnnumb_sh[j1]; }
-  itr = job->bse_lim / nvir;
-  rem = job->bse_lim - itr * nvir;
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) { dim4 += job->rpa_lim * atoms_ax->bfnnumb_sh[j1]; }
+  itr = job->rpa_lim / nvir;
+  rem = job->rpa_lim - itr * nvir;
 
   if (dim4 == 0) dim4 = 1;
   AllocateDoubleArray(&temp4,&dim4,job);
@@ -1927,13 +2008,13 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   AllocateDoubleArray(&GW_eigenvalues,&nbands,job);
   AllocateDoubleArray(&scf_eigenvalues,&nbands,job);
   ResetDoubleArray(scf_eigenvalues,&nbands);
-  AllocateDoubleArray(&cas_eigenvalues,&job->bse_lim,job);
-  ResetDoubleArray(cas_eigenvalues,&job->bse_lim);
+  AllocateDoubleArray(&cas_eigenvalues,&job->rpa_lim,job);
+  ResetDoubleArray(cas_eigenvalues,&job->rpa_lim);
   time3 = MPI_Wtime();
   char zz6[24] = "/evalfile";
   read_SCF_GW_eigenvalues(scf_eigenvalues, fermi->bands[0] - 1, nbands, zz6, job, file);
   char zz7[24] = "/cas_evalues";
-  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->bse_lim, zz7, job, file);
+  read_SCF_GW_eigenvalues(cas_eigenvalues, 0, job->rpa_lim, zz7, job, file);
   time4 = MPI_Wtime() - time3;
 
   // ******************************************************************************************
@@ -1947,6 +2028,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   for (i = 0; i < nbands; i++) Sigma[i] = k_zero;
   for (i = 0; i < nbands; i++) dSigma_dE[i] = k_zero;
+
   mdim = nbands * nbands * nvir;
   AllocateDoubleArray(&M,&mdim,job);
   AllocateDoubleArray(&M_buffer,&mdim,job);
@@ -1958,7 +2040,7 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   ResetDoubleArray(M,&mdim);
   for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
     nd6 = atoms_ax->bfnnumb_sh[j1];
-    offset1 = job->bse_lim * offset_j1[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
     offset2 = offset_j[j1];
     for (l2 = 0; l2 < nvir; l2++) {
       for (m = 0; m < nbands; m++) {
@@ -1977,41 +2059,44 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
   MPI_Allreduce(M_buffer,M,mdim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   time4 += MPI_Wtime() - time3;
 
-  /*
   if (job->self_plot == 1) {
-  for (l = 0; l < job->nspectra; l++) {
-    for (i = 0; i < nbands; i++) {
-      for (k = 0; k < nocc; k++) {
-        for (l2 = 0; l2 < nvir; l2++) {
-          for (ii = 0; ii < job->npoints; ii++) {
-            EE = start_energy + ii * energy_increment;
-            denom = EE - scf_eigenvalues[i] - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
-            sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
-            Sigma_plot_buffer->a[i][ii] += sigma_factor * denom / (denom * denom + 1.0e-04);
-            dSigma_dE_plot_buffer->a[i][ii] -= sigma_factor / denom / denom;
-           }
-          }
-         }
-        }
-       }
 
   for (l = 0; l < job->nspectra; l++) {
-    for (i = 0; i < nbands; i++) {
-      for (k = nocc; k < nbands; k++) {
-        for (l2 = 0; l2 < nvir; l2++) {
-          for (ii = 0; ii < job->npoints; ii++) {
-            EE = start_energy + ii * energy_increment;
-            denom = EE - scf_eigenvalues[i] - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
-            sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
-            Sigma_plot_buffer->a[i][ii] += sigma_factor * denom / (denom * denom + 1.0e-04);
-            dSigma_dE_plot_buffer->a[i][ii] -= sigma_factor / denom / denom;
-           }
-          }
+    i = fermi->plot_bands[l];
+    for (k = 0; k < nocc; k++) {
+      for (l2 = 0; l2 < nvir; l2++) {
+        for (ii = 0; ii < job->npoints; ii++) {
+          EE = start_energy + ii * energy_increment;
+          denom = EE - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
+          sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+          Sigma_plot_buffer->a[l][ii] += sigma_factor * denom * denom / (denom * denom + 1.0e-04);
+          dSigma_dE_plot_buffer->a[l][ii] -= sigma_factor / denom;
          }
         }
        }
       }
-  */
+
+  for (l = 0; l < job->nspectra; l++) {
+    i = fermi->plot_bands[l];
+    for (k = nocc; k < nbands; k++) {
+      for (l2 = 0; l2 < nvir; l2++) {
+        for (ii = 0; ii < job->npoints; ii++) {
+          EE = start_energy + ii * energy_increment;
+          denom = EE - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
+          sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+          Sigma_plot_buffer->a[l][ii] += sigma_factor * denom * denom / (denom * denom + 1.0e-04);
+          dSigma_dE_plot_buffer->a[l][ii] -= sigma_factor / denom;
+         }
+        }
+       }
+      }
+
+  } // close if job->self_plot
+
+ //fprintf(file.out,"%10.4f %10.4f %3d\n",(start_energy+ 508 * energy_increment)*au_to_eV,scf_eigenvalues[5]*au_to_eV,fermi->plot_bands[5]);
+ //fprintf(file.out,"plot %3d %10.4f %10.4f\n", l1, (start_energy + 508 * energy_increment) * au_to_eV, Sigma_plot_buffer->a[5][508] * au_to_eV);
+ //fprintf(file.out,"%10.4f %10.4f %3d\n",(start_energy+ 540 * energy_increment)*au_to_eV,scf_eigenvalues[17]*au_to_eV,fermi->plot_bands[0]);
+ //fprintf(file.out,"plot %3d %10.4f %10.4f\n", l1, (start_energy + 540 * energy_increment) * au_to_eV, Sigma_plot_buffer->a[0][540] * au_to_eV);
 
   time5 = MPI_Wtime();
   for (i = 0; i < nbands; i++) {
@@ -2035,11 +2120,114 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
        }
       }
      }
-  //for (i = 0; i < nbands; i++) GW_eigenvalues[i] = scf_eigenvalues[i] + Sigma[i] / (k_one - dSigma_dE[i]);
+
+ //fprintf(file.out,"not  %3d %10.4f %10.4f\n", l1, scf_eigenvalues[5] * au_to_eV, Sigma[5] * au_to_eV);
+ //fprintf(file.out,"not  %3d %10.4f %10.4f\n", l1, scf_eigenvalues[17] * au_to_eV, Sigma[17] * au_to_eV);
+
   time6 += MPI_Wtime() - time5;
 
  } // close loop on l1
 
+  if (rem > 0) {
+
+  time1 = MPI_Wtime();
+  ResetDoubleArray(M_buffer,&mdim);
+  ResetDoubleArray(M,&mdim);
+  for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
+    nd6 = atoms_ax->bfnnumb_sh[j1];
+    offset1 = job->rpa_lim * offset_j1[j1];
+    offset2 = offset_j[j1];
+    for (l2 = 0; l2 < rem; l2++) {
+      for (m = 0; m < nbands; m++) {
+        for (r = 0; r < nbands; r++) {
+          for (a1 = 0; a1 < nd6; a1++) {
+            M_buffer[m * nbands * nvir + r * nvir + l2] += integral_buffer1[offset2 + m * nbands * nd6 + r * nd6 + a1] * \
+            temp4[(l1 * nvir + l2) * nd6 + offset1 + a1]; 
+           }
+          }
+         }
+        }
+       }
+  time2 += MPI_Wtime() - time1;
+
+  time3 = MPI_Wtime();
+  MPI_Allreduce(M_buffer,M,mdim,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  time4 += MPI_Wtime() - time3;
+
+  if (job->self_plot == 1) {
+
+  for (l = 0; l < job->nspectra; l++) {
+    i = fermi->plot_bands[l];
+    for (k = 0; k < nocc; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        for (ii = 0; ii < job->npoints; ii++) {
+          EE = start_energy + ii * energy_increment;
+          denom = EE - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
+          sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+          Sigma_plot_buffer->a[l][ii] += sigma_factor * denom * denom / (denom * denom + 1.0e-04);
+          dSigma_dE_plot_buffer->a[l][ii] -= sigma_factor / denom;
+         }
+        }
+       }
+      }
+
+  for (l = 0; l < job->nspectra; l++) {
+    i = fermi->plot_bands[l];
+    for (k = nocc; k < nbands; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        for (ii = 0; ii < job->npoints; ii++) {
+          EE = start_energy + ii * energy_increment;
+          denom = EE - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
+          sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+          Sigma_plot_buffer->a[l][ii] += sigma_factor * denom * denom / (denom * denom + 1.0e-04);
+          dSigma_dE_plot_buffer->a[l][ii] -= sigma_factor / denom;
+         }
+        }
+       }
+      }
+
+  } // close if job->self_plot
+
+  time5 = MPI_Wtime();
+  for (i = 0; i < nbands; i++) {
+    for (k = 0; k < nocc; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] + cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+
+  for (i = 0; i < nbands; i++) {
+    for (k = nocc; k < nbands; k++) {
+      for (l2 = 0; l2 < rem; l2++) {
+        denom = scf_eigenvalues[i] - scf_eigenvalues[k] - cas_eigenvalues[l1 * nvir + l2];
+        sigma_factor = two * M[i * nbands * nvir + k * nvir + l2] * M[k * nbands * nvir + i * nvir + l2] / denom;
+        Sigma[i] += sigma_factor;
+        dSigma_dE[i] -= sigma_factor / denom;
+       }
+      }
+     }
+
+  time6 += MPI_Wtime() - time5;
+
+ } // if rem > 0
+
+  if (job->self_plot == 1) {
+  MPI_Reduce(&Sigma_plot_buffer->a[0][0],&Sigma_plot->a[0][0],job->nspectra*job->npoints,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(&dSigma_dE_plot_buffer->a[0][0],&dSigma_dE_plot->a[0][0],job->nspectra*job->npoints,MPI_DOUBLE,MPI_SUM,0,\
+  MPI_COMM_WORLD);
+  if (job->taskid == 0)
+  for (i = 0; i < job->nspectra; i++) for (ii = 0; ii < job->npoints; ii++) fprintf(file_prt[i],"%10.4lf %10.4lf %10.4lf\n", \
+  (start_energy + ii * energy_increment) * au_to_eV, Sigma_plot->a[i][ii] * au_to_eV, \
+  Sigma_plot->a[i][ii] / (k_one - dSigma_dE_plot->a[i][ii]) * au_to_eV);
+  DestroyDoubleMatrix(&dSigma_dE_plot,job);
+  DestroyDoubleMatrix(&dSigma_dE_plot_buffer,job);
+  DestroyDoubleMatrix(&Sigma_plot,job);
+  DestroyDoubleMatrix(&Sigma_plot_buffer,job);
+ } // close if (job->self_plot
   DestroyDoubleArray(&M_buffer,&mdim,job);
   DestroyDoubleArray(&M,&mdim,job);
 
@@ -2051,7 +2239,6 @@ double Sigma[nbands], dSigma_dE[nbands], sigma_factor, denom;
 
   if (job->taskid == 0) {
 
-  //fprintf(file.out,"GW Eigenvalues: %4d RPA states used\n",job->bse_lim);
   fprintf(file.out,"\n\n===========================================================================================================\n");
   fprintf(file.out,"|                                GW EIGENVALUES AND SELF-ENERGY (eV)                                      |\n");
   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
@@ -2254,7 +2441,6 @@ int ntransitions = nocc * nvir;
 int itr, rem;
 int begin_j[job->numtasks], end_j[job->numtasks];
 int num_proc = job->numtasks < dim1 ? job->numtasks : dim1;
-int num_eigenvectors;
 int offset, offset1, offset2;
 int *offset_j1;
 char xc[22] = "/cas_eigenvectors_mpi";
@@ -2268,17 +2454,14 @@ MPI_File fh;
   strcat(bufcas,xc);
 
   // ******************************************************************************************
-  // * Contract V <alpha|beta><beta|occ-vir> with CASIDA eigenvectors                         *
+  // * Contract V <alpha|beta><beta|occ-vir> with job->rpa_lim CASIDA eigenvectors            *
   // ******************************************************************************************
   
   time1 = MPI_Wtime();
   time3 = MPI_Wtime();
 
-  if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
-  //if (job->taskid == 0) printf("BSE vector limit %3d\n",job->bse_lim);
-  num_eigenvectors = job->bse_lim;
-  itr = job->bse_lim / nvir;
-  rem = job->bse_lim - itr * nvir;
+  itr = job->rpa_lim / nvir;
+  rem = job->rpa_lim - itr * nvir;
 
   AllocateIntArray(&offset_j1,&dim1,job);
   mpi_begin_end(begin_j, end_j, dim1, num_proc, job, file);
@@ -2300,7 +2483,7 @@ MPI_File fh;
     MPI_File_read(fh, &cas_eigenvectors->a[0][0], nvir * ntransitions, MPI_DOUBLE, MPI_STATUS_IGNORE);
     for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
       nd6 = atoms_ax->bfnnumb_sh[j1];
-      offset1 = job->bse_lim * offset_j1[j1];
+      offset1 = job->rpa_lim * offset_j1[j1];
       offset2 = offset_j1[j1] * nbands * nbands;
       for (l2 = 0; l2 < nvir; l2++) {
         for (m = 0; m < nocc; m++) {
@@ -2322,7 +2505,7 @@ MPI_File fh;
   MPI_File_read(fh, &cas_eigenvectors->a[0][0], rem * ntransitions, MPI_DOUBLE, MPI_STATUS_IGNORE);
   for (j1 = begin_j[job->taskid]; j1 < end_j[job->taskid]; j1++) {
     nd6 = atoms_ax->bfnnumb_sh[j1];
-    offset1 = offset_j1[j1] * job->bse_lim;
+    offset1 = offset_j1[j1] * job->rpa_lim;
     offset2 = offset_j1[j1] * nbands * nbands;
     for (l2 = 0; l2 < rem; l2++) {
       for (m = 0; m < nocc; m++) {

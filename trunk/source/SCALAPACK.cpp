@@ -431,7 +431,7 @@ long long local_pointer, global_pointer, myrow_pointer, mycol_pointer;
   //if (job->bse_lim == 0 || job->bse_lim > *nt) job->bse_lim = *nt; // if number of vectors is not set, set to max value
   if (limit == 0 || limit > *nt) limit = *nt; // if number of vectors is not set, set to max value
 
-  if (job->taskid == 0) printf("limit %3d nt %6d bse_lim %6d\n",limit,*nt,job->bse_lim);
+  if (job->taskid == 0) printf("limit %3d nt %6d \n",limit,*nt);
   if ((myrow < nprow && myrow >= 0) && (mycol < npcol && mycol >= 0)) {
   for (j = 0; j < nqA / *nbsize ; j++) { 
     for (k = 0; k < *nbsize; k++) {

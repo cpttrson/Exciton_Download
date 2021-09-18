@@ -124,7 +124,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
   char title3[15];
   char fermi_homo[12], fermi_bands[12], fermi_bands1[12], nspec[14], spectrum[14], monkhorst_pack[9], ntrans[12];
   char hamiltonian[7], field[80], tamm_dancoff[12], spin_state[12], linear_algebra[12], scissor_shift[9], scale_factor[9];
-  char int_range[12], double_range[13], plot_type[12];
+  char int_range[12], double_range[13], plot_type[12], bse_lim[12], rpa_lim[12];
   double double_value[2], energy_range[2];
   FERMI fermi;
 
@@ -1016,6 +1016,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       spectrum[0] = 0;
       ntrans[0] = 0;
       monkhorst_pack[0] = 0;
+      rpa_lim[0] = 0;
 
       sprintf(double_range, "%12s", "ENERGY RANGE");
       sprintf(int_range, "%11s", "ENERGY BAND");
@@ -1062,7 +1063,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       if (!strcmp(jobname1, "RPA_VECTORS")) {   // use a limited number of CASIDA eigenvectors in GW calculation
 
       read_line(file.job, title, 99);
-      sscanf(title, "%d", &job->bse_lim);
+      sscanf(title, "%d", &job->rpa_lim);
+      //sscanf(title, "%d", &job->bse_lim);
 
     }
 
@@ -1094,7 +1096,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
        for (i = 0; i < job->nspectra; i++) {
          if ((self[i] < fermi.bands[0] || self[i] > fermi.bands[1]) && job->spin_polarisation == 0) {
          if (job->taskid == 0) 
-         fprintf(file.out,"RANGE OF BANDS FOR SELF-ENERGY PLOT MUST LIE WITHIN MO RANGE %d %d\n",fermi.bands[0],fermi.bands[1]);
+         fprintf(file.out,"RANGE OF BANDS %d FOR SELF-ENERGY PLOT MUST LIE WITHIN MO RANGE %d %d\n",self[i],fermi.bands[0],fermi.bands[1]);
          MPI_Finalize();
          exit(0);
         }
@@ -1102,13 +1104,13 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
          else if ((self[i] < fermi.bands[0] || self[i] > fermi.bands[1] || self[i] < fermi.bands[2] || self[i] > fermi.bands[3]) \
          && job->spin_polarisation == 1) { 
          if (job->taskid == 0) 
-         fprintf(file.out,"RANGE OF BANDS FOR SELF-ENERGY PLOT MUST LIE WITHIN MO RANGE %d %d and %d %d\n", \
-         fermi.bands[0],fermi.bands[1],fermi.bands[2],fermi.bands[3]);
+         fprintf(file.out,"RANGE OF BANDS %d FOR SELF-ENERGY PLOT MUST LIE WITHIN MO RANGE %d %d and %d %d\n", \
+         self[i],fermi.bands[0],fermi.bands[1],fermi.bands[2],fermi.bands[3]);
          MPI_Finalize();
          exit(0);
         }
 
-         fermi.plot_bands[i] = self[i];
+         fermi.plot_bands[i] = self[i] - fermi.bands[0]; // bands referenced to beginning of MO_RANGE
        }
 
      }
@@ -1124,6 +1126,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       nocc = fermi.occupied[0];
       nvir = nbands - fermi.occupied[0];
       ntransitions = nocc * nvir;
+      if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
 
       // Check input
 
@@ -1139,16 +1142,24 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       if (nspec[0] == 0)       sprintf(nspec,"      %d",job->nspectra);
       if (spectrum[0] == 0)    sprintf(spectrum,"%4.1lf - %4.1lf",energy_range[0],energy_range[1]);
       if (ntrans[0] == 0)      sprintf(ntrans,"   %d",ntransitions);
+      if (rpa_lim[0] == 0)     sprintf(rpa_lim,"   %d",job->rpa_lim);
 
       if (job->taskid == 0) {
    
       fprintf(file.out,"\n\n===========================================================================================================\n");
       if (crystal->type[0] == 'M') {
-      fprintf(file.out,"| GW CALCULATION            | HOMO LEVEL    %8s | MO     %16s | NTRANS     %12s |\n", \
+      fprintf(file.out,"| GW CALCULATION            | HOMO LEVEL    %8s | MO     %16s | NTRANS         %8s |\n", \
       fermi_homo, fermi_bands, ntrans);
+      if (job->self_plot == 0) {
+      fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+      fprintf(file.out,"| RPA VECTORS      %8s |                         |                         |                         |\n", \
+      rpa_lim);
+     }
       if (job->self_plot == 1) {
       fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-      fprintf(file.out,"| SELF-ENERGY PLOTTED       | NBANDS         %8s | E RANGE  %14s |                         |\n", \
+      fprintf(file.out,"| SELF-ENERGY PLOTTED       | NBANDS         %8s | E RANGE  %14s | RPA VECTORS    %8s |\n", \
+      nspec,spectrum,rpa_lim);
+      //fprintf(file.out,"| SELF-ENERGY PLOTTED       | NBANDS         %8s | E RANGE  %14s |                         |\n", \
       nspec,spectrum);
      }
     }
@@ -1201,6 +1212,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       ntrans[0] = 0;
       monkhorst_pack[0] = 0;
       int_range[0] = 0;
+      rpa_lim[0] = 0;
 
       sprintf(int_range, "%11s", "ENERGY BAND");
 
@@ -1234,9 +1246,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
   
       if (!strcmp(jobname1, "RPA_VECTORS")) {
       read_line(file.job, title, 99);
-      sscanf(title, "%d", &job->bse_lim);
-      if (job->taskid == 0) {
-     }
+      //sscanf(title, "%d", &job->bse_lim);
+      sscanf(title, "%d", &job->rpa_lim);
     }
 
        if (!strcmp(jobname1, "MO_RANGE")) {
@@ -1255,6 +1266,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       nocc = fermi.occupied[0];
       nvir = nbands - fermi.occupied[0];
       ntransitions = nocc * nvir;
+      if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
 
       // Check input
 
@@ -1267,6 +1279,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       if (fermi_bands[0] == 0) sprintf(fermi_bands,"  %d - %d",fermi.bands[0],fermi.bands[1]);
       //if (job->spin_polarisation == 1 && fermi_bands1[0] == 0) sprintf(fermi_bands1,"  %d - %d",fermi.bands[2],fermi.bands[3]);
       if (ntrans[0] == 0)      sprintf(ntrans,"   %d",ntransitions);
+      if (rpa_lim[0] == 0)     sprintf(rpa_lim,"   %d",job->rpa_lim);
 
    if (job->taskid == 0) {
 
@@ -1274,6 +1287,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
    if (crystal->type[0] == 'M') {
    fprintf(file.out,"| RPA CALCULATION           | HOMO LEVEL    %8s | MO     %16s | NTRANS     %12s |\n", \
    fermi_homo, fermi_bands, ntrans);
+   fprintf(file.out,"|                           | RPA VECTORS   %8s |                       |                  |\n", \
+   rpa_lim);
   }
    if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {
    fprintf(file.out,"| GW CALCULATION            | FERMI LEVEL    %8s | BANDS  %16s | MONKHORST-PACK %8s |\n", \
@@ -1330,6 +1345,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       linear_algebra[0] = 0;
       int_range[0] = 0;
       double_range[0] = 0;
+      rpa_lim[0] = 0;
+      bse_lim[0] = 0;
 
       sprintf(int_range, "%11s", "ENERGY BAND");
       sprintf(double_range, "%11s", "ENERGY RANGE");
@@ -1352,6 +1369,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       job->bse_cou    = 0;     // default is do not calculate Coulomb energy of occupied states in MO RANGE
       job->bse_exc    = 0;     // default is do not calculate exchange energy of occupied states in MO RANGE
       job->bse_lim    = 0;     // default is include all transitions implied by MO RANGE in BSE calculation
+      job->rpa_lim    = 0;     // default is include all transitions implied by MO RANGE in RPA calculation
 
       fermi_default(&fermi,crystal,atoms,job,file);
 
@@ -1413,6 +1431,11 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
       if (!strcmp(jobname1, "TDHF")) {
       job->bse_ham = 0;
+    }
+
+      if (!strcmp(jobname1, "RPA_VECTORS")) {
+      read_line(file.job, title, 99);
+      sscanf(title, "%d", &job->rpa_lim);
     }
 
       if (!strcmp(jobname1, "BSE_VECTORS")) {
@@ -1531,6 +1554,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       nocc = fermi.occupied[0];
       nvir = nbands - fermi.occupied[0];
       ntransitions = nocc * nvir;
+      if (job->rpa_lim == 0 || job->rpa_lim > ntransitions) job->rpa_lim = ntransitions;
+      if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
 
       // Check input
 
@@ -1569,7 +1594,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
       sprintf(scissor_shift,"%8.2f",job->scissor);
 
-      sprintf(linear_algebra,"%s","SCALAPACK");
+      //sprintf(linear_algebra,"%s","SCALAPACK");
 
       if (job->bse_ham == 0) 
       sprintf(hamiltonian,"%s","TDHF");
@@ -1591,6 +1616,10 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
       sprintf(monkhorst_pack,"%d %d %d",fermi.is[0], fermi.is[1], fermi.is[2]);
 
+      sprintf(rpa_lim,"%d",job->rpa_lim);
+
+      sprintf(bse_lim,"%d",job->bse_lim);
+
       // Convert input to atomic units
 
       job->scissor /= au_to_eV;
@@ -1604,9 +1633,14 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
    fprintf(file.out,"| BSE CALCULATION           | HOMO LEVEL     %8s | RANGE  %16s | MONKHORST-PACK %8s |\n", \
    fermi_homo,fermi_bands, monkhorst_pack);
    fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-   fprintf(file.out,"| HAMILTONIAN      %8s | TAMM-DANCOFF   %8s | SPIN STATE     %8s | LINEAR ALG.   %9s |\n", \
-   hamiltonian,tamm_dancoff,spin_state,linear_algebra);
+   fprintf(file.out,"| HAMILTONIAN      %8s | TAMM-DANCOFF   %8s | SPIN STATE     %8s | BSE VECTORS    %8s |\n", \
+   hamiltonian,tamm_dancoff,spin_state,bse_lim);
+   if (job->bse_ham > 0) {
+   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+   fprintf(file.out,"| RPA VECTORS      %8s |                         |                         |                         |\n", \
+   rpa_lim);
   }
+ }
    if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {
    fprintf(file.out,"| BSE CALCULATION           | FERMI LEVEL    %8s | RANGE  %16s | MONKHORST-PACK %8s |\n", \
    fermi_homo,fermi_bands, monkhorst_pack);
@@ -1615,9 +1649,9 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
    scissor_shift,scale_factor);
   }
    fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-   fprintf(file.out,"| RANGE (eV) %14s | FIELDS   %66s |\n", \
+   fprintf(file.out,"| E RANGE (eV) %12s | FIELDS   %66s |\n", \
    spectrum,field);
-   fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
+   fprintf(file.out,"===========================================================================================================\n");
    fflush(file.out);
   }
 
@@ -1651,7 +1685,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
     }
 
-    // *****JOB: BETHE-SALPETER EQUATION HAMILTONIAN DIAGONALISATION AND OPTICAL SPECTRUM *****************************
+    // *****JOB: OPTICAL SPECTRUM CALCULATED USING BSE EIGENVECTORS *****************************
 
     else if (!strcmp(jobname, "OPTICAL_SPECTRUM")) {
 
@@ -1666,6 +1700,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       fermi_homo[0] = 0; 
       fermi_bands[0] = 0;
       fermi_bands1[0] = 0;
+      bse_lim[0] = 0;
 
       // Set job defaults
 
@@ -1806,6 +1841,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       nocc = fermi.occupied[0];
       nvir = nbands - fermi.occupied[0];
       ntransitions = nocc * nvir;
+      if (job->bse_lim == 0 || job->bse_lim > ntransitions) job->bse_lim = ntransitions;
 
       // Check input
 
@@ -1827,7 +1863,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
       sprintf(fermi_bands,"  %d - %d %d - %d",fermi.bands[0],fermi.bands[1],fermi.bands[2],fermi.bands[3]);
      }
 
-      sprintf(linear_algebra,"%s","SCALAPACK");
+      //sprintf(linear_algebra,"%s","SCALAPACK");
+      sprintf(bse_lim,"%5d",bse_lim);
 
       if (job->bse_ham == 0) 
       sprintf(hamiltonian,"%s","TDHF");
@@ -1862,8 +1899,8 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
    fprintf(file.out,"| OPTICAL SPECTRUM          | HOMO LEVEL     %8s | RANGE  %16s | MONKHORST-PACK %8s |\n", \
    fermi_homo,fermi_bands, monkhorst_pack);
    fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-   fprintf(file.out,"| HAMILTONIAN      %8s | TAMM-DANCOFF   %8s | SPIN STATE     %8s | LINEAR ALG.   %9s |\n", \
-   hamiltonian,tamm_dancoff,spin_state,linear_algebra);
+   fprintf(file.out,"| HAMILTONIAN      %8s | TAMM-DANCOFF   %8s | SPIN STATE     %8s | BSE VECTORS  %8s |\n", \
+   hamiltonian,tamm_dancoff,spin_state,bse_lim);
   }
    if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {
    fprintf(file.out,"| OPTICAL SPECTRUM          | FERMI LEVEL    %8s | RANGE  %16s | MONKHORST-PACK %8s |\n", \
@@ -2090,7 +2127,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
 
     //fprintf(file.out,"| %-99s     |\n", title1);
     //fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
-    fprintf(file.out,"| HOMO LEVEL     %8s   | MO RANGE %9s      |                                                   |\n", 
+    fprintf(file.out,"| HOMO LEVEL     %8s   | MO RANGE %9s   |                                                   |\n", 
     fermi_homo, fermi_bands);
     fprintf(file.out,"-----------------------------------------------------------------------------------------------------------\n");
     fprintf(file.out,"| TYPE OF PLOT   %8s   | GRID TYPE %8s      | GRID PARAM     %2d %2d %2d |                         |\n", 
@@ -2114,6 +2151,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
     knet.cart[j].comp3 * bohr_to_AA);
    //}
     fprintf(file.out,"===========================================================================================================\n");
+    fflush(file.out);
    }
 
     if (!strcmp(jobname, "BSE_PLOT")) {
@@ -2128,7 +2166,7 @@ int startjob(ATOM *atoms, ATOM *atoms_ax, ATOM_TRAN *atom_p, SHELL *shells, GAUS
     }
 
     else if (!strcmp(jobname, "ELECTRON_HOLE_PLOT")) {
-      if (crystal->type[0] == 'M' && job->taskid == 0)
+      if (crystal->type[0] == 'M')
       plot_electron_hole_molecule(grid_par,points,&fermi,atoms,atom_p,shells,gaussians,crystal,symmetry,R,R_tables,\
       job,file);
       else if (crystal->type[0] == 'C' || crystal->type[0] == 'S' || crystal->type[0] == 'P') {

@@ -591,7 +591,7 @@ MPI_Win win;
       MPI_Allreduce(Fock_2e_buffer,Fock_2e,dimp_spin,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
       DestroyDoubleArray(&Fock_2e_buffer,&dimp_spin,job);
 
-      if (job->scf_direct == 0 && (job->taskid > 0 || job->numtasks == 1)) { fclose(integrals_2m); job->int_exist == 1; }
+      if (job->scf_direct == 0 && (job->taskid > 0 || job->numtasks == 1)) { fclose(integrals_2m); job->int_exist = 1; }
 
       if (job->taskid == 0 && job->iter == 1) \
       printf("%2d m_quads uniq %4d tot %5d int %8li quad %8.2e scrn %8.2e comp %8.2e contr %8.2e write %8.2e tot %8.2e\n",\

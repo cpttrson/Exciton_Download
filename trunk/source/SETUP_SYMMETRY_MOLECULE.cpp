@@ -1927,8 +1927,8 @@ void generate_Dirac_characters_complex(SYMMETRY *symmetry, JOB_PARAM *job, FILES
         }
          //fprintf(file.out,"eigval\n");
          //print_double_matrix(eigval, file);
-         if (i == symmetry->number_of_classes - 1) fprintf(file.out,"Ceigval Csum %10.4f %10.4f\n",(Csum[i]).real(),(Csum[i]).imag());
-         if (i == symmetry->number_of_classes - 1) print_complex_matrix(Ceigval, file);
+         //if (i == symmetry->number_of_classes - 1) fprintf(file.out,"Ceigval Csum %10.4f %10.4f\n",(Csum[i]).real(),(Csum[i]).imag());
+         //if (i == symmetry->number_of_classes - 1) print_complex_matrix(Ceigval, file);
          //print_real_eigenvector_matrix(eigvec, eigval->a[i], file);
         } // close loop on i
 
